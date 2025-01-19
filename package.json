@@ -9,6 +9,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.1.7"
+    "@astrojs/react": "^4.1.5",
+    "astro": "^5.1.7",
+    "my-aws-docs": "file:"
+  },
+  "devDependencies": {
+    "@astrojs/tailwind": "^5.1.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17"
   }
 }
