@@ -11,6 +11,8 @@ const ExamSimulator = () => {
   const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
   const [isActive, setIsActive] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [answerStatus, setAnswerStatus] = useState(null);
 
   // Sample questions - você precisará expandir isso com seu próprio banco de questões
   const questions = [
@@ -61,13 +63,22 @@ const ExamSimulator = () => {
 
   const handleAnswerSubmit = (answerIndex) => {
     setSelectedAnswer(answerIndex);
+    const isCorrect = answerIndex === questions[currentQuestion].correct;
+    setAnswerStatus(isCorrect ? 'correct' : 'incorrect');
+    setShowExplanation(true);
+
+    if (isCorrect) {
+      setScore(score + 1);
+    }
   };
 
   const handleNextQuestion = () => {
+    setShowExplanation(false);
+    setAnswerStatus(null);
     if (selectedAnswer === questions[currentQuestion].correct) {
       setScore(score + 1);
     }
-    
+
     if (currentQuestion + 1 < questions.length) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
@@ -85,7 +96,14 @@ const ExamSimulator = () => {
     setTimeLeft(90 * 60);
     setSelectedAnswer(null);
   };
-
+  const getButtonVariant = (index) => {
+    if (selectedAnswer === null) return "outline";
+    if (index === questions[currentQuestion].correct && showExplanation) return "success";
+    if (selectedAnswer === index) {
+      return answerStatus === 'correct' ? "success" : "destructive";
+    }
+    return "outline";
+  };
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <Card>
@@ -116,7 +134,7 @@ const ExamSimulator = () => {
                 </span>
                 <Progress value={(currentQuestion + 1) * 100 / questions.length} className="mt-2" />
               </div>
-              
+
               <div className="mb-4">
                 <span className="text-sm font-medium text-blue-600">
                   {questions[currentQuestion].category}
@@ -126,26 +144,39 @@ const ExamSimulator = () => {
                 </h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 mt-4">
                 {questions[currentQuestion].options.map((option, index) => (
                   <Button
                     key={index}
-                    variant={selectedAnswer === index ? "secondary" : "outline"}
+                    variant={getButtonVariant(index)}
                     className="w-full justify-start text-left"
-                    onClick={() => handleAnswerSubmit(index)}
+                    onClick={() => !showExplanation && handleAnswerSubmit(index)}
+                    disabled={showExplanation}
                   >
                     {option}
                   </Button>
                 ))}
               </div>
 
-              {selectedAnswer !== null && (
+              {showExplanation && (
+                <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded">
+                  <p className="font-medium mb-2">
+                    {answerStatus === 'correct' ? '✅ Correto!' : '❌ Incorreto!'}
+                  </p>
+                  <p className="text-sm text-gray-800">
+                    {questions[currentQuestion].explanation}
+                  </p>
+                  {selectedAnswer !== null && (
                 <div className="mt-4">
                   <Button onClick={handleNextQuestion}>
                     {currentQuestion === questions.length - 1 ? "Finalizar" : "Próxima"}
                   </Button>
                 </div>
               )}
+                </div>
+              )}
+
+             
             </div>
           )}
 
