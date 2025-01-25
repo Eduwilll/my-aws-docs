@@ -1,32 +1,80 @@
 ---
 // src/layouts/BaseLayout.astro
-import '../styles/global.css';
+import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle";
 const { title } = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} - Curso AWS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-</head>
-<body class="text-gray-800 bg-gray-50">
-    <header class="bg-aws-blue text-white py-12 px-4 sm:px-8 md:px-12 lg:px-16">
-        <div class="max-w-screen-lg mx-auto text-center">
-            <h1 class="text-4xl font-bold mb-4">Escola da Nuvem - AWS Course</h1>
-            <p class="text-lg text-gray-200">Transforme o mundo com a tecnologia</p>
-        </div>
-    </header>
-
-    <main class="max-w-screen-lg mx-auto py-12 px-4 sm:px-8 md:px-12 lg:px-16">
-        <slot />
-    </main>
-
-    <footer class="bg-aws-blue text-gray-200 py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center">
-        <p>&copy; 2024 Eduwilll. Todos os direitos reservados.</p>
-    </footer>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title} - Curso AWS</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        />
+        <script is:inline>
+            // Prevents flickering on page load
+            const theme = localStorage.getItem("theme") || "light";
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark");
+            }
+        </script>
+    </head>
+    <body class="bg-background text-foreground">
+        <header
+            class="bg-secondary py-6 px-4 sm:px-8 md:px-12 lg:px-16 shadow-md"
+        >
+            <div
+                class="max-w-screen-lg mx-auto flex justify-between items-center"
+            >
+                <h1 class="text-2xl font-bold">Escola da Nuvem</h1>
+                <nav class="flex items-center space-x-4">
+                    <ul class="flex space-x-6 mr-4">
+                        <li>
+                            <a
+                                href="/"
+                                class="hover:text-primary transition-colors"
+                                >Início</a>
+                        </li>
+                        <li>
+                            <a
+                                href="/docs"
+                                class="hover:text-primary transition-colors"
+                                >Docs</a>
+                        </li>
+                        <li>
+                            <a
+                                href="/simulador"
+                                class="hover:text-primary transition-colors"
+                                >Simulador</a>
+                        </li>
+                        <li>
+                            <a
+                                href="/about"
+                                class="hover:text-primary transition-colors"
+                                >Sobre</a>
+                        </li>
+                    </ul>
+                    <ThemeToggle client:load />
+                </nav>
+            </div>
+        </header>
+        <main
+            class="max-w-screen-lg mx-auto py-12 px-4 sm:px-8 md:px-12 lg:px-16"
+        >
+            <slot />
+        </main>
+        <footer
+            class="bg-secondary text-foreground py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
+        >
+            <p>&copy; 2024 Eduwilll. Todos os direitos reservados.</p>
+        </footer>
+    </body>
 </html>
