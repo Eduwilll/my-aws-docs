@@ -34,7 +34,7 @@ const ThemeToggle = () => {
   return (
     <button 
       onClick={toggleTheme} 
-      className="p-2 rounded-full hover:bg-secondary transition-colors"
+      className="p-2 rounded-full text-primary transition-colors"
       aria-label="Toggle Theme"
     >
       {theme === 'light' ? <Moon /> : <Sun />}

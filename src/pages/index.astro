@@ -5,8 +5,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout title="Página Inicial">
     <section class="mb-12">
-        <h2 class="text-3xl font-bold mb-6 text-blue-700">Sobre o Curso</h2>
-        <p class="mb-6 text-gray-700">
+        <h2 class="text-3xl font-bold mb-6 text-primary">Sobre o Curso</h2>
+        <p class="mb-6 text-muted-foreground">
             O curso de AWS da Escola da Nuvem é uma oportunidade incrível para aprender 
             e se desenvolver na área de tecnologia. Junte-se a nós e venha transformar 
             o mundo com a tecnologia.
@@ -20,7 +20,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </section>
 
     <section class="mb-12">
-        <h2 class="text-3xl font-bold mb-6 text-blue-700">Módulos do Curso</h2>
+        <h2 class="text-3xl font-bold mb-6 text-primary">Módulos do Curso</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
                 { title: 'Fundamentos AWS', icon: 'fa-cloud' },
@@ -30,11 +30,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 { title: 'Segurança', icon: 'fa-shield-alt' },
                 { title: 'Projetos Práticos', icon: 'fa-code' }
             ].map(module => (
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <i class={`fas ${module.icon} text-3xl text-blue-600 mb-4`}></i>
+                <div class="bg-background p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <i class={`fas ${module.icon} text-3xl text-primary mb-4`}></i>
                     <h3 class="text-xl font-semibold mb-2">{module.title}</h3>
                     <a href={`/modulos/${module.title.toLowerCase().replace(' ', '-')}`} 
-                       class="text-blue-600 hover:text-blue-800">
+                       class="text-primary hover:text-primary/80 transition-colors duration-300">
                         Saiba mais →
                     </a>
                 </div>
@@ -43,29 +43,29 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </section>
 
     <section class="mb-12">
-        <h2 class="text-3xl font-bold mb-6 text-blue-700">Redes Sociais</h2>
+        <h2 class="text-3xl font-bold mb-6 text-primary">Redes Sociais</h2>
         <ul class="flex justify-center space-x-6 mb-6">
             <li>
-                <a href="https://www.instagram.com/escola_da_nuvem/" 
-                   class="text-blue-500 hover:text-blue-700 transition-colors duration-300">
+                <a href="https://www.instagram.com/escola_da_nuvem/"  target="_blank"
+                   class="text-primary hover:text-primary/80 transition-colors duration-300">
                     <i class="fab fa-instagram text-3xl"></i>
                 </a>
             </li>
             <li>
-                <a href="https://www.facebook.com/EscolaDaNuvemOficial" 
-                   class="text-blue-500 hover:text-blue-700 transition-colors duration-300">
+                <a href="https://www.facebook.com/EscolaDaNuvemOficial"  target="_blank"
+                   class="text-primary hover:text-primary/80 transition-colors duration-300">
                     <i class="fab fa-facebook-f text-3xl"></i>
                 </a>
             </li>
             <li>
-                <a href="https://www.youtube.com/@escoladanuvem" 
-                   class="text-blue-500 hover:text-blue-700 transition-colors duration-300">
+                <a href="https://www.youtube.com/@escoladanuvem"  target="_blank"
+                   class="text-primary hover:text-primary/80 transition-colors duration-300">
                     <i class="fab fa-youtube text-3xl"></i>
                 </a>
             </li>
             <li>
-                <a href="https://www.linkedin.com/school/escola-da-nuvem/" 
-                   class="text-blue-500 hover:text-blue-700 transition-colors duration-300">
+                <a href="https://www.linkedin.com/school/escola-da-nuvem/"  target="_blank"
+                   class="text-primary hover:text-primary/80 transition-colors duration-300">
                     <i class="fab fa-linkedin-in text-3xl"></i>
                 </a>
             </li>

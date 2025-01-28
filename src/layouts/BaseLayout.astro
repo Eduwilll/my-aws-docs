@@ -2,6 +2,7 @@
 // src/layouts/BaseLayout.astro
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
+import { Github } from 'lucide-react';
 const { title } = Astro.props;
 ---
 
@@ -62,7 +63,7 @@ const { title } = Astro.props;
                                 >Sobre</a>
                         </li>
                     </ul>
-                    <ThemeToggle client:load />
+                    <ThemeToggle  client:load  />
                 </nav>
             </div>
         </header>
@@ -72,9 +73,10 @@ const { title } = Astro.props;
             <slot />
         </main>
         <footer
-            class="bg-secondary text-foreground py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
+            class="py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
         >
             <p>&copy; 2024 Eduwilll. Todos os direitos reservados.</p>
+            <Github/>
         </footer>
     </body>
 </html>

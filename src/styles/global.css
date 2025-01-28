@@ -38,7 +38,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 50%; /* Blue-700 for titles */
+    --primary: 217 91% 60%; /* Blue-700 for titles */
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
@@ -63,9 +63,9 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+  /* body {
+    @apply bg-background text-foreground; Substituido pelo tailwind.config
+  } */
 
   h1, h2 {
     @apply text-primary; /* Apply blue-700 to titles */

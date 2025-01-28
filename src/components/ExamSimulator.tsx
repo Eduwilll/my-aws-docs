@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Timer } from 'lucide-react';
@@ -89,6 +89,7 @@ const ExamSimulator = () => {
     }
     return 'outline';
   };
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
@@ -118,7 +119,10 @@ const ExamSimulator = () => {
                 <span className="text-sm text-gray-500">
                   Questão {currentQuestion + 1} de {questions.length}
                 </span>
-                <Progress value={(currentQuestion + 1) * 100 / questions.length} className="mt-2" />
+                <CardDescription>
+                  Progress: {Math.round(progress)}%
+                </CardDescription>
+                <Progress value={progress} className="mt-2" />
               </div>
 
               <div className="mb-4">
@@ -154,19 +158,19 @@ const ExamSimulator = () => {
                     <div className=" outline-8 divide-y divide-solid divide-gray-800 divide-1">
                       <div>
                         <ul>
-                        <li><strong>{correctOption?.text}</strong>: {correctOption?.explanation}</li>
+                          <li><strong>{correctOption?.text}</strong>: {correctOption?.explanation}</li>
 
                         </ul>
                       </div>
                       <div>
                         <ul>
-                        {incorrectOptions.map(option => (
-                          <li key={option.id}>
-                            <strong>{option.text}:</strong> {option.explanation}
-                          </li>
-                        ))}
+                          {incorrectOptions.map(option => (
+                            <li key={option.id}>
+                              <strong>{option.text}:</strong> {option.explanation}
+                            </li>
+                          ))}
                         </ul>
-                       
+
                       </div>
                     </div>
                   </p>
