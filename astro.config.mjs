@@ -2,8 +2,7 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 
-import vercel from "@astrojs/vercel";
-
+import vercelServerless from '@astrojs/vercel/serverless';
 export default defineConfig({
   integrations: [
     react(),
@@ -11,6 +10,6 @@ export default defineConfig({
       applyBaseStyles: false,
     }),
   ],
-  output: "server",
-  adapter: vercel(),
+  output: 'server',
+  adapter: vercelServerless(),
 });
