@@ -11,6 +11,6 @@ export default defineConfig({
       applyBaseStyles: false,
     })
   ],
-  output: 'server',
+  output: 'static',
   adapter: vercel(),
 });
