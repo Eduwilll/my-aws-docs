@@ -2,7 +2,7 @@
 // src/layouts/BaseLayout.astro
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
-import { Github } from 'lucide-react';
+import { Github, Twitter, Linkedin , Cloud } from "lucide-react";
 const { title } = Astro.props;
 ---
 
@@ -35,35 +35,52 @@ const { title } = Astro.props;
             <div
                 class="max-w-screen-lg mx-auto flex justify-between items-center"
             >
-                <h1 class="text-2xl font-bold">Escola da Nuvem</h1>
+                <div class="flex items-center space-x-4">
+                    <Cloud size={48} color="#0B64F4" />
+                    <h1 class="text-2xl font-bold">Escola da Nuvem</h1>
+                </div>
                 <nav class="flex items-center space-x-4">
                     <ul class="flex space-x-6 mr-4">
                         <li>
                             <a
                                 href="/"
                                 class="hover:text-primary transition-colors"
-                                >Início</a>
+                                >Início</a
+                            >
                         </li>
                         <li>
                             <a
                                 href="/docs"
                                 class="hover:text-primary transition-colors"
-                                >Docs</a>
+                                >Docs</a
+                            >
                         </li>
                         <li>
                             <a
                                 href="/simulador"
                                 class="hover:text-primary transition-colors"
-                                >Simulador</a>
+                                >Simulador</a
+                            >
                         </li>
                         <li>
                             <a
                                 href="/about"
                                 class="hover:text-primary transition-colors"
-                                >Sobre</a>
+                                >Sobre</a
+                            >
                         </li>
                     </ul>
-                    <ThemeToggle  client:load  />
+                    
+                    <ThemeToggle client:load />
+                    <a
+                        href="https://github.com/Eduwilll/my-aws-docs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="Repositório do GitHub"
+                    >
+                        <Github className="w-5 h-5" />
+                    </a>
                 </nav>
             </div>
         </header>
@@ -73,10 +90,52 @@ const { title } = Astro.props;
             <slot />
         </main>
         <footer
-            class="py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
-        >
-            <p>&copy; 2024 Eduwilll. Todos os direitos reservados.</p>
-            <Github/>
-        </footer>
+        class="bg-secondary py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
+    >
+        <div class="max-w-screen-lg mx-auto">
+            <div class="flex justify-center space-x-6 mb-4">
+                <a
+                    href="https://github.com/Eduwilll/my-aws-docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-muted-foreground hover:text-primary transition-colors"
+                >
+                    <Github />
+                </a>
+                <a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-muted-foreground hover:text-primary transition-colors"
+                >
+                    <Twitter  />
+                </a>
+                <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-muted-foreground hover:text-primary transition-colors"
+                >
+                    <Linkedin  />
+                </a>
+            </div>
+            <p class="text-muted-foreground">&copy; 2024 Eduwilll. Todos os direitos reservados.</p>
+            <p class="text-muted-foreground mt-2">
+                <a
+                    href="/terms"
+                    class="hover:text-primary transition-colors"
+                >
+                    Termos de Serviço
+                </a>
+                <span class="mx-2">|</span>
+                <a
+                    href="/privacy"
+                    class="hover:text-primary transition-colors"
+                >
+                    Política de Privacidade
+                </a>
+            </p>
+        </div>
+    </footer>
     </body>
 </html>
