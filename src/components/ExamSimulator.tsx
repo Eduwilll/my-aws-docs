@@ -161,27 +161,14 @@ const ExamSimulator = () => {
                     className="flex items-center space-x-2 p-1 rounded hover:bg-gray-50"
                   >
                     {currentQuestion.type === 'multiple_choice' ? (
-                      <>
-                        <div
-                          key={option.id}
-                          className="flex items-center space-x-2 p-1 rounded hover:bg-gray-50"
-                        >
-                          <Checkbox
-                            id={option.id}
-                            checked={selectedAnswers.includes(option.id)}
-                            onCheckedChange={() => !showExplanation && handleAnswerToggle(option.id)}
-                            disabled={showExplanation}
-
-                          />
-                          <label
-                            htmlFor={option.id}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {option.text}
-                          </label>
-                        </div>
-
-                      </>
+                      <Button
+                        variant={selectedAnswers.includes(option.id) ? 'default' : 'outline'}
+                        className="w-full justify-start text-left"
+                        onClick={() => !showExplanation && handleAnswerToggle(option.id)}
+                        disabled={showExplanation}
+                      >
+                        {option.text}
+                      </Button>
                     ) : (
                       <Button
                         variant={selectedAnswers.includes(option.id) ? 'default' : 'outline'}
@@ -195,7 +182,6 @@ const ExamSimulator = () => {
                   </div>
                 ))}
               </div>
-
               {!showExplanation && selectedAnswers.length > 0 && (
                 <Button
                   className="mt-4"
