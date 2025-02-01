@@ -67,7 +67,8 @@
     @apply bg-background text-foreground; Substituido pelo tailwind.config
   } */
 
-  h1, h2 {
+  h1,
+  h2 {
     @apply text-primary; /* Apply blue-700 to titles */
   }
 

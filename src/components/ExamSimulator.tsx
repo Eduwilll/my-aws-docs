@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Timer, Check } from 'lucide-react';
-import { questions } from '@/data/questions-clf-c02';
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Timer, Check } from "lucide-react";
+import { questions } from "@/data/questions-clf-c02";
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -13,25 +20,29 @@ const ExamSimulator = () => {
   const [isActive, setIsActive] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [answerStatus, setAnswerStatus] = useState<'correct' | 'incorrect' | 'partial' | null>(null);
+  const [answerStatus, setAnswerStatus] = useState<
+    "correct" | "incorrect" | "partial" | null
+  >(null);
   const [endMessage, setEndMessage] = useState<string | null>(null);
 
   // Get current question data
   const currentQuestion = questions[currentQuestionIndex];
   const currentOptions = currentQuestion.options;
-  const correctOptions = currentOptions.filter(option => option.isCorrect);
-  const incorrectOptions = currentOptions.filter(option => !option.isCorrect);
+  const correctOptions = currentOptions.filter((option) => option.isCorrect);
+  const incorrectOptions = currentOptions.filter((option) => !option.isCorrect);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft(timeLeft => timeLeft - 1);
+        setTimeLeft((timeLeft) => timeLeft - 1);
       }, 1000);
     } else if (timeLeft === 0) {
       clearInterval(interval!);
       setShowScore(true);
-      setEndMessage('O tempo acabou! Sua prova foi finalizada automaticamente.');
+      setEndMessage(
+        "O tempo acabou! Sua prova foi finalizada automaticamente.",
+      );
     }
     return () => clearInterval(interval!);
   }, [isActive, timeLeft]);
@@ -39,13 +50,13 @@ const ExamSimulator = () => {
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const handleAnswerToggle = (answerId: string) => {
-    setSelectedAnswers(prev => {
+    setSelectedAnswers((prev) => {
       if (prev.includes(answerId)) {
-        return prev.filter(id => id !== answerId);
+        return prev.filter((id) => id !== answerId);
       } else {
         return [...prev, answerId];
       }
@@ -54,25 +65,27 @@ const ExamSimulator = () => {
 
   const handleSubmitAnswers = () => {
     const correctAnswerIds = currentOptions
-      .filter(option => option.isCorrect)
-      .map(option => option.id);
+      .filter((option) => option.isCorrect)
+      .map((option) => option.id);
 
     // Check if all selected answers are correct and all correct answers are selected
-    const isFullyCorrect = selectedAnswers.length === correctAnswerIds.length &&
-      selectedAnswers.every(id => correctAnswerIds.includes(id));
+    const isFullyCorrect =
+      selectedAnswers.length === correctAnswerIds.length &&
+      selectedAnswers.every((id) => correctAnswerIds.includes(id));
 
     // Check if some answers are correct but not all
-    const hasPartialCorrect = selectedAnswers.some(id => correctAnswerIds.includes(id)) &&
+    const hasPartialCorrect =
+      selectedAnswers.some((id) => correctAnswerIds.includes(id)) &&
       !isFullyCorrect;
 
     if (isFullyCorrect) {
       setScore(score + 1);
-      setAnswerStatus('correct');
+      setAnswerStatus("correct");
     } else if (hasPartialCorrect) {
       setScore(score + 0.5);
-      setAnswerStatus('partial');
+      setAnswerStatus("partial");
     } else {
-      setAnswerStatus('incorrect');
+      setAnswerStatus("incorrect");
     }
 
     setShowExplanation(true);
@@ -88,13 +101,15 @@ const ExamSimulator = () => {
     } else {
       setShowScore(true);
       setIsActive(false);
-      setEndMessage('Parabéns! Você finalizou a prova.');
+      setEndMessage("Parabéns! Você finalizou a prova.");
     }
   };
 
   const getButtonVariant = (optionId: string) => {
     const isSelected = selectedAnswers.includes(optionId);
-    const isCorrect = currentOptions.find(option => option.id === optionId)?.isCorrect;
+    const isCorrect = currentOptions.find(
+      (option) => option.id === optionId,
+    )?.isCorrect;
 
     if (!showExplanation) {
       return isSelected ? "default" : "outline";
@@ -163,7 +178,7 @@ const ExamSimulator = () => {
                 <h3 className="text-lg font-medium mt-2">
                   {currentQuestion.text}
                 </h3>
-                {currentQuestion.type === 'multiple_choice' && (
+                {currentQuestion.type === "multiple_choice" && (
                   <p className="text-sm text-gray-500 mt-1">
                     (Selecione todas as opções corretas)
                   </p>
@@ -176,11 +191,13 @@ const ExamSimulator = () => {
                     key={option.id}
                     className="flex items-center space-x-2 p-1 rounded hover:bg-gray-50"
                   >
-                    {currentQuestion.type === 'multiple_choice' ? (
+                    {currentQuestion.type === "multiple_choice" ? (
                       <Button
                         variant={getButtonVariant(option.id)}
                         className="w-full justify-start text-left"
-                        onClick={() => !showExplanation && handleAnswerToggle(option.id)}
+                        onClick={() =>
+                          !showExplanation && handleAnswerToggle(option.id)
+                        }
                         disabled={showExplanation}
                       >
                         {option.text}
@@ -189,7 +206,9 @@ const ExamSimulator = () => {
                       <Button
                         variant={getButtonVariant(option.id)}
                         className="w-full justify-start text-left"
-                        onClick={() => !showExplanation && setSelectedAnswers([option.id])}
+                        onClick={() =>
+                          !showExplanation && setSelectedAnswers([option.id])
+                        }
                         disabled={showExplanation}
                       >
                         {option.text}
@@ -199,10 +218,7 @@ const ExamSimulator = () => {
                 ))}
               </div>
               {!showExplanation && selectedAnswers.length > 0 && (
-                <Button
-                  className="mt-4"
-                  onClick={handleSubmitAnswers}
-                >
+                <Button className="mt-4" onClick={handleSubmitAnswers}>
                   Verificar Resposta
                 </Button>
               )}
@@ -210,21 +226,25 @@ const ExamSimulator = () => {
               {showExplanation && (
                 <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded">
                   <p className="font-medium mb-2">
-                    {answerStatus === 'correct' && '✅ Correto!'}
-                    {answerStatus === 'partial' && '⚠️ Parcialmente Correto!'}
-                    {answerStatus === 'incorrect' && '❌ Incorreto!'}
+                    {answerStatus === "correct" && "✅ Correto!"}
+                    {answerStatus === "partial" && "⚠️ Parcialmente Correto!"}
+                    {answerStatus === "incorrect" && "❌ Incorreto!"}
                   </p>
 
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-green-600 font-bold mb-2">Respostas Corretas:</h3>
+                      <h3 className="text-green-600 font-bold mb-2">
+                        Respostas Corretas:
+                      </h3>
                       <ul className="space-y-2">
-                        {correctOptions.map(option => (
+                        {correctOptions.map((option) => (
                           <li key={option.id} className="flex items-start">
                             <Check className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-1" />
                             <div>
                               <strong>{option.text}</strong>
-                              <p className="text-sm text-gray-700">{option.explanation}</p>
+                              <p className="text-sm text-gray-700">
+                                {option.explanation}
+                              </p>
                             </div>
                           </li>
                         ))}
@@ -232,12 +252,16 @@ const ExamSimulator = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-red-600 font-bold mb-2">Explicação das outras opções:</h3>
+                      <h3 className="text-red-600 font-bold mb-2">
+                        Explicação das outras opções:
+                      </h3>
                       <ul className="space-y-2">
-                        {incorrectOptions.map(option => (
+                        {incorrectOptions.map((option) => (
                           <li key={option.id}>
                             <strong>{option.text}:</strong>
-                            <p className="text-sm text-gray-700">{option.explanation}</p>
+                            <p className="text-sm text-gray-700">
+                              {option.explanation}
+                            </p>
                           </li>
                         ))}
                       </ul>
@@ -245,7 +269,9 @@ const ExamSimulator = () => {
                   </div>
 
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Referências:</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Referências:
+                    </h4>
                     <ul className="space-y-1">
                       {currentQuestion.references.map((reference, index) => (
                         <li key={index}>
@@ -263,7 +289,9 @@ const ExamSimulator = () => {
                   </div>
 
                   <Button onClick={handleNextQuestion} className="mt-4">
-                    {currentQuestionIndex === questions.length - 1 ? "Finalizar" : "Próxima"}
+                    {currentQuestionIndex === questions.length - 1
+                      ? "Finalizar"
+                      : "Próxima"}
                   </Button>
                 </div>
               )}
@@ -277,8 +305,8 @@ const ExamSimulator = () => {
                 <p className="text-lg text-gray-700 mb-4">{endMessage}</p>
               )}
               <p className="text-xl mb-4">
-                Você acertou {score} de {questions.length} questões
-                ({Math.round((score / questions.length) * 100)}%)
+                Você acertou {score} de {questions.length} questões (
+                {Math.round((score / questions.length) * 100)}%)
               </p>
               <Button onClick={startExam}>Tentar Novamente</Button>
             </div>
