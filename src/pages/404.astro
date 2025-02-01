@@ -1,31 +1,34 @@
 ---
 // src/pages/404.astro
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { Home } from 'lucide-react';
+import { Home } from "lucide-react";
 ---
 
 <BaseLayout title="Página não encontrada">
-    <main class="flex flex-col items-center justify-center flex-grow text-center px-4">
-        <div class="max-w-2xl mx-auto">
-            <img
-                src="/images/undraw_quiet-street_v45k.svg"
-                alt="Ilustração 404"
-                class="w-84 h-64 mx-auto mb-8"
-            />
-            <!-- Título -->
-            <h1 class="text-6xl font-bold text-primary mb-4">404</h1>
-            <!-- Mensagem -->
-            <p class="text-2xl text-muted-foreground mb-8">
-                Oops! A página que você está procurando não foi encontrada ou está sendo trabalhada neste momento.
-            </p>
-            <!-- Botão de voltar -->
-            <a
-                href="/"
-                class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-            >
-                <Home />
-                Voltar à página inicial
-            </a>
-        </div>
-    </main>
+  <main
+    class="flex flex-col items-center justify-center flex-grow text-center px-4"
+  >
+    <div class="max-w-2xl mx-auto">
+      <img
+        src="/images/undraw_quiet-street_v45k.svg"
+        alt="Ilustração 404"
+        class="w-84 h-64 mx-auto mb-8"
+      />
+      <!-- Título -->
+      <h1 class="text-6xl font-bold text-primary mb-4">404</h1>
+      <!-- Mensagem -->
+      <p class="text-2xl text-muted-foreground mb-8">
+        Oops! A página que você está procurando não foi encontrada ou está sendo
+        trabalhada neste momento.
+      </p>
+      <!-- Botão de voltar -->
+      <a
+        href="/"
+        class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        <Home />
+        Voltar à página inicial
+      </a>
+    </div>
+  </main>
 </BaseLayout>

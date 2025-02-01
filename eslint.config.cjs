@@ -1,14 +1,10 @@
 module.exports = {
-  extends: [
-    "eslint:recommended",
-    "plugin:astro/recommended",
-    "prettier"
-  ],
+  extends: ["eslint:recommended", "plugin:astro/recommended", "prettier"],
   parserOptions: {
     ecmaVersion: "latest",
-    sourceType: "module"
+    sourceType: "module",
   },
   rules: {
-    "no-console": "warn"
-  }
+    "no-console": "warn",
+  },
 };
