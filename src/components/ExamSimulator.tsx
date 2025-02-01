@@ -3,8 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Timer, Check } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { questions } from '@/data/questions';
+import { questions } from '@/data/questions-clf-c02';
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);

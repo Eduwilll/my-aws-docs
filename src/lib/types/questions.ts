@@ -21,9 +21,21 @@ export interface Question {
     | 'security-and-compliance'
     | 'technology'
     | 'billing-and-pricing'
-    | 'architecture-design';
-  
-  export type ExamDominion = 'Dominion 1'|'Dominion 2'|'Dominion 3'|'Dominion 4';
+    | 'architecture-design'
+    | 'deployment'
+    | 'networking'
+    | 'management'
+    | 'security'
+    | 'monitoring'
+    | 'storage'
+    | 'database'
+    | 'compute'
+    | 'infrastructure'
+    | 'developer_tools'
+    | 'analytics'
+    | 'application_integration'
+
+  export type ExamDominion = 'Domínio 1: Conceitos de Nuvem'|'Domínio 2: Segurança e Conformidade'|'Domínio 3: Tecnologia'|'Domínio 4: Faturamento e Preços';
   export type typeChoice = 'single_choice' | 'multiple_choice';
 
   export interface SimulatedExam {
