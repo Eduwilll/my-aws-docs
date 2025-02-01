@@ -93,6 +93,23 @@ const ExamSimulator = () => {
     }
   };
 
+  const getButtonVariant = (optionId: string) => {
+    const isSelected = selectedAnswers.includes(optionId);
+    const isCorrect = currentOptions.find(option => option.id === optionId)?.isCorrect;
+
+    if (!showExplanation) {
+      return isSelected ? "default" : "outline";
+    } else {
+      if (isCorrect) {
+        return "success";
+      } else if (isSelected && !isCorrect) {
+        return "destructive";
+      } else {
+        return "outline";
+      }
+    }
+  };
+
   const startExam = () => {
     setIsActive(true);
     setCurrentQuestionIndex(0);
@@ -162,7 +179,7 @@ const ExamSimulator = () => {
                   >
                     {currentQuestion.type === 'multiple_choice' ? (
                       <Button
-                        variant={selectedAnswers.includes(option.id) ? 'default' : 'outline'}
+                        variant={getButtonVariant(option.id)}
                         className="w-full justify-start text-left"
                         onClick={() => !showExplanation && handleAnswerToggle(option.id)}
                         disabled={showExplanation}
@@ -171,7 +188,7 @@ const ExamSimulator = () => {
                       </Button>
                     ) : (
                       <Button
-                        variant={selectedAnswers.includes(option.id) ? 'default' : 'outline'}
+                        variant={getButtonVariant(option.id)}
                         className="w-full justify-start text-left"
                         onClick={() => !showExplanation && setSelectedAnswers([option.id])}
                         disabled={showExplanation}
