@@ -11,7 +11,7 @@ export interface Question {
   }[];
   // explanation: string;
   category: ExamCategory;
-  dominio: ExamDominion;
+  dominio: ExamDominionKey;
   difficulty: "easy" | "medium" | "hard";
   references: string[];
 }
@@ -33,13 +33,23 @@ export type ExamCategory =
   | "infrastructure"
   | "developer_tools"
   | "analytics"
-  | "application_integration";
+  | "application_integration"
+  | "machine-learning"
+  | "devops"
+  | "serverless"
+  | "containers";
 
-export type ExamDominion =
-  | "Domínio 1: Conceitos de Nuvem"
-  | "Domínio 2: Segurança e Conformidade"
-  | "Domínio 3: Tecnologia"
-  | "Domínio 4: Faturamento e Preços";
+export type ExamDominion = "DOMAIN_1" | "DOMAIN_2" | "DOMAIN_3" | "DOMAIN_4";
+
+export const ExamDominionMap = {
+  DOMAIN_1: "DOMAIN_1",
+  DOMAIN_2: "DOMAIN_2",
+  DOMAIN_3: "DOMAIN_3",
+  DOMAIN_4: "DOMAIN_4",
+} as const;
+
+export type ExamDominionKey = keyof typeof ExamDominionMap;
+
 export type typeChoice = "single_choice" | "multiple_choice";
 
 export interface SimulatedExam {
