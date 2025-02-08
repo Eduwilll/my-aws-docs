@@ -197,7 +197,7 @@ const ExamSimulator = () => {
                     <SelectItem value="CLF-C02-01">
                       Simulado CLF-C02-01 (65 questões)
                     </SelectItem>
-                    <SelectItem value="CLF-C02-FULL">
+                    <SelectItem value="CLF-C02-FULL-NOGPT">
                       Simulado Completo (130 questões)
                     </SelectItem>
                   </SelectContent>
