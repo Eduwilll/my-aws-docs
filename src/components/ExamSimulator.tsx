@@ -3,14 +3,23 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Timer, Check } from "lucide-react";
 import { questions } from "@/data/questions-clf-c02";
+import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
+import { GPTquestions } from "@/data/questions";
+import type { Question } from "@/lib/types/questions";
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -24,10 +33,20 @@ const ExamSimulator = () => {
     "correct" | "incorrect" | "partial" | null
   >(null);
   const [endMessage, setEndMessage] = useState<string | null>(null);
+  const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string>("");
+
+  const simulados = {
+    "CLF-C02": questions,
+    "CLF-C02-01": questionsClfC0201,
+    "CLF-C02-GPT": GPTquestions,
+    "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
+  };
 
   // Get current question data
-  const currentQuestion = questions[currentQuestionIndex];
-  const currentOptions = currentQuestion.options;
+  const currentQuestion =
+    selectedSimulado[currentQuestionIndex] || selectedSimulado[0];
+  const currentOptions = currentQuestion?.options || [];
   const correctOptions = currentOptions.filter((option) => option.isCorrect);
   const incorrectOptions = currentOptions.filter((option) => !option.isCorrect);
 
@@ -68,12 +87,10 @@ const ExamSimulator = () => {
       .filter((option) => option.isCorrect)
       .map((option) => option.id);
 
-    // Check if all selected answers are correct and all correct answers are selected
     const isFullyCorrect =
       selectedAnswers.length === correctAnswerIds.length &&
       selectedAnswers.every((id) => correctAnswerIds.includes(id));
 
-    // Check if some answers are correct but not all
     const hasPartialCorrect =
       selectedAnswers.some((id) => correctAnswerIds.includes(id)) &&
       !isFullyCorrect;
@@ -96,7 +113,7 @@ const ExamSimulator = () => {
     setAnswerStatus(null);
     setSelectedAnswers([]);
 
-    if (currentQuestionIndex + 1 < questions.length) {
+    if (currentQuestionIndex + 1 < selectedSimulado.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       setShowScore(true);
@@ -124,7 +141,17 @@ const ExamSimulator = () => {
     }
   };
 
+  const handleExamSelection = (examId: string) => {
+    console.log("examId:" + examId);
+    setSelectedExamId(examId);
+    setSelectedSimulado(simulados[examId as keyof typeof simulados]);
+  };
+
   const startExam = () => {
+    if (!selectedExamId) {
+      alert("Por favor, selecione um simulado antes de começar.");
+      return;
+    }
     setIsActive(true);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -135,7 +162,7 @@ const ExamSimulator = () => {
     setEndMessage(null);
   };
 
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
@@ -153,17 +180,45 @@ const ExamSimulator = () => {
         </CardHeader>
         <CardContent>
           {!isActive && !showScore && (
-            <div className="text-center">
+            <div className="text-center space-y-4">
               <h2 className="text-xl mb-4">Bem-vindo ao Simulador CLF-C02</h2>
-              <Button onClick={startExam}>Iniciar Simulado</Button>
+              <div className="flex flex-col items-center gap-4">
+                <Select
+                  onValueChange={handleExamSelection}
+                  value={selectedExamId}
+                >
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Escolha o simulado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CLF-C02">
+                      Simulado CLF-C02 (65 questões)
+                    </SelectItem>
+                    <SelectItem value="CLF-C02-01">
+                      Simulado CLF-C02-01 (65 questões)
+                    </SelectItem>
+                    <SelectItem value="CLF-C02-FULL">
+                      Simulado Completo (130 questões)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={startExam}
+                  disabled={!selectedExamId}
+                  className="w-[280px]"
+                >
+                  Iniciar Simulado
+                </Button>
+              </div>
             </div>
           )}
 
-          {isActive && !showScore && (
+          {isActive && !showScore && currentQuestion && (
             <div>
               <div className="mb-4">
                 <span className="text-sm text-gray-500">
-                  Questão {currentQuestionIndex + 1} de {questions.length}
+                  Questão {currentQuestionIndex + 1} de{" "}
+                  {selectedSimulado.length}
                 </span>
                 <CardDescription>
                   Progress: {Math.round(progress)}%
@@ -191,32 +246,23 @@ const ExamSimulator = () => {
                     key={option.id}
                     className="flex items-center space-x-2 p-1 rounded hover:bg-gray-50"
                   >
-                    {currentQuestion.type === "multiple_choice" ? (
-                      <Button
-                        variant={getButtonVariant(option.id)}
-                        className="w-full justify-start text-left"
-                        onClick={() =>
-                          !showExplanation && handleAnswerToggle(option.id)
-                        }
-                        disabled={showExplanation}
-                      >
-                        {option.text}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant={getButtonVariant(option.id)}
-                        className="w-full justify-start text-left"
-                        onClick={() =>
-                          !showExplanation && setSelectedAnswers([option.id])
-                        }
-                        disabled={showExplanation}
-                      >
-                        {option.text}
-                      </Button>
-                    )}
+                    <Button
+                      variant={getButtonVariant(option.id)}
+                      className="w-full justify-start text-left"
+                      onClick={() =>
+                        !showExplanation &&
+                        (currentQuestion.type === "multiple_choice"
+                          ? handleAnswerToggle(option.id)
+                          : setSelectedAnswers([option.id]))
+                      }
+                      disabled={showExplanation}
+                    >
+                      {option.text}
+                    </Button>
                   </div>
                 ))}
               </div>
+
               {!showExplanation && selectedAnswers.length > 0 && (
                 <Button className="mt-4" onClick={handleSubmitAnswers}>
                   Verificar Resposta
@@ -288,8 +334,12 @@ const ExamSimulator = () => {
                     </ul>
                   </div>
 
-                  <Button onClick={handleNextQuestion} className="mt-4">
-                    {currentQuestionIndex === questions.length - 1
+                  <Button
+                    onClick={handleNextQuestion}
+                    className="mt-4"
+                    variant={answerStatus === "correct" ? "success" : "default"}
+                  >
+                    {currentQuestionIndex === selectedSimulado.length - 1
                       ? "Finalizar"
                       : "Próxima"}
                   </Button>
@@ -305,8 +355,8 @@ const ExamSimulator = () => {
                 <p className="text-lg text-gray-700 mb-4">{endMessage}</p>
               )}
               <p className="text-xl mb-4">
-                Você acertou {score} de {questions.length} questões (
-                {Math.round((score / questions.length) * 100)}%)
+                Você acertou {score} de {selectedSimulado.length} questões (
+                {Math.round((score / selectedSimulado.length) * 100)}%)
               </p>
               <Button onClick={startExam}>Tentar Novamente</Button>
             </div>

@@ -1,6 +1,6 @@
 import type { Question } from "../lib/types/questions";
 
-export const questions: Question[] = [
+export const GPTquestions: Question[] = [
   {
     id: "q1",
     type: "single_choice",
