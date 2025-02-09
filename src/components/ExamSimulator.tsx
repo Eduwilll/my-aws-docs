@@ -19,6 +19,7 @@ import { Timer, Check } from "lucide-react";
 import { questions } from "@/data/questions-clf-c02";
 import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
+import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
 import type { Question } from "@/lib/types/questions";
 
 const ExamSimulator = () => {
@@ -39,6 +40,7 @@ const ExamSimulator = () => {
   const simulados = {
     "CLF-C02": questions,
     "CLF-C02-01": questionsClfC0201,
+    "CLF-C02-02": questionsClfC0202,
     "CLF-C02-GPT": GPTquestions,
     "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
   };
@@ -196,6 +198,9 @@ const ExamSimulator = () => {
                     </SelectItem>
                     <SelectItem value="CLF-C02-01">
                       Simulado CLF-C02-01 (65 questões)
+                    </SelectItem>
+                    <SelectItem value="CLF-C02-02">
+                      Simulado CLF-C02-02 (65 questões)
                     </SelectItem>
                     <SelectItem value="CLF-C02-FULL-NOGPT">
                       Simulado Completo (130 questões)

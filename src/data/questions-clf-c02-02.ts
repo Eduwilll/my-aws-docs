@@ -1,6 +1,6 @@
 import type { Question } from "../lib/types/questions";
 
-const questionsClfC0202: Question[] = [
+export const questionsClfC0202: Question[] = [
   {
     id: "CLF-C02-02-01",
     text: "Um engenheiro de rede precisa construir uma arquitetura de nuvem híbrida conectando redes locais à Nuvem AWS usando o AWS Direct Connect. A empresa possui algumas VPCs em uma única região da AWS e espera aumentar o número de VPCs para centenas ao longo do tempo. Qual serviço ou recurso da AWS o engenheiro deve usar para simplificar e dimensionar essa conectividade à medida que o número de VPCs aumenta?",
