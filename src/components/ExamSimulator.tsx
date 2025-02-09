@@ -253,7 +253,7 @@ const ExamSimulator = () => {
                   >
                     <Button
                       variant={getButtonVariant(option.id)}
-                      className="w-full justify-start text-left"
+                      className="w-full justify-start text-left size-full"
                       onClick={() =>
                         !showExplanation &&
                         (currentQuestion.type === "multiple_choice"
