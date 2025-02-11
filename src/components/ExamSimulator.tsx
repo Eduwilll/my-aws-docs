@@ -15,13 +15,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Timer, Check } from "lucide-react";
+import { Timer, Check, ChevronRight, RotateCcw, Award } from "lucide-react";
 import { questions } from "@/data/questions-clf-c02";
 import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
 import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
 import type { Question } from "@/lib/types/questions";
-
+import { Separator } from "@radix-ui/react-select";
+import { Badge } from "@/components/ui/badge";
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -167,93 +168,111 @@ const ExamSimulator = () => {
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>AWS Cloud Practitioner Simulator</span>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <Card className="border-none shadow-lg">
+          <CardHeader className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  AWS Cloud Practitioner
+                </CardTitle>
+                <CardDescription>
+                  Official Practice Exam Simulator
+                </CardDescription>
+              </div>
+              {isActive && (
+                <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
+                  <Timer className="w-4 h-4" />
+                  <span className="font-mono font-medium">
+                    {formatTime(timeLeft)}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {isActive && (
-              <div className="flex items-center gap-2">
-                <Timer className="w-5 h-5" />
-                <span>{formatTime(timeLeft)}</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-sm">
+                    Question {currentQuestionIndex + 1} of{" "}
+                    {selectedSimulado.length}
+                  </Badge>
+                  <Badge variant="secondary" className="text-sm">
+                    {currentQuestion.category}
+                  </Badge>
+                </div>
+                <Progress value={progress} className="h-2" />
               </div>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!isActive && !showScore && (
-            <div className="text-center space-y-4">
-              <h2 className="text-xl mb-4">Bem-vindo ao Simulador CLF-C02</h2>
-              <div className="flex flex-col items-center gap-4">
-                <Select
-                  onValueChange={handleExamSelection}
-                  value={selectedExamId}
-                >
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Escolha o simulado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CLF-C02">
-                      Simulado CLF-C02 (65 questões)
-                    </SelectItem>
-                    <SelectItem value="CLF-C02-01">
-                      Simulado CLF-C02-01 (65 questões)
-                    </SelectItem>
-                    <SelectItem value="CLF-C02-02">
-                      Simulado CLF-C02-02 (65 questões)
-                    </SelectItem>
-                    <SelectItem value="CLF-C02-FULL-NOGPT">
-                      Simulado Completo (130 questões)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={startExam}
-                  disabled={!selectedExamId}
-                  className="w-[280px]"
-                >
-                  Iniciar Simulado
-                </Button>
-              </div>
-            </div>
-          )}
+          </CardHeader>
 
-          {isActive && !showScore && currentQuestion && (
-            <div>
-              <div className="mb-4">
-                <span className="text-sm text-gray-500">
-                  Questão {currentQuestionIndex + 1} de{" "}
-                  {selectedSimulado.length}
-                </span>
-                <CardDescription>
-                  Progress: {Math.round(progress)}%
-                </CardDescription>
-                <Progress value={progress} className="mt-2" />
-              </div>
-
-              <div className="mb-4">
-                <span className="text-sm font-medium text-blue-600">
-                  {currentQuestion.category}, ID: {currentQuestion.id}
-                </span>
-                <h3 className="text-lg font-medium mt-2">
-                  {currentQuestion.text}
-                </h3>
-                {currentQuestion.type === "multiple_choice" && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    (Selecione todas as opções corretas)
+          <CardContent className="p-6">
+            {!isActive && !showScore && (
+              <div className="space-y-8 py-8">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-bold">
+                    Welcome to CLF-C02 Simulator
+                  </h2>
+                  <p className="text-gray-500">
+                    Choose your exam and start practicing
                   </p>
-                )}
-              </div>
+                </div>
 
-              <div className="space-y-3 mt-4">
-                {currentOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    className="flex items-center space-x-2 p-1 rounded hover:bg-gray-50"
+                <div className="max-w-sm mx-auto space-y-4">
+                  <Select
+                    onValueChange={handleExamSelection}
+                    value={selectedExamId}
                   >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select your exam" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CLF-C02">
+                        CLF-C02 Exam (65 questions)
+                      </SelectItem>
+                      <SelectItem value="CLF-C02-01">
+                        CLF-C02-01 Exam (65 questions)
+                      </SelectItem>
+                      <SelectItem value="CLF-C02-02">
+                        CLF-C02-02 Exam (65 questions)
+                      </SelectItem>
+                      <SelectItem value="CLF-C02-FULL-NOGPT">
+                        Complete Exam (130 questions)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    onClick={startExam}
+                    disabled={!selectedExamId}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                  >
+                    Start Exam
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {isActive && !showScore && currentQuestion && (
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {currentQuestion.text}
+                  </h3>
+                  {currentQuestion.type === "multiple_choice" && (
+                    <p className="text-sm text-blue-600 mt-2 font-medium">
+                      Select all correct options
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {currentOptions.map((option) => (
                     <Button
+                      key={option.id}
                       variant={getButtonVariant(option.id)}
-                      className="w-full justify-start text-left size-full"
+                      className="w-full justify-start text-left p-4 h-auto whitespace-normal"
                       onClick={() =>
                         !showExplanation &&
                         (currentQuestion.type === "multiple_choice"
@@ -264,110 +283,145 @@ const ExamSimulator = () => {
                     >
                       {option.text}
                     </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {!showExplanation && selectedAnswers.length > 0 && (
-                <Button className="mt-4" onClick={handleSubmitAnswers}>
-                  Verificar Resposta
-                </Button>
-              )}
+                {!showExplanation && selectedAnswers.length > 0 && (
+                  <Button
+                    onClick={handleSubmitAnswers}
+                    className="w-full sm:w-auto"
+                  >
+                    Check Answer
+                  </Button>
+                )}
 
-              {showExplanation && (
-                <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded">
-                  <p className="font-medium mb-2">
-                    {answerStatus === "correct" && "✅ Correto!"}
-                    {answerStatus === "partial" && "⚠️ Parcialmente Correto!"}
-                    {answerStatus === "incorrect" && "❌ Incorreto!"}
-                  </p>
+                {showExplanation && (
+                  <div className="space-y-6 bg-gray-50 p-6 rounded-lg border">
+                    <div className="flex items-center gap-2">
+                      {answerStatus === "correct" && (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                          Correct Answer
+                        </Badge>
+                      )}
+                      {answerStatus === "partial" && (
+                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                          Partially Correct
+                        </Badge>
+                      )}
+                      {answerStatus === "incorrect" && (
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                          Incorrect Answer
+                        </Badge>
+                      )}
+                    </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-green-600 font-bold mb-2">
-                        Respostas Corretas:
-                      </h3>
-                      <ul className="space-y-2">
-                        {correctOptions.map((option) => (
-                          <li key={option.id} className="flex items-start">
-                            <Check className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-1" />
-                            <div>
-                              <strong>{option.text}</strong>
-                              <p className="text-sm text-gray-700">
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-green-700">
+                          Correct Answers:
+                        </h3>
+                        <ul className="space-y-3">
+                          {correctOptions.map((option) => (
+                            <li key={option.id} className="flex gap-3">
+                              <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
+                              <div>
+                                <p className="font-medium">{option.text}</p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {option.explanation}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-red-700">
+                          Other Options Explained:
+                        </h3>
+                        <ul className="space-y-3">
+                          {incorrectOptions.map((option) => (
+                            <li key={option.id} className="space-y-1">
+                              <p className="font-medium">{option.text}</p>
+                              <p className="text-sm text-gray-600">
                                 {option.explanation}
                               </p>
-                            </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-700">References:</h4>
+                      <ul className="space-y-1">
+                        {currentQuestion.references.map((reference, index) => (
+                          <li key={index}>
+                            <a
+                              href={reference}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm"
+                            >
+                              {reference}
+                            </a>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div>
-                      <h3 className="text-red-600 font-bold mb-2">
-                        Explicação das outras opções:
-                      </h3>
-                      <ul className="space-y-2">
-                        {incorrectOptions.map((option) => (
-                          <li key={option.id}>
-                            <strong>{option.text}:</strong>
-                            <p className="text-sm text-gray-700">
-                              {option.explanation}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <Button
+                      onClick={handleNextQuestion}
+                      className="w-full sm:w-auto"
+                      variant={
+                        answerStatus === "correct" ? "default" : "secondary"
+                      }
+                    >
+                      {currentQuestionIndex === selectedSimulado.length - 1 ? (
+                        "Finish Exam"
+                      ) : (
+                        <>
+                          Next Question
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
                   </div>
+                )}
+              </div>
+            )}
 
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Referências:
-                    </h4>
-                    <ul className="space-y-1">
-                      {currentQuestion.references.map((reference, index) => (
-                        <li key={index}>
-                          <a
-                            href={reference}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
-                          >
-                            {reference}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <Button
-                    onClick={handleNextQuestion}
-                    className="mt-4"
-                    variant={answerStatus === "correct" ? "success" : "default"}
-                  >
-                    {currentQuestionIndex === selectedSimulado.length - 1
-                      ? "Finalizar"
-                      : "Próxima"}
-                  </Button>
+            {showScore && (
+              <div className="text-center space-y-6 py-8">
+                <div className="inline-flex p-4 bg-blue-50 rounded-full">
+                  <Award className="w-12 h-12 text-blue-600" />
                 </div>
-              )}
-            </div>
-          )}
 
-          {showScore && (
-            <div className="text-center">
-              <h2 className="text-2xl mb-4">Resultado do Simulado</h2>
-              {endMessage && (
-                <p className="text-lg text-gray-700 mb-4">{endMessage}</p>
-              )}
-              <p className="text-xl mb-4">
-                Você acertou {score} de {selectedSimulado.length} questões (
-                {Math.round((score / selectedSimulado.length) * 100)}%)
-              </p>
-              <Button onClick={startExam}>Tentar Novamente</Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold">Exam Complete!</h2>
+                  {endMessage && <p className="text-gray-600">{endMessage}</p>}
+                </div>
+
+                <div className="max-w-xs mx-auto p-6 bg-gray-50 rounded-lg">
+                  <div className="text-4xl font-bold text-blue-600">
+                    {Math.round((score / selectedSimulado.length) * 100)}%
+                  </div>
+                  <p className="text-gray-600 mt-2">
+                    {score} correct out of {selectedSimulado.length} questions
+                  </p>
+                </div>
+
+                <Button onClick={startExam} className="gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Try Again
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
