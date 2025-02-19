@@ -1,0 +1,148 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Sobre - Meu Aprendizado AWS">
+  <div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-4xl font-bold mb-8 text-primary">Sobre o Projeto</h1>
+
+    <div class="space-y-8">
+      <!-- Descrição Geral -->
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Descrição Geral</h2>
+        <p class="text-muted-foreground mb-4">
+          Este site foi criado para documentar meu estudo e auxiliar no
+          desenvolvimento e aprendizado na Nuvem AWS. O foco principal está nos
+          cursos ministrados pela Escola da Nuvem e na preparação para os exames
+          AWS CLF-C02, incluindo a implementação de um simulador de provas para
+          ajudar outros estudantes.
+        </p>
+        <p class="text-muted-foreground">
+          O projeto nasceu da necessidade de organizar o conhecimento adquirido
+          durante meus estudos e, ao mesmo tempo, criar uma ferramenta útil para
+          a comunidade de estudantes AWS.
+        </p>
+      </section>
+
+      <!-- Missão, Visão e Valores -->
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Missão, Visão e Valores</h2>
+        <div class="grid gap-6">
+          <div class="border-l-4 border-primary pl-4">
+            <h3 class="text-xl font-medium mb-2">Missão</h3>
+            <p class="text-muted-foreground">
+              Compartilhar conhecimento e experiências adquiridas no estudo da
+              AWS, tornando o aprendizado mais acessível e prático para todos.
+            </p>
+          </div>
+          <div class="border-l-4 border-primary pl-4">
+            <h3 class="text-xl font-medium mb-2">Visão</h3>
+            <p class="text-muted-foreground">
+              Criar uma comunidade ativa de aprendizado e troca de informações
+              sobre AWS, contribuindo para o desenvolvimento profissional de
+              pessoas interessadas em cloud computing.
+            </p>
+          </div>
+          <div class="border-l-4 border-primary pl-4">
+            <h3 class="text-xl font-medium mb-2">Valores</h3>
+            <ul class="list-disc list-inside text-muted-foreground space-y-2">
+              <li>Educação contínua e autodesenvolvimento</li>
+              <li>Colaboração e compartilhamento de conhecimento</li>
+              <li>Acessibilidade ao conhecimento técnico</li>
+              <li>Excelência e qualidade no conteúdo</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diferenciais e Impacto -->
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Diferenciais e Impacto</h2>
+        <div class="space-y-4">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <div>
+              <h3 class="font-medium">Simulador AWS CLF-C02</h3>
+              <p class="text-muted-foreground">
+                Ferramenta prática para preparação do exame de certificação
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <div>
+              <h3 class="font-medium">Conteúdo Estruturado</h3>
+              <p class="text-muted-foreground">
+                Material organizado por módulos e tópicos específicos
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <div>
+              <h3 class="font-medium">Experiência Prática</h3>
+              <p class="text-muted-foreground">
+                Exemplos reais e casos de uso baseados em experiência própria
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contato e Redes Sociais -->
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Contato e Redes Sociais</h2>
+        <p class="text-muted-foreground mb-4">
+          Entre em contato ou acompanhe as novidades através dos seguintes
+          canais:
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a
+            href="https://www.linkedin.com/in/eduardo-fabricio-goza/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors duration-300"
+          >
+            <i class="fab fa-linkedin text-xl"></i>
+            <span>LinkedIn</span>
+          </a>
+          <a
+            href="https://github.com/Eduwilll/my-aws-docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors duration-300"
+          >
+            <i class="fab fa-github text-xl"></i>
+            <span>GitHub</span>
+          </a>
+          <a
+            href="https://discord.gg/bXq4gsCk"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors duration-300"
+          >
+            <i class="fab fa-discord text-xl"></i>
+            <span>Discord</span>
+          </a>
+          <a
+            href="mailto:eduwill100@gmail.com"
+            class="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors duration-300"
+          >
+            <i class="fas fa-envelope text-xl"></i>
+            <span>Email</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div class="mt-8">
+      <a
+        href="/"
+        class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>
+        Voltar para Página Inicial
+      </a>
+    </div>
+  </div>
+</BaseLayout>
