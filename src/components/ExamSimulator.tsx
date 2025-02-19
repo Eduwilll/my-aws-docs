@@ -178,7 +178,7 @@ const ExamSimulator = () => {
                   AWS Cloud Practitioner
                 </CardTitle>
                 <CardDescription>
-                  Official Practice Exam Simulator
+                  Exame Simulado para o certificado AWS Cloud Practitioner
                 </CardDescription>
               </div>
               {isActive && (
@@ -195,7 +195,7 @@ const ExamSimulator = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-sm">
-                    Question {currentQuestionIndex + 1} of{" "}
+                    Questão {currentQuestionIndex + 1} de{" "}
                     {selectedSimulado.length}
                   </Badge>
                   <Badge variant="secondary" className="text-sm">
@@ -212,10 +212,10 @@ const ExamSimulator = () => {
               <div className="space-y-8 py-8">
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-bold">
-                    Welcome to CLF-C02 Simulator
+                    Bem-vindo ao Simulador de Exame da AWS
                   </h2>
                   <p className="text-gray-500">
-                    Choose your exam and start practicing
+                    Escolha seu exame e comece a praticar
                   </p>
                 </div>
 
@@ -225,20 +225,20 @@ const ExamSimulator = () => {
                     value={selectedExamId}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select your exam" />
+                      <SelectValue placeholder="Selecione seu exame" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="CLF-C02">
-                        CLF-C02 Exam (65 questions)
+                        Exame CLF-C02 (65 questões)
                       </SelectItem>
                       <SelectItem value="CLF-C02-01">
-                        CLF-C02-01 Exam (65 questions)
+                        Exame CLF-C02-01 (65 questões)
                       </SelectItem>
                       <SelectItem value="CLF-C02-02">
-                        CLF-C02-02 Exam (65 questions)
+                        Exame CLF-C02-02 (65 questões)
                       </SelectItem>
                       <SelectItem value="CLF-C02-FULL-NOGPT">
-                        Complete Exam (130 questions)
+                        Exame Infinito (130 questões)
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -248,7 +248,7 @@ const ExamSimulator = () => {
                     disabled={!selectedExamId}
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
                   >
-                    Start Exam
+                    Iniciar Exame
                   </Button>
                 </div>
               </div>
@@ -262,7 +262,7 @@ const ExamSimulator = () => {
                   </h3>
                   {currentQuestion.type === "multiple_choice" && (
                     <p className="text-sm text-blue-600 mt-2 font-medium">
-                      Select all correct options
+                      Seleciona todas as opções corretas
                     </p>
                   )}
                 </div>
@@ -291,7 +291,7 @@ const ExamSimulator = () => {
                     onClick={handleSubmitAnswers}
                     className="w-full sm:w-auto"
                   >
-                    Check Answer
+                    Verificar Resposta
                   </Button>
                 )}
 
@@ -300,17 +300,17 @@ const ExamSimulator = () => {
                     <div className="flex items-center gap-2">
                       {answerStatus === "correct" && (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                          Correct Answer
+                          Resposta Correta
                         </Badge>
                       )}
                       {answerStatus === "partial" && (
                         <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                          Partially Correct
+                          Parcialmente Correta
                         </Badge>
                       )}
                       {answerStatus === "incorrect" && (
                         <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                          Incorrect Answer
+                          Resposta Incorreta
                         </Badge>
                       )}
                     </div>
@@ -318,7 +318,7 @@ const ExamSimulator = () => {
                     <div className="space-y-4">
                       <div className="space-y-3">
                         <h3 className="font-semibold text-green-700">
-                          Correct Answers:
+                          Respostas Corretas:
                         </h3>
                         <ul className="space-y-3">
                           {correctOptions.map((option) => (
@@ -339,7 +339,7 @@ const ExamSimulator = () => {
 
                       <div className="space-y-3">
                         <h3 className="font-semibold text-red-700">
-                          Other Options Explained:
+                          Outras Opções Explicadas:
                         </h3>
                         <ul className="space-y-3">
                           {incorrectOptions.map((option) => (
@@ -375,15 +375,15 @@ const ExamSimulator = () => {
                     <Button
                       onClick={handleNextQuestion}
                       className="w-full sm:w-auto"
-                      variant={
-                        answerStatus === "correct" ? "default" : "secondary"
-                      }
+                      // variant={
+                      //   answerStatus === "correct" ? "default" : "secondary"
+                      // }
                     >
                       {currentQuestionIndex === selectedSimulado.length - 1 ? (
-                        "Finish Exam"
+                        "Finalizar Exame"
                       ) : (
                         <>
-                          Next Question
+                          Proxima Questão
                           <ChevronRight className="w-4 h-4 ml-2" />
                         </>
                       )}
