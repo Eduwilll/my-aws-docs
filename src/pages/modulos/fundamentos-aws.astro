@@ -1,0 +1,101 @@
+---
+// src/pages/modulos/fundamentos-aws.astro
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Fundamentos AWS">
+  <div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-4xl font-bold mb-8 text-primary">Fundamentos AWS</h1>
+
+    <div class="space-y-8">
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Visão Geral</h2>
+        <p class="text-muted-foreground mb-4">
+          Neste módulo, você aprenderá os conceitos fundamentais da Amazon Web
+          Services (AWS), incluindo os principais serviços e a infraestrutura
+          global da AWS.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-muted-foreground">
+          <li>Introdução à Computação em Nuvem</li>
+          <li>Modelo de Responsabilidade Compartilhada</li>
+          <li>Infraestrutura Global AWS</li>
+          <li>Modelo de Preços da AWS</li>
+        </ul>
+      </section>
+
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Conteúdo do Módulo</h2>
+        <div class="grid gap-4">
+          {
+            [
+              {
+                title: "Introdução à AWS",
+                duration: "2 horas",
+                description: "Conceitos básicos e história da AWS",
+              },
+              {
+                title: "Serviços Fundamentais",
+                duration: "4 horas",
+                description: "Visão geral dos principais serviços",
+              },
+              {
+                title: "Arquitetura na Nuvem",
+                duration: "3 horas",
+                description: "Princípios de arquitetura na AWS",
+              },
+            ].map((topic) => (
+              <div class="border-l-4 border-primary pl-4">
+                <h3 class="text-xl font-medium">{topic.title}</h3>
+                <p class="text-sm text-muted-foreground">
+                  Duração: {topic.duration}
+                </p>
+                <p class="mt-1 text-muted-foreground">{topic.description}</p>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Objetivos de Aprendizagem</h2>
+        <div class="grid gap-4">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <p class="text-muted-foreground">
+              Compreender os conceitos básicos de computação em nuvem
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <p class="text-muted-foreground">
+              Identificar os principais serviços da AWS
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <p class="text-muted-foreground">
+              Entender o modelo de preços e faturamento
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="mt-8 flex justify-between">
+      <a
+        href="/modulos"
+        class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>
+        Voltar para Módulos
+      </a>
+      <a
+        href="/modulos/computacao"
+        class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+      >
+        Próximo Módulo: Computação
+        <i class="fas fa-arrow-right ml-2"></i>
+      </a>
+    </div>
+  </div>
+</BaseLayout>

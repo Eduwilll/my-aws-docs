@@ -1,6 +1,17 @@
 ---
 // src/pages/index.astro
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const normalizeTitle = (title: string) => {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+    .trim(); // Remove leading/trailing spaces
+};
 ---
 
 <BaseLayout title="Página Inicial">
@@ -37,7 +48,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <i class={`fas ${module.icon} text-3xl text-primary mb-4`} />
             <h3 class="text-xl font-semibold mb-2">{module.title}</h3>
             <a
-              href={`/modulos/${module.title.toLowerCase().replace(" ", "-")}`}
+              href={`/modulos/${normalizeTitle(module.title)}`}
               class="text-primary hover:text-primary/80 transition-colors duration-300"
             >
               Saiba mais →
