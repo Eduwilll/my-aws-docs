@@ -1,0 +1,59 @@
+---
+// src/pages/notes/[...slug].astro
+import { getCollection } from "astro:content";
+import NoteLayout from "../../layouts/NoteLayout.astro";
+
+export async function getStaticPaths() {
+  const notes = await getCollection("notes");
+  return notes.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+// Buscar todas as notas para gerar o sidebar
+const allNotes = await getCollection("notes");
+const organizedNotes = allNotes.reduce((acc, note) => {
+  const [category] = note.slug.split("/");
+  if (!acc[category]) {
+    acc[category] = [];
+  }
+  acc[category].push(note);
+  return acc;
+}, {});
+---
+
+<NoteLayout frontmatter={entry.data} slug={entry.slug}>
+  <div slot="sidebar">
+    {
+      Object.entries(organizedNotes).map(([category, notes]) => (
+        <div class="mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            {category}
+          </h3>
+          <ul class="space-y-2">
+            {notes.map((note) => (
+              <li>
+                <a
+                  href={`/docs/${note.slug}`}
+                  class={`block px-2 py-1 rounded-md text-gray-600 hover:bg-gray-100 ${
+                    entry.slug === note.slug
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : ""
+                  }`}
+                >
+                  {note.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+
+  <Content />
+</NoteLayout>
