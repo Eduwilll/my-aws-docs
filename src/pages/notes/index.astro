@@ -1,0 +1,56 @@
+---
+// src/pages/notes/index.astro
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const notes = await getCollection("notes");
+const categories = notes.reduce((acc, note) => {
+  const [category] = note.slug.split("/");
+  if (!acc[category]) {
+    acc[category] = [];
+  }
+  acc[category].push(note);
+  return acc;
+}, {});
+---
+
+<BaseLayout title="Notas AWS">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8">Notas AWS</h1>
+
+    <div class="grid gap-8">
+      {
+        Object.entries(categories).map(([category, categoryNotes]) => (
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-900 capitalize">
+              {category}
+            </h2>
+            <div class="grid gap-4">
+              {categoryNotes
+                .sort((a, b) => (a.data.order || 0) - (b.data.order || 0))
+                .map((note) => (
+                  <a
+                    href={`/notes/${note.slug}`}
+                    class="block p-4 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                      {note.data.title}
+                    </h3>
+                    {note.data.tags && (
+                      <div class="flex gap-2">
+                        {note.data.tags.map((tag) => (
+                          <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </a>
+                ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>
