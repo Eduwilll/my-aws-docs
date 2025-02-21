@@ -9,84 +9,377 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     <div class="space-y-8">
       <section class="bg-background p-6 rounded-lg shadow-md">
+        <div
+          class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+        >
+          <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+          <ul class="space-y-2 list-inside list-disc">
+            <li>
+              <a href="#visao-geral" class="hover:text-blue-500">Visão Geral</a>
+            </li>
+            <li>
+              <a href="#ec2" class="hover:text-blue-500"
+                >Amazon EC2 (Elastic Compute Cloud)</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#ec2-tipos" class="hover:text-blue-500"
+                    >Tipos de Instância</a
+                  >
+                </li>
+                <li>
+                  <a href="#ec2-compra" class="hover:text-blue-500"
+                    >Opções de Compra</a
+                  >
+                </li>
+                <li>
+                  <a href="#ec2-recursos" class="hover:text-blue-500"
+                    >Recursos Importantes</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#lambda" class="hover:text-blue-500">AWS Lambda</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#lambda-caracteristicas" class="hover:text-blue-500"
+                    >Características Principais</a
+                  >
+                </li>
+                <li>
+                  <a href="#lambda-limites" class="hover:text-blue-500"
+                    >Limites e Cotas</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#containers" class="hover:text-blue-500"
+                >Serviços de Container</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#ecs" class="hover:text-blue-500">Amazon ECS</a>
+                </li>
+                <li>
+                  <a href="#eks" class="hover:text-blue-500">Amazon EKS</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#elastic-beanstalk" class="hover:text-blue-500"
+                >AWS Elastic Beanstalk</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#beanstalk-plataformas" class="hover:text-blue-500"
+                    >Plataformas Suportadas</a
+                  >
+                </li>
+                <li>
+                  <a href="#beanstalk-recursos" class="hover:text-blue-500"
+                    >Recursos</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#auto-scaling" class="hover:text-blue-500"
+                >Auto Scaling</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#scaling-componentes" class="hover:text-blue-500"
+                    >Componentes Principais</a
+                  >
+                </li>
+                <li>
+                  <a href="#scaling-politicas" class="hover:text-blue-500"
+                    >Políticas de Escalabilidade</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#lightsail" class="hover:text-blue-500"
+                >Amazon Lightsail</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#lightsail-recursos" class="hover:text-blue-500"
+                    >Recursos</a
+                  >
+                </li>
+                <li>
+                  <a href="#lightsail-casos" class="hover:text-blue-500"
+                    >Casos de Uso</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#batch" class="hover:text-blue-500">AWS Batch</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#batch-recursos" class="hover:text-blue-500"
+                    >Recursos</a
+                  >
+                </li>
+                <li>
+                  <a href="#batch-integracao" class="hover:text-blue-500"
+                    >Integrações</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#outposts" class="hover:text-blue-500">AWS Outposts</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#outposts-recursos" class="hover:text-blue-500"
+                    >Recursos</a
+                  >
+                </li>
+                <li>
+                  <a href="#outposts-casos" class="hover:text-blue-500"
+                    >Casos de Uso</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="visao-geral" class="bg-background p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-semibold mb-4">Visão Geral</h2>
         <p class="text-muted-foreground mb-4">
-          Este módulo aborda os principais serviços de computação da AWS,
-          incluindo EC2, Lambda, e outros serviços relacionados à computação em
-          nuvem.
+          A AWS oferece uma ampla gama de serviços de computação que permitem
+          executar qualquer tipo de aplicação na nuvem. Desde máquinas virtuais
+          tradicionais até computação serverless, a AWS fornece opções para
+          todos os casos de uso.
         </p>
-        <ul class="list-disc list-inside space-y-2 text-muted-foreground">
-          <li>Amazon EC2 (Elastic Compute Cloud)</li>
-          <li>AWS Lambda (Serverless)</li>
-          <li>Amazon ECS (Elastic Container Service)</li>
-          <li>Amazon EKS (Elastic Kubernetes Service)</li>
+      </section>
+
+      <section id="ec2" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">
+          Amazon EC2 (Elastic Compute Cloud)
+        </h2>
+        <div class="space-y-4">
+          <h3 id="ec2-tipos" class="text-xl font-medium">Tipos de Instância</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>
+              <strong>Uso Geral (t3, m5):</strong> Equilíbrio entre recursos
+            </li>
+            <li>
+              <strong>Otimizada para Computação (c5):</strong> Alta performance de
+              processamento
+            </li>
+            <li>
+              <strong>Otimizada para Memória (r5):</strong> Processamento de grandes
+              conjuntos de dados
+            </li>
+            <li>
+              <strong>Computação Acelerada (p3, g4):</strong> GPUs para machine learning
+              e gráficos
+            </li>
+            <li>
+              <strong>Otimizada para Armazenamento (i3, d2):</strong> Alto throughput
+              para dados
+            </li>
+          </ul>
+
+          <h3 id="ec2-compra" class="text-xl font-medium mt-4">
+            Opções de Compra
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>
+              <strong>On-Demand:</strong> Pague por hora/segundo sem compromisso
+            </li>
+            <li>
+              <strong>Reserved Instances:</strong> Desconto por compromisso de 1-3
+              anos
+            </li>
+            <li>
+              <strong>Spot Instances:</strong> Capacidade não utilizada com desconto
+            </li>
+            <li>
+              <strong>Dedicated Hosts:</strong> Servidores físicos dedicados
+            </li>
+          </ul>
+
+          <h3 id="ec2-recursos" class="text-xl font-medium mt-4">
+            Recursos Importantes
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>AMIs (Amazon Machine Images)</li>
+            <li>Security Groups</li>
+            <li>Elastic IP Addresses</li>
+            <li>Tags e Resource Groups</li>
+            <li>Placement Groups</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="lambda" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">AWS Lambda</h2>
+        <div class="space-y-4">
+          <p class="text-muted-foreground">
+            Computação serverless que executa código em resposta a eventos sem a
+            necessidade de provisionar servidores.
+          </p>
+
+          <h3 id="lambda-caracteristicas" class="text-xl font-medium">
+            Características Principais
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Execução de código sem servidor</li>
+            <li>Escalabilidade automática</li>
+            <li>Pagamento por uso (por requisição e tempo de execução)</li>
+            <li>Suporte a múltiplas linguagens de programação</li>
+            <li>Integração com outros serviços AWS</li>
+          </ul>
+
+          <h3 id="lambda-limites" class="text-xl font-medium mt-4">
+            Limites e Cotas
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Tempo máximo de execução: 15 minutos</li>
+            <li>Memória: 128MB a 10GB</li>
+            <li>Armazenamento temporário: até 10GB</li>
+            <li>Tamanho do pacote implantado: até 50MB (compactado)</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="containers" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Serviços de Container</h2>
+
+        <div class="space-y-6">
+          <div>
+            <h3 id="ecs" class="text-xl font-medium">
+              Amazon ECS (Elastic Container Service)
+            </h3>
+            <ul
+              class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+            >
+              <li>Orquestração de containers gerenciada pela AWS</li>
+              <li>Integração com outros serviços AWS</li>
+              <li>Suporte a Docker</li>
+              <li>Launch types: EC2 e Fargate</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 id="eks" class="text-xl font-medium">
+              Amazon EKS (Elastic Kubernetes Service)
+            </h3>
+            <ul
+              class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+            >
+              <li>Kubernetes gerenciado</li>
+              <li>Compatibilidade com ferramentas K8s</li>
+              <li>Suporte a clusters híbridos</li>
+              <li>Integração com AWS IAM</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="elastic-beanstalk"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">AWS Elastic Beanstalk</h2>
+        <p class="text-muted-foreground mb-4">
+          Serviço para implantar e escalar aplicações web desenvolvidas em
+          linguagens populares.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-muted-foreground ml-4">
+          <li id="beanstalk-plataformas">
+            Plataformas suportadas: Java, .NET, PHP, Node.js, Python, Ruby, Go,
+            Docker
+          </li>
+          <li id="beanstalk-recursos">
+            Gerenciamento automatizado de capacidade
+          </li>
+          <li>Balanceamento de carga e escalonamento automático</li>
+          <li>Monitoramento de saúde da aplicação</li>
         </ul>
       </section>
 
-      <section class="bg-background p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Conteúdo do Módulo</h2>
-        <div class="grid gap-4">
-          {
-            [
-              {
-                title: "Instâncias EC2",
-                duration: "4 horas",
-                description: "Tipos de instâncias e configurações",
-              },
-              {
-                title: "Computação Serverless",
-                duration: "3 horas",
-                description: "AWS Lambda e aplicações serverless",
-              },
-              {
-                title: "Containers na AWS",
-                duration: "3 horas",
-                description: "ECS, EKS e orquestração de containers",
-              },
-            ].map((topic) => (
-              <div class="border-l-4 border-primary pl-4">
-                <h3 class="text-xl font-medium">{topic.title}</h3>
-                <p class="text-sm text-muted-foreground">
-                  Duração: {topic.duration}
-                </p>
-                <p class="mt-1 text-muted-foreground">{topic.description}</p>
-              </div>
-            ))
-          }
+      <section id="auto-scaling" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Auto Scaling</h2>
+        <div class="space-y-4">
+          <p class="text-muted-foreground">
+            Ajusta automaticamente a capacidade computacional para manter o
+            desempenho e a disponibilidade.
+          </p>
+
+          <h3 id="scaling-componentes" class="text-xl font-medium">
+            Componentes Principais
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Grupos de Auto Scaling</li>
+            <li>Templates de Configuração</li>
+            <li>Políticas de Escalabilidade</li>
+            <li>Verificações de Saúde</li>
+          </ul>
         </div>
       </section>
 
-      <section class="bg-background p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Laboratórios Práticos</h2>
-        <div class="grid gap-4">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-laptop-code text-primary mt-1"></i>
-            <div>
-              <h3 class="font-medium">Lab 1: Criando e Gerenciando EC2</h3>
-              <p class="text-muted-foreground">
-                Configure sua primeira instância EC2
-              </p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3">
-            <i class="fas fa-laptop-code text-primary mt-1"></i>
-            <div>
-              <h3 class="font-medium">Lab 2: Funções Lambda</h3>
-              <p class="text-muted-foreground">
-                Desenvolvendo funções serverless
-              </p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3">
-            <i class="fas fa-laptop-code text-primary mt-1"></i>
-            <div>
-              <h3 class="font-medium">Lab 3: Containers com ECS</h3>
-              <p class="text-muted-foreground">
-                Implantando aplicações containerizadas
-              </p>
-            </div>
-          </div>
-        </div>
+      <section id="lightsail" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Amazon Lightsail</h2>
+        <p class="text-muted-foreground mb-4">
+          Plataforma de computação em nuvem simplificada para pequenos projetos.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-muted-foreground ml-4">
+          <li id="lightsail-recursos">Instâncias pré-configuradas</li>
+          <li>Preços mensais previsíveis</li>
+          <li>Aplicações populares incluídas (WordPress, LAMP, Node.js)</li>
+          <li>Gerenciamento simplificado de DNS</li>
+        </ul>
+      </section>
+
+      <section id="batch" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">AWS Batch</h2>
+        <p class="text-muted-foreground mb-4">
+          Executa trabalhos em lote em qualquer escala na AWS.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-muted-foreground ml-4">
+          <li id="batch-recursos">Gerenciamento automático de recursos</li>
+          <li>Priorização de trabalhos</li>
+          <li>Integração com outros serviços AWS</li>
+          <li>Suporte a containers Docker</li>
+        </ul>
+      </section>
+
+      <section id="outposts" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">AWS Outposts</h2>
+        <p class="text-muted-foreground mb-4">
+          Serviços, infraestrutura e ferramentas AWS em instalações on-premises.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-muted-foreground ml-4">
+          <li id="outposts-recursos">
+            Hardware e software totalmente gerenciado pela AWS
+          </li>
+          <li>Consistência com serviços AWS nativos</li>
+          <li>Baixa latência para aplicações locais</li>
+          <li>Conformidade com requisitos de residência de dados</li>
+        </ul>
       </section>
     </div>
 

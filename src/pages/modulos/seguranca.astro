@@ -6,22 +6,322 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold mb-6">Segurança na AWS</h1>
 
-    <div class="prose max-w-none">
-      <h2 class="text-2xl font-semibold mb-4">O que você vai aprender</h2>
-      <ul class="space-y-2">
-        <li>AWS IAM (Identity and Access Management)</li>
-        <li>AWS Organizations</li>
-        <li>AWS WAF e Shield</li>
-        <li>AWS KMS e CloudHSM</li>
-        <li>AWS Security Hub e GuardDuty</li>
-      </ul>
+    <div class="space-y-8">
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <div
+          class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+        >
+          <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+          <ul class="space-y-2 list-inside list-disc">
+            <li>
+              <a href="#iam" class="hover:text-blue-500"
+                >AWS IAM (Identity and Access Management)</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#usuarios" class="hover:text-blue-500"
+                    >Usuários e Grupos</a
+                  >
+                </li>
+                <li>
+                  <a href="#roles" class="hover:text-blue-500"
+                    >Roles e Políticas</a
+                  >
+                </li>
+                <li>
+                  <a href="#mfa" class="hover:text-blue-500"
+                    >MFA e Credenciais</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#organizations" class="hover:text-blue-500"
+                >AWS Organizations</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#org-estrutura" class="hover:text-blue-500"
+                    >Estrutura Organizacional</a
+                  >
+                </li>
+                <li>
+                  <a href="#scp" class="hover:text-blue-500"
+                    >Service Control Policies</a
+                  >
+                </li>
+                <li>
+                  <a href="#contas" class="hover:text-blue-500"
+                    >Gerenciamento de Contas</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#protecao" class="hover:text-blue-500"
+                >Proteção de Aplicações</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li><a href="#waf" class="hover:text-blue-500">AWS WAF</a></li>
+                <li>
+                  <a href="#shield" class="hover:text-blue-500">AWS Shield</a>
+                </li>
+                <li>
+                  <a href="#firewall" class="hover:text-blue-500"
+                    >Network Firewall</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#criptografia" class="hover:text-blue-500"
+                >Criptografia e Gerenciamento de Chaves</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li><a href="#kms" class="hover:text-blue-500">AWS KMS</a></li>
+                <li>
+                  <a href="#cloudhsm" class="hover:text-blue-500"
+                    >AWS CloudHSM</a
+                  >
+                </li>
+                <li>
+                  <a href="#secrets" class="hover:text-blue-500"
+                    >Secrets Manager</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#monitoramento" class="hover:text-blue-500"
+                >Monitoramento e Detecção</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#security-hub" class="hover:text-blue-500"
+                    >Security Hub</a
+                  >
+                </li>
+                <li>
+                  <a href="#guardduty" class="hover:text-blue-500">GuardDuty</a>
+                </li>
+                <li>
+                  <a href="#detective" class="hover:text-blue-500">Detective</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-4">Benefícios</h2>
-      <ul class="space-y-2">
-        <li>Compreensão profunda da segurança na nuvem</li>
-        <li>Capacidade de implementar controles de segurança</li>
-        <li>Habilidade de proteger recursos e dados</li>
-      </ul>
+      <section id="iam" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">
+          AWS IAM (Identity and Access Management)
+        </h2>
+
+        <div id="usuarios" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Usuários e Grupos</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Criação e gerenciamento de usuários</li>
+            <li>Grupos e permissões</li>
+            <li>Melhores práticas de IAM</li>
+            <li>Políticas gerenciadas vs customizadas</li>
+          </ul>
+        </div>
+
+        <div id="roles" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Roles e Políticas</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>IAM Roles para serviços</li>
+            <li>Políticas baseadas em identidade</li>
+            <li>Políticas baseadas em recursos</li>
+            <li>Avaliação de políticas</li>
+          </ul>
+        </div>
+
+        <div id="mfa" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">MFA e Credenciais</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Autenticação multifator</li>
+            <li>Rotação de credenciais</li>
+            <li>Access keys</li>
+            <li>Password policies</li>
+          </ul>
+        </div>
+      </section>
+
+      <section
+        id="organizations"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">AWS Organizations</h2>
+
+        <div id="org-estrutura" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Estrutura Organizacional</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Root account</li>
+            <li>Organizational Units (OUs)</li>
+            <li>Hierarquia de contas</li>
+            <li>Estratégias de organização</li>
+          </ul>
+        </div>
+
+        <div id="scp" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Service Control Policies</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Controle de acesso organizacional</li>
+            <li>Herança de políticas</li>
+            <li>Estratégias de SCP</li>
+            <li>Exemplos práticos</li>
+          </ul>
+        </div>
+
+        <div id="contas" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Gerenciamento de Contas</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Criação de contas</li>
+            <li>Consolidação de faturamento</li>
+            <li>Compartilhamento de recursos</li>
+            <li>Cross-account access</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="protecao" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Proteção de Aplicações</h2>
+
+        <div id="waf" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">AWS WAF</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Web ACLs</li>
+            <li>Regras e condições</li>
+            <li>Proteção contra ataques web</li>
+            <li>Integração com serviços AWS</li>
+          </ul>
+        </div>
+
+        <div id="shield" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">AWS Shield</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Shield Standard</li>
+            <li>Shield Advanced</li>
+            <li>Proteção DDoS</li>
+            <li>Response team</li>
+          </ul>
+        </div>
+
+        <div id="firewall" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Network Firewall</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Regras de firewall</li>
+            <li>Filtragem de tráfego</li>
+            <li>Inspeção de pacotes</li>
+            <li>Logs e monitoramento</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="criptografia" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">
+          Criptografia e Gerenciamento de Chaves
+        </h2>
+
+        <div id="kms" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">AWS KMS</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Customer Master Keys (CMKs)</li>
+            <li>Key policies</li>
+            <li>Rotação de chaves</li>
+            <li>Integração com serviços AWS</li>
+          </ul>
+        </div>
+
+        <div id="cloudhsm" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">AWS CloudHSM</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Hardware Security Modules</li>
+            <li>FIPS 140-2 Level 3</li>
+            <li>Gerenciamento de chaves</li>
+            <li>Casos de uso</li>
+          </ul>
+        </div>
+
+        <div id="secrets" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Secrets Manager</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Armazenamento de segredos</li>
+            <li>Rotação automática</li>
+            <li>Controle de acesso</li>
+            <li>Integração com aplicações</li>
+          </ul>
+        </div>
+      </section>
+
+      <section
+        id="monitoramento"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">Monitoramento e Detecção</h2>
+
+        <div id="security-hub" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Security Hub</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Visão unificada de segurança</li>
+            <li>Padrões de segurança</li>
+            <li>Integração com serviços</li>
+            <li>Automação de resposta</li>
+          </ul>
+        </div>
+
+        <div id="guardduty" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">GuardDuty</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Detecção de ameaças</li>
+            <li>Machine learning</li>
+            <li>Análise de logs</li>
+            <li>Findings e alertas</li>
+          </ul>
+        </div>
+
+        <div id="detective" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Detective</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Análise de segurança</li>
+            <li>Visualização de eventos</li>
+            <li>Investigação de incidentes</li>
+            <li>Timeline de atividades</li>
+          </ul>
+        </div>
+      </section>
     </div>
   </div>
 </BaseLayout>

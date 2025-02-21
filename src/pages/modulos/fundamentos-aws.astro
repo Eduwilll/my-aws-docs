@@ -9,74 +9,302 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     <div class="space-y-8">
       <section class="bg-background p-6 rounded-lg shadow-md">
+        <div
+          class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+        >
+          <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+          <ul class="space-y-2 list-inside list-disc">
+            <li>
+              <a href="#visao-geral" class="hover:text-blue-500">Visão Geral</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#introducao-cloud" class="hover:text-blue-500"
+                    >Introdução à Computação em Nuvem</a
+                  >
+                </li>
+                <li>
+                  <a href="#beneficios-cloud" class="hover:text-blue-500"
+                    >Benefícios da Computação em Nuvem</a
+                  >
+                </li>
+                <li>
+                  <a href="#tipos-cloud" class="hover:text-blue-500"
+                    >Tipos de Computação em Nuvem</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#infraestrutura" class="hover:text-blue-500"
+                >Infraestrutura Global AWS</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#regioes" class="hover:text-blue-500">Regiões</a>
+                </li>
+                <li>
+                  <a href="#azs" class="hover:text-blue-500"
+                    >Zonas de Disponibilidade</a
+                  >
+                </li>
+                <li>
+                  <a href="#edge-locations" class="hover:text-blue-500"
+                    >Edge Locations</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#responsabilidade" class="hover:text-blue-500"
+                >Modelo de Responsabilidade Compartilhada</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#resp-aws" class="hover:text-blue-500"
+                    >Responsabilidades da AWS</a
+                  >
+                </li>
+                <li>
+                  <a href="#resp-cliente" class="hover:text-blue-500"
+                    >Responsabilidades do Cliente</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#precos" class="hover:text-blue-500">Modelo de Preços</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#modelos-pagamento" class="hover:text-blue-500"
+                    >Modelos de Pagamento</a
+                  >
+                </li>
+                <li>
+                  <a href="#calculadora" class="hover:text-blue-500"
+                    >Calculadora de Preços</a
+                  >
+                </li>
+                <li>
+                  <a href="#free-tier" class="hover:text-blue-500">Free Tier</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#suporte" class="hover:text-blue-500"
+                >Planos de Suporte</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#planos-tipos" class="hover:text-blue-500"
+                    >Tipos de Planos</a
+                  >
+                </li>
+                <li>
+                  <a href="#planos-recursos" class="hover:text-blue-500"
+                    >Recursos Incluídos</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="visao-geral" class="bg-background p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-semibold mb-4">Visão Geral</h2>
         <p class="text-muted-foreground mb-4">
           Neste módulo, você aprenderá os conceitos fundamentais da Amazon Web
           Services (AWS), incluindo os principais serviços e a infraestrutura
           global da AWS.
         </p>
-        <ul class="list-disc list-inside space-y-2 text-muted-foreground">
-          <li>Introdução à Computação em Nuvem</li>
-          <li>Modelo de Responsabilidade Compartilhada</li>
-          <li>Infraestrutura Global AWS</li>
-          <li>Modelo de Preços da AWS</li>
-        </ul>
-      </section>
 
-      <section class="bg-background p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Conteúdo do Módulo</h2>
-        <div class="grid gap-4">
-          {
-            [
-              {
-                title: "Introdução à AWS",
-                duration: "2 horas",
-                description: "Conceitos básicos e história da AWS",
-              },
-              {
-                title: "Serviços Fundamentais",
-                duration: "4 horas",
-                description: "Visão geral dos principais serviços",
-              },
-              {
-                title: "Arquitetura na Nuvem",
-                duration: "3 horas",
-                description: "Princípios de arquitetura na AWS",
-              },
-            ].map((topic) => (
-              <div class="border-l-4 border-primary pl-4">
-                <h3 class="text-xl font-medium">{topic.title}</h3>
-                <p class="text-sm text-muted-foreground">
-                  Duração: {topic.duration}
-                </p>
-                <p class="mt-1 text-muted-foreground">{topic.description}</p>
-              </div>
-            ))
-          }
+        <div id="introducao-cloud" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">
+            Introdução à Computação em Nuvem
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Definição de computação em nuvem</li>
+            <li>Evolução dos serviços de TI</li>
+            <li>Por que usar computação em nuvem</li>
+          </ul>
+        </div>
+
+        <div id="beneficios-cloud" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">
+            Benefícios da Computação em Nuvem
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Troque despesas de capital por despesas variáveis</li>
+            <li>Beneficie-se de economias de escala massivas</li>
+            <li>Pare de adivinhar a capacidade</li>
+            <li>Aumente a velocidade e agilidade</li>
+            <li>Pare de gastar dinheiro com manutenção de data centers</li>
+            <li>Torne-se global em minutos</li>
+          </ul>
+        </div>
+
+        <div id="tipos-cloud" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">
+            Tipos de Computação em Nuvem
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>
+              <strong>IaaS (Infrastructure as a Service):</strong> Recursos de computação
+              básicos
+            </li>
+            <li>
+              <strong>PaaS (Platform as a Service):</strong> Plataforma de desenvolvimento
+            </li>
+            <li>
+              <strong>SaaS (Software as a Service):</strong> Software completo
+            </li>
+          </ul>
         </div>
       </section>
 
-      <section class="bg-background p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Objetivos de Aprendizagem</h2>
-        <div class="grid gap-4">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-            <p class="text-muted-foreground">
-              Compreender os conceitos básicos de computação em nuvem
-            </p>
-          </div>
-          <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-            <p class="text-muted-foreground">
-              Identificar os principais serviços da AWS
-            </p>
-          </div>
-          <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-            <p class="text-muted-foreground">
-              Entender o modelo de preços e faturamento
-            </p>
-          </div>
+      <section
+        id="infraestrutura"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">Infraestrutura Global AWS</h2>
+
+        <div id="regioes" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Regiões</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Áreas geográficas que hospedam data centers</li>
+            <li>Cada região é completamente independente</li>
+            <li>Escolha baseada em latência, custos e requisitos legais</li>
+          </ul>
+        </div>
+
+        <div id="azs" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">
+            Zonas de Disponibilidade (AZs)
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Data centers isolados dentro de uma região</li>
+            <li>Conectados por links de baixa latência</li>
+            <li>Alta disponibilidade e tolerância a falhas</li>
+          </ul>
+        </div>
+
+        <div id="edge-locations" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Edge Locations</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Pontos de presença para entrega de conteúdo</li>
+            <li>CloudFront e Route 53</li>
+            <li>Menor latência para usuários finais</li>
+          </ul>
+        </div>
+      </section>
+
+      <section
+        id="responsabilidade"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">
+          Modelo de Responsabilidade Compartilhada
+        </h2>
+
+        <div id="resp-aws" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Responsabilidades da AWS</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Segurança DA nuvem</li>
+            <li>Hardware e infraestrutura global</li>
+            <li>Regiões, zonas de disponibilidade e edge locations</li>
+          </ul>
+        </div>
+
+        <div id="resp-cliente" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">
+            Responsabilidades do Cliente
+          </h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Segurança NA nuvem</li>
+            <li>Configuração de serviços e aplicações</li>
+            <li>Gerenciamento de dados e criptografia</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="precos" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Modelo de Preços</h2>
+
+        <div id="modelos-pagamento" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Modelos de Pagamento</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Pay-as-you-go</li>
+            <li>Save when you reserve</li>
+            <li>Pay less by using more</li>
+          </ul>
+        </div>
+
+        <div id="calculadora" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Calculadora de Preços</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Estimativa de custos mensais</li>
+            <li>Comparação entre regiões</li>
+            <li>Diferentes cenários de uso</li>
+          </ul>
+        </div>
+
+        <div id="free-tier" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Free Tier</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>12 meses gratuitos após inscrição</li>
+            <li>Sempre gratuito</li>
+            <li>Trials</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="suporte" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Planos de Suporte</h2>
+
+        <div id="planos-tipos" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Tipos de Planos</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li><strong>Basic:</strong> Gratuito, suporte limitado</li>
+            <li><strong>Developer:</strong> Suporte técnico por email</li>
+            <li><strong>Business:</strong> Suporte 24/7 por telefone</li>
+            <li><strong>Enterprise:</strong> Suporte premium com TAM</li>
+          </ul>
+        </div>
+
+        <div id="planos-recursos" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Recursos Incluídos</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>AWS Trusted Advisor</li>
+            <li>AWS Support API</li>
+            <li>Tempos de resposta</li>
+            <li>Gerentes técnicos de conta</li>
+          </ul>
         </div>
       </section>
     </div>

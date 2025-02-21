@@ -6,22 +6,336 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold mb-6">Redes na AWS</h1>
 
-    <div class="prose max-w-none">
-      <h2 class="text-2xl font-semibold mb-4">O que você vai aprender</h2>
-      <ul class="space-y-2">
-        <li>Amazon VPC (Virtual Private Cloud)</li>
-        <li>Subnets e Network ACLs</li>
-        <li>Security Groups</li>
-        <li>Route 53 (DNS)</li>
-        <li>CloudFront (CDN)</li>
-      </ul>
+    <div class="space-y-8">
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <div
+          class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+        >
+          <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+          <ul class="space-y-2 list-inside list-disc">
+            <li>
+              <a href="#vpc" class="hover:text-blue-500"
+                >Amazon VPC (Virtual Private Cloud)</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#vpc-componentes" class="hover:text-blue-500"
+                    >Componentes Principais</a
+                  >
+                </li>
+                <li>
+                  <a href="#vpc-subnets" class="hover:text-blue-500">Subnets</a>
+                </li>
+                <li>
+                  <a href="#vpc-routing" class="hover:text-blue-500"
+                    >Roteamento</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#seguranca" class="hover:text-blue-500"
+                >Segurança de Rede</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#security-groups" class="hover:text-blue-500"
+                    >Security Groups</a
+                  >
+                </li>
+                <li>
+                  <a href="#network-acls" class="hover:text-blue-500"
+                    >Network ACLs</a
+                  >
+                </li>
+                <li>
+                  <a href="#nat" class="hover:text-blue-500">NAT Gateway</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#conectividade" class="hover:text-blue-500"
+                >Conectividade</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#internet-gateway" class="hover:text-blue-500"
+                    >Internet Gateway</a
+                  >
+                </li>
+                <li>
+                  <a href="#vpn" class="hover:text-blue-500"
+                    >VPN e Direct Connect</a
+                  >
+                </li>
+                <li>
+                  <a href="#peering" class="hover:text-blue-500">VPC Peering</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#route53" class="hover:text-blue-500">Amazon Route 53</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#dns-records" class="hover:text-blue-500"
+                    >Tipos de Registros DNS</a
+                  >
+                </li>
+                <li>
+                  <a href="#routing-policies" class="hover:text-blue-500"
+                    >Políticas de Roteamento</a
+                  >
+                </li>
+                <li>
+                  <a href="#health-checks" class="hover:text-blue-500"
+                    >Health Checks</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#cloudfront" class="hover:text-blue-500"
+                >Amazon CloudFront</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#distribuicoes" class="hover:text-blue-500"
+                    >Distribuições</a
+                  >
+                </li>
+                <li>
+                  <a href="#origens" class="hover:text-blue-500">Origens</a>
+                </li>
+                <li>
+                  <a href="#cache" class="hover:text-blue-500"
+                    >Comportamentos de Cache</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-4">Benefícios</h2>
-      <ul class="space-y-2">
-        <li>Capacidade de projetar redes seguras e escaláveis</li>
-        <li>Entendimento de conectividade e roteamento</li>
-        <li>Habilidade de implementar soluções de alta disponibilidade</li>
-      </ul>
+      <section id="vpc" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">
+          Amazon VPC (Virtual Private Cloud)
+        </h2>
+
+        <div id="vpc-componentes" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Componentes Principais</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>VPC e CIDR blocks</li>
+            <li>Subnets públicas e privadas</li>
+            <li>Route tables</li>
+            <li>Internet Gateway</li>
+            <li>Elastic IPs</li>
+          </ul>
+        </div>
+
+        <div id="vpc-subnets" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Subnets</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Divisão de VPC em sub-redes</li>
+            <li>Zonas de disponibilidade</li>
+            <li>Endereçamento IP</li>
+            <li>Tipos de subnet (pública/privada)</li>
+          </ul>
+        </div>
+
+        <div id="vpc-routing" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Roteamento</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Route tables principais e personalizadas</li>
+            <li>Rotas para Internet Gateway</li>
+            <li>Rotas para NAT Gateway</li>
+            <li>VPC Endpoints</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="seguranca" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Segurança de Rede</h2>
+
+        <div id="security-groups" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Security Groups</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Firewall virtual para instâncias</li>
+            <li>Regras de entrada e saída</li>
+            <li>Stateful por natureza</li>
+            <li>Múltiplos security groups por instância</li>
+          </ul>
+        </div>
+
+        <div id="network-acls" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Network ACLs</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Firewall virtual para subnets</li>
+            <li>Regras numeradas</li>
+            <li>Stateless por natureza</li>
+            <li>Uma NACL por subnet</li>
+          </ul>
+        </div>
+
+        <div id="nat" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">NAT Gateway</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Acesso à Internet para subnets privadas</li>
+            <li>Alta disponibilidade por AZ</li>
+            <li>Gerenciado pela AWS</li>
+            <li>Escalabilidade automática</li>
+          </ul>
+        </div>
+      </section>
+
+      <section
+        id="conectividade"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">Conectividade</h2>
+
+        <div id="internet-gateway" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Internet Gateway</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Conectividade com a Internet</li>
+            <li>Um IGW por VPC</li>
+            <li>Altamente disponível</li>
+          </ul>
+        </div>
+
+        <div id="vpn" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">VPN e Direct Connect</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Site-to-Site VPN</li>
+            <li>Client VPN</li>
+            <li>Direct Connect</li>
+            <li>Direct Connect Gateway</li>
+          </ul>
+        </div>
+
+        <div id="peering" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">VPC Peering</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Conexão entre VPCs</li>
+            <li>Diferentes regiões ou contas</li>
+            <li>Não transitivo</li>
+            <li>Sem sobreposição de CIDR</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="route53" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Amazon Route 53</h2>
+
+        <div id="dns-records" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Tipos de Registros DNS</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>A e AAAA Records</li>
+            <li>CNAME e Alias</li>
+            <li>MX Records</li>
+            <li>TXT Records</li>
+          </ul>
+        </div>
+
+        <div id="routing-policies" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Políticas de Roteamento</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Simple Routing</li>
+            <li>Weighted Routing</li>
+            <li>Latency-based Routing</li>
+            <li>Geolocation Routing</li>
+            <li>Failover Routing</li>
+          </ul>
+        </div>
+
+        <div id="health-checks" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Health Checks</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Monitoramento de endpoints</li>
+            <li>Integração com CloudWatch</li>
+            <li>Failover automático</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="cloudfront" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Amazon CloudFront</h2>
+
+        <div id="distribuicoes" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Distribuições</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Web e RTMP distribuições</li>
+            <li>Edge locations</li>
+            <li>Regional edge caches</li>
+          </ul>
+        </div>
+
+        <div id="origens" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Origens</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>S3 buckets</li>
+            <li>EC2 instances</li>
+            <li>Load balancers</li>
+            <li>Custom origins</li>
+          </ul>
+        </div>
+
+        <div id="cache" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Comportamentos de Cache</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>TTL (Time To Live)</li>
+            <li>Cache behaviors</li>
+            <li>Invalidação de cache</li>
+            <li>Compressão</li>
+          </ul>
+        </div>
+      </section>
+      <div class="mt-8 flex justify-between">
+        <a
+          href="/modulos/amarzenamento"
+          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Voltar para Amazenamento
+        </a>
+        <a
+          href="/modulos/seguranca"
+          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+        >
+          Próximo Módulo: Segurança
+          <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
     </div>
   </div>
 </BaseLayout>

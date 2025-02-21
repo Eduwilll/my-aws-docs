@@ -7,21 +7,370 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <h1 class="text-4xl font-bold mb-6">Armazenamento na AWS</h1>
 
     <div class="prose max-w-none">
-      <h2 class="text-2xl font-semibold mb-4">O que você vai aprender</h2>
+      <div
+        class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+      >
+        <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+        <ul class="space-y-2 list-inside list-disc">
+          <li>
+            <a href="#s3" class="hover:text-blue-500"
+              >Amazon S3 (Simple Storage Service)</a
+            >
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#s3-conceitos" class="hover:text-blue-500"
+                  >Conceitos Fundamentais</a
+                >
+              </li>
+              <li>
+                <a href="#s3-classes" class="hover:text-blue-500"
+                  >Classes de Armazenamento</a
+                >
+              </li>
+              <li>
+                <a href="#s3-recursos" class="hover:text-blue-500"
+                  >Recursos e Características</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#ebs" class="hover:text-blue-500"
+              >Amazon EBS (Elastic Block Store)</a
+            >
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#ebs-tipos" class="hover:text-blue-500"
+                  >Tipos de Volume</a
+                >
+              </li>
+              <li>
+                <a href="#ebs-caracteristicas" class="hover:text-blue-500"
+                  >Características Importantes</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#efs" class="hover:text-blue-500"
+              >Amazon EFS (Elastic File System)</a
+            >
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#efs-caracteristicas" class="hover:text-blue-500"
+                  >Características Principais</a
+                >
+              </li>
+              <li>
+                <a href="#efs-classes" class="hover:text-blue-500"
+                  >Classes de Armazenamento</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#fsx" class="hover:text-blue-500">Amazon FSx</a>
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#fsx-tipos" class="hover:text-blue-500">Tipos de FSx</a
+                >
+              </li>
+              <li>
+                <a href="#fsx-casos-uso" class="hover:text-blue-500"
+                  >Casos de Uso</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#storage-gateway" class="hover:text-blue-500"
+              >AWS Storage Gateway</a
+            >
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#storage-gateway-tipos" class="hover:text-blue-500"
+                  >Tipos de Gateway</a
+                >
+              </li>
+              <li>
+                <a href="#storage-gateway-usos" class="hover:text-blue-500"
+                  >Casos de Uso</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#snow-family" class="hover:text-blue-500"
+              >AWS Snow Family</a
+            >
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#snow-dispositivos" class="hover:text-blue-500"
+                  >Dispositivos Disponíveis</a
+                >
+              </li>
+              <li>
+                <a href="#snow-casos-uso" class="hover:text-blue-500"
+                  >Casos de Uso</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#backup" class="hover:text-blue-500">AWS Backup</a>
+            <ul class="ml-6 space-y-1 list-inside list-disc">
+              <li>
+                <a href="#backup-recursos" class="hover:text-blue-500"
+                  >Recursos Principais</a
+                >
+              </li>
+              <li>
+                <a href="#backup-integracao" class="hover:text-blue-500"
+                  >Integrações</a
+                >
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <h2 id="s3" class="text-2xl font-semibold mt-8 mb-4">
+        Amazon Simple Storage Service (S3)
+      </h2>
+      <p>
+        O Amazon S3 é um serviço de armazenamento de objetos altamente
+        escalável, durável e seguro. Principais características:
+      </p>
       <ul class="space-y-2">
-        <li>Amazon S3 (Simple Storage Service)</li>
-        <li>Amazon EBS (Elastic Block Store)</li>
-        <li>Amazon EFS (Elastic File System)</li>
-        <li>Amazon FSx</li>
-        <li>AWS Storage Gateway</li>
+        <li>Durabilidade de 99,999999999% (11 noves)</li>
+        <li>Disponibilidade de 99,99%</li>
+        <li>Armazenamento ilimitado</li>
+        <li>Objetos de até 5TB</li>
+        <li>Acesso via HTTP/HTTPS</li>
       </ul>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-4">Benefícios</h2>
+      <h3 id="s3-conceitos" class="text-xl font-semibold mt-6 mb-2">
+        Conceitos fundamentais:
+      </h3>
       <ul class="space-y-2">
-        <li>Compreensão dos diferentes tipos de armazenamento</li>
-        <li>Capacidade de escolher a solução ideal para cada cenário</li>
-        <li>Otimização de custos com armazenamento</li>
+        <li>
+          <strong>Buckets:</strong> Containers para objetos, nomes devem ser globalmente
+          únicos
+        </li>
+        <li><strong>Objetos:</strong> Arquivos e metadados associados</li>
+        <li>
+          <strong>Versionamento:</strong> Mantém múltiplas versões de objetos
+        </li>
+        <li>
+          <strong>Lifecycle Rules:</strong> Automatiza movimentação entre classes
+          de armazenamento
+        </li>
+        <li>
+          <strong>Encryption:</strong> Criptografia em repouso e em trânsito
+        </li>
       </ul>
+
+      <h3 id="s3-classes" class="text-xl font-semibold mt-6 mb-2">
+        Classes de armazenamento do S3:
+      </h3>
+      <ul class="space-y-2">
+        <li>
+          <strong>S3 Standard:</strong> Uso geral, acesso frequente, 99,99% disponibilidade
+        </li>
+        <li>
+          <strong>S3 Intelligent-Tiering:</strong> Movimentação automática entre
+          níveis baseada no uso
+        </li>
+        <li>
+          <strong>S3 Standard-IA:</strong> Acesso infrequente, menor custo, recuperação
+          rápida
+        </li>
+        <li>
+          <strong>S3 One Zone-IA:</strong> Menor custo para dados não críticos, uma
+          única zona
+        </li>
+        <li>
+          <strong>S3 Glacier Instant Retrieval:</strong> Arquivamento com acesso
+          em milissegundos
+        </li>
+        <li>
+          <strong>S3 Glacier Flexible Retrieval:</strong> Arquivamento com recuperação
+          em minutos a horas
+        </li>
+        <li>
+          <strong>S3 Glacier Deep Archive:</strong> Arquivamento de longo prazo,
+          recuperação em 12h
+        </li>
+        <li><strong>S3 Outposts:</strong> Armazenamento S3 no local</li>
+      </ul>
+
+      <h2 id="ebs" class="text-2xl font-semibold mt-8 mb-4">
+        Amazon Elastic Block Store (EBS)
+      </h2>
+      <p>
+        O Amazon EBS fornece volumes de armazenamento em bloco de alta
+        performance para EC2.
+      </p>
+
+      <h3 id="ebs-tipos" class="text-xl font-semibold mt-6 mb-2">
+        Tipos de Volume:
+      </h3>
+      <ul class="space-y-2">
+        <li>
+          <strong>gp3/gp2 (SSD):</strong> Propósito geral, equilíbrio preço/performance
+        </li>
+        <li>
+          <strong>io2/io1 (SSD):</strong> Alta performance, baixa latência
+        </li>
+        <li>
+          <strong>st1 (HDD):</strong> Throughput otimizado para big data, streaming
+        </li>
+        <li><strong>sc1 (HDD):</strong> Armazenamento frio, menor custo</li>
+      </ul>
+
+      <h3 id="ebs-caracteristicas" class="text-xl font-semibold mt-6 mb-2">
+        Características importantes:
+      </h3>
+      <ul class="space-y-2">
+        <li>Snapshots incrementais armazenados no S3</li>
+        <li>Volumes podem ser criptografados</li>
+        <li>Podem ser redimensionados dinamicamente</li>
+        <li>Replicação entre zonas de disponibilidade</li>
+      </ul>
+
+      <h2 id="efs" class="text-2xl font-semibold mt-8 mb-4">
+        Amazon Elastic File System (EFS)
+      </h2>
+      <p>
+        Sistema de arquivos gerenciado para Linux, escalável automaticamente.
+      </p>
+
+      <h3 id="efs-caracteristicas" class="text-xl font-semibold mt-6 mb-2">
+        Características principais:
+      </h3>
+      <ul class="space-y-2">
+        <li>Sistema de arquivos POSIX compatível</li>
+        <li>Escala automaticamente até petabytes</li>
+        <li>Pague apenas pelo armazenamento usado</li>
+        <li>Suporta milhares de conexões NFS simultâneas</li>
+        <li>Replicação entre múltiplas AZs</li>
+      </ul>
+
+      <h3 id="efs-classes" class="text-xl font-semibold mt-6 mb-2">
+        Classes de armazenamento:
+      </h3>
+      <ul class="space-y-2">
+        <li><strong>Standard:</strong> Acesso frequente</li>
+        <li>
+          <strong>Infrequent Access (IA):</strong> Menor custo para arquivos acessados
+          com menos frequência
+        </li>
+        <li>
+          <strong>One Zone:</strong> Menor custo, armazenamento em uma única AZ
+        </li>
+      </ul>
+
+      <h2 id="fsx" class="text-2xl font-semibold mt-8 mb-4">Amazon FSx</h2>
+      <p>
+        Sistemas de arquivos totalmente gerenciados para cargas de trabalho
+        específicas.
+      </p>
+
+      <h3 id="fsx-tipos" class="text-xl font-semibold mt-6 mb-2">
+        Variantes do FSx:
+      </h3>
+      <ul class="space-y-2">
+        <li>
+          <strong>FSx for Windows:</strong> Compartilhamento SMB, integração AD
+        </li>
+        <li>
+          <strong>FSx for Lustre:</strong> Computação de alta performance (HPC)
+        </li>
+        <li>
+          <strong>FSx for NetApp ONTAP:</strong> Gerenciamento de dados empresariais
+        </li>
+        <li>
+          <strong>FSx for OpenZFS:</strong> Sistema de arquivos ZFS gerenciado
+        </li>
+      </ul>
+
+      <h2 id="storage-gateway" class="text-2xl font-semibold mt-8 mb-4">
+        AWS Storage Gateway
+      </h2>
+      <p>
+        Serviço híbrido que conecta ambientes on-premises com armazenamento em
+        nuvem.
+      </p>
+
+      <h3 id="storage-gateway-tipos" class="text-xl font-semibold mt-6 mb-2">
+        Tipos de gateway:
+      </h3>
+      <ul class="space-y-2">
+        <li><strong>S3 File Gateway:</strong> Acesso NFS/SMB para S3</li>
+        <li><strong>FSx File Gateway:</strong> Cache local para Amazon FSx</li>
+        <li>
+          <strong>Volume Gateway:</strong> Volumes iSCSI em cache ou armazenados
+        </li>
+        <li>
+          <strong>Tape Gateway:</strong> Backup em fita virtual usando S3 e Glacier
+        </li>
+      </ul>
+
+      <h2 id="snow-family" class="text-2xl font-semibold mt-8 mb-4">
+        Família AWS Snow
+      </h2>
+      <p>Dispositivos físicos para migração de dados e edge computing.</p>
+
+      <h3 id="snow-dispositivos" class="text-xl font-semibold mt-6 mb-2">
+        Dispositivos disponíveis:
+      </h3>
+      <ul class="space-y-2">
+        <li>
+          <strong>Snowcone:</strong> 8TB, ideal para ambientes pequenos ou remotos
+        </li>
+        <li>
+          <strong>Snowball Edge:</strong>
+          <ul class="ml-4">
+            <li>Storage Optimized: 80TB de HDD</li>
+            <li>Compute Optimized: 42TB de NVMe</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Snowmobile:</strong> Data center móvel com capacidade de 100PB
+        </li>
+      </ul>
+
+      <h2 id="backup" class="text-2xl font-semibold mt-8 mb-4">AWS Backup</h2>
+      <p>Serviço centralizado de backup para recursos AWS.</p>
+
+      <h3 id="backup-recursos" class="text-xl font-semibold mt-6 mb-2">
+        Recursos principais:
+      </h3>
+      <ul class="space-y-2">
+        <li>Backup automatizado entre regiões</li>
+        <li>Políticas de retenção configuráveis</li>
+        <li>Controle de acesso baseado em tags</li>
+        <li>Monitoramento centralizado</li>
+        <li>
+          Suporte a diversos serviços AWS (EC2, EBS, RDS, DynamoDB, EFS, etc.)
+        </li>
+      </ul>
+    </div>
+    <div class="mt-8 flex justify-between">
+      <a
+        href="/modulos/computacao"
+        class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>
+        Voltar para Computação
+      </a>
+      <a
+        href="/modulos/redes"
+        class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+      >
+        Próximo Módulo: Redes
+        <i class="fas fa-arrow-right ml-2"></i>
+      </a>
     </div>
   </div>
 </BaseLayout>

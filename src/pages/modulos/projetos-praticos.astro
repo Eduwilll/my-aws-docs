@@ -6,22 +6,331 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold mb-6">Projetos Práticos</h1>
 
-    <div class="prose max-w-none">
-      <h2 class="text-2xl font-semibold mb-4">O que você vai desenvolver</h2>
-      <ul class="space-y-2">
-        <li>Hospedagem de site estático com S3 e CloudFront</li>
-        <li>Aplicação serverless com Lambda e API Gateway</li>
-        <li>Infraestrutura como código com CloudFormation</li>
-        <li>Microsserviços com containers no ECS</li>
-        <li>Arquitetura de alta disponibilidade</li>
-      </ul>
+    <div class="space-y-8">
+      <section class="bg-background p-6 rounded-lg shadow-md">
+        <div
+          class="bg-inherit p-4 rounded-lg border border-blue-100 text-primary"
+        >
+          <h2 class="text-2xl font-semibold mb-4">Índice</h2>
+          <ul class="space-y-2 list-inside list-disc">
+            <li>
+              <a href="#site-estatico" class="hover:text-blue-500"
+                >Site Estático com S3 e CloudFront</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#site-config" class="hover:text-blue-500"
+                    >Configuração do S3</a
+                  >
+                </li>
+                <li>
+                  <a href="#site-cdn" class="hover:text-blue-500"
+                    >Distribuição CloudFront</a
+                  >
+                </li>
+                <li>
+                  <a href="#site-dns" class="hover:text-blue-500"
+                    >Configuração de DNS</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#serverless" class="hover:text-blue-500"
+                >Aplicação Serverless</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#lambda-setup" class="hover:text-blue-500"
+                    >Configuração do Lambda</a
+                  >
+                </li>
+                <li>
+                  <a href="#api-gateway" class="hover:text-blue-500"
+                    >API Gateway</a
+                  >
+                </li>
+                <li>
+                  <a href="#dynamodb" class="hover:text-blue-500">DynamoDB</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#iac" class="hover:text-blue-500"
+                >Infraestrutura como Código</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#cloudformation" class="hover:text-blue-500"
+                    >CloudFormation</a
+                  >
+                </li>
+                <li>
+                  <a href="#terraform" class="hover:text-blue-500">Terraform</a>
+                </li>
+                <li><a href="#cdk" class="hover:text-blue-500">AWS CDK</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#containers" class="hover:text-blue-500"
+                >Microsserviços com Containers</a
+              >
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#docker" class="hover:text-blue-500">Docker</a>
+                </li>
+                <li>
+                  <a href="#ecs-setup" class="hover:text-blue-500">ECS</a>
+                </li>
+                <li>
+                  <a href="#fargate" class="hover:text-blue-500">Fargate</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#ha" class="hover:text-blue-500">Alta Disponibilidade</a>
+              <ul class="ml-6 space-y-1 list-inside list-disc">
+                <li>
+                  <a href="#multi-az" class="hover:text-blue-500">Multi-AZ</a>
+                </li>
+                <li>
+                  <a href="#auto-scaling" class="hover:text-blue-500"
+                    >Auto Scaling</a
+                  >
+                </li>
+                <li>
+                  <a href="#load-balancing" class="hover:text-blue-500"
+                    >Load Balancing</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-4">Benefícios</h2>
-      <ul class="space-y-2">
-        <li>Experiência prática com serviços AWS</li>
-        <li>Portfolio de projetos reais</li>
-        <li>Preparação para o mercado de trabalho</li>
-      </ul>
+      <section
+        id="site-estatico"
+        class="bg-background p-6 rounded-lg shadow-md"
+      >
+        <h2 class="text-2xl font-semibold mb-4">
+          Site Estático com S3 e CloudFront
+        </h2>
+
+        <div id="site-config" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Configuração do S3</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Criação do bucket</li>
+            <li>Configuração de hospedagem estática</li>
+            <li>Políticas de acesso</li>
+            <li>Upload de arquivos</li>
+          </ul>
+        </div>
+
+        <div id="site-cdn" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Distribuição CloudFront</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Criação da distribuição</li>
+            <li>Configuração de cache</li>
+            <li>SSL/TLS e HTTPS</li>
+            <li>Invalidação de cache</li>
+          </ul>
+        </div>
+
+        <div id="site-dns" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Configuração de DNS</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Route 53</li>
+            <li>Domínio personalizado</li>
+            <li>Certificado SSL</li>
+            <li>DNS propagation</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="serverless" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Aplicação Serverless</h2>
+
+        <div id="lambda-setup" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Configuração do Lambda</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Criação de funções</li>
+            <li>Runtime e dependências</li>
+            <li>Variáveis de ambiente</li>
+            <li>Monitoramento e logs</li>
+          </ul>
+        </div>
+
+        <div id="api-gateway" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">API Gateway</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>REST APIs</li>
+            <li>Métodos HTTP</li>
+            <li>Autorização e autenticação</li>
+            <li>Stages e deployment</li>
+          </ul>
+        </div>
+
+        <div id="dynamodb" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">DynamoDB</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Modelagem de dados</li>
+            <li>Partição e ordenação</li>
+            <li>Índices secundários</li>
+            <li>Operações CRUD</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="iac" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Infraestrutura como Código</h2>
+
+        <div id="cloudformation" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">CloudFormation</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Templates YAML/JSON</li>
+            <li>Stacks e recursos</li>
+            <li>Parâmetros e outputs</li>
+            <li>Nested stacks</li>
+          </ul>
+        </div>
+
+        <div id="terraform" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Terraform</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Providers e recursos</li>
+            <li>State management</li>
+            <li>Módulos</li>
+            <li>Workspaces</li>
+          </ul>
+        </div>
+
+        <div id="cdk" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">AWS CDK</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Constructs</li>
+            <li>Stacks</li>
+            <li>Assets</li>
+            <li>Testing</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="containers" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">
+          Microsserviços com Containers
+        </h2>
+
+        <div id="docker" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Docker</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Dockerfiles</li>
+            <li>Docker Compose</li>
+            <li>Networking</li>
+            <li>Volumes</li>
+          </ul>
+        </div>
+
+        <div id="ecs-setup" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">ECS</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Clusters</li>
+            <li>Task definitions</li>
+            <li>Services</li>
+            <li>Load balancing</li>
+          </ul>
+        </div>
+
+        <div id="fargate" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Fargate</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Serverless containers</li>
+            <li>Networking</li>
+            <li>Security groups</li>
+            <li>Auto scaling</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="ha" class="bg-background p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Alta Disponibilidade</h2>
+
+        <div id="multi-az" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Multi-AZ</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Design resiliente</li>
+            <li>Failover automático</li>
+            <li>Replicação de dados</li>
+            <li>Disaster recovery</li>
+          </ul>
+        </div>
+
+        <div id="auto-scaling" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Auto Scaling</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Launch templates</li>
+            <li>Scaling policies</li>
+            <li>Scheduled scaling</li>
+            <li>Target tracking</li>
+          </ul>
+        </div>
+
+        <div id="load-balancing" class="mt-6">
+          <h3 class="text-xl font-semibold mb-3">Load Balancing</h3>
+          <ul
+            class="list-disc list-inside space-y-2 text-muted-foreground ml-4"
+          >
+            <li>Application Load Balancer</li>
+            <li>Target groups</li>
+            <li>Health checks</li>
+            <li>SSL/TLS termination</li>
+          </ul>
+        </div>
+      </section>
+      <div class="mt-8 flex justify-between">
+        <a
+          href="/modulos/seguranca"
+          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Voltar para Segurança e Conformidade
+        </a>
+        <a
+          href="/modulos/fundamentos-aws"
+          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300"
+        >
+          Próximo Módulo: Fundamentos AWS
+          <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
     </div>
   </div>
 </BaseLayout>
