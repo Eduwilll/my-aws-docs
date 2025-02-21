@@ -71,7 +71,8 @@
   } */
 
   h1,
-  h2 {
+  h2,
+  h3{
     @apply text-primary; /* Apply blue-700 to titles */
   }
 
