@@ -1,9 +1,19 @@
 ---
-// src/layouts/BaseLayout.astro
+type DescribedString = {
+  value: string;
+  description: string;
+};
+const myString: DescribedString = {
+  value: "Seja bem vindo!",
+  description:
+    "Projeto Pessoal de Documentação e aprendizado da plataforma AWS - Simulados e notas de estudo.",
+};
+
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
 import { Github, Twitter, Linkedin, Cloud, Menu, X } from "lucide-react";
 const { title } = Astro.props;
+const { description } = myString;
 ---
 
 <!doctype html>
@@ -11,7 +21,24 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="images/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
     <title>{title} - Curso AWS</title>
+    <meta name="description" content={description} />
+
+    <!-- OpenGraph / Social Meta Tags -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="images/og-image.webp" />
+    <meta property="og:url" content={Astro.url.href} />
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="/images/twitter-image.jpg" />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
