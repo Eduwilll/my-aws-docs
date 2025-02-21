@@ -3,12 +3,17 @@ import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import remarkWikiLink from 'remark-wiki-link';
 import vercel from "@astrojs/vercel";
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   integrations: [
     react(),
     tailwind({
       applyBaseStyles: false,
+    }),
+    sitemap({
+      hostname: 'https://my-aws-docs.vercel.app',
+      exclude: ['/404'],
     }),
   ],
   markdown: {
