@@ -20,9 +20,10 @@ import { questions } from "@/data/questions-clf-c02";
 import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
 import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
-import type { Question } from "@/lib/types/questions";
+import type { Question, SimulatedExam } from "@/lib/types/questions";
 import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
+
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -45,6 +46,43 @@ const ExamSimulator = () => {
     "CLF-C02-GPT": GPTquestions,
     "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
   };
+  // Save Local Storage
+  // useEffect(() => {
+  //   const savedExamId = localStorage.getItem("selectedExamId");
+  //   const savedSimulado = localStorage.getItem("selectedSimulado");
+  //   const savedCurrentQuestionIndex = localStorage.getItem("currentQuestionIndex");
+  //   const savedScore = localStorage.getItem("score");
+  //   const savedTimeLeft = localStorage.getItem("timeLeft");
+  //   const savedSelectedAnswers = localStorage.getItem("selectedAnswers");
+  //   const activeSimulado = localStorage.getItem("isActive");
+
+  //   if (savedExamId && savedSimulado) {
+  //     setIsActive(activeSimulado === "true");
+  //     setSelectedExamId(savedExamId);
+  //     setSelectedSimulado(JSON.parse(savedSimulado));
+  //     setCurrentQuestionIndex(Number(savedCurrentQuestionIndex) || 0);
+  //     setScore(Number(savedScore) || 0);
+  //     setTimeLeft(Number(savedTimeLeft) || 90 * 60);
+  //     setSelectedAnswers(JSON.parse(savedSelectedAnswers) || [""]);
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   localStorage.setItem("isActive", isActive.toString());
+  //   localStorage.setItem("selectedExamId", selectedExamId);
+  //   localStorage.setItem("selectedSimulado", JSON.stringify(selectedSimulado));
+  //   localStorage.setItem("currentQuestionIndex", currentQuestionIndex.toString());
+  //   localStorage.setItem("score", score.toString());
+  //   localStorage.setItem("timeLeft", timeLeft.toString());
+  //   localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
+  // }, [
+  //   selectedExamId,
+  //   selectedSimulado,
+  //   currentQuestionIndex,
+  //   score,
+  //   timeLeft,
+  //   selectedAnswers,
+  // ]);
 
   // Get current question data
   const currentQuestion =
@@ -164,7 +202,6 @@ const ExamSimulator = () => {
     setShowExplanation(false);
     setEndMessage(null);
   };
-
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
   return (
