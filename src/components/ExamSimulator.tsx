@@ -145,7 +145,18 @@ const ExamSimulator = () => {
     } else {
       setAnswerStatus("incorrect");
     }
+    // Update the SimulatedExam object with the user's answer
+    if (simulatedExam) {
+      const updatedAnswers = {
+        ...simulatedExam.answers,
+        [currentQuestion.id]: selectedAnswers.join(","), // Store selected answers as a comma-separated string
+      };
 
+      setSimulatedExam({
+        ...simulatedExam,
+        answers: updatedAnswers,
+      });
+    }
     setShowExplanation(true);
   };
 
@@ -157,6 +168,18 @@ const ExamSimulator = () => {
     if (currentQuestionIndex + 1 < selectedSimulado.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      // Finalize the exam
+      if (simulatedExam) {
+        const updatedExam: SimulatedExam = {
+          ...simulatedExam,
+          endTime: new Date(), // Set the end time
+          score: score, // Set the final score
+          timeSpent: 90 * 60 - timeLeft, // Calculate time spent in minutes
+        };
+
+        setSimulatedExam(updatedExam);
+        console.log("Exam Completed:", updatedExam); // Log or save the exam data
+      }
       setShowScore(true);
       setIsActive(false);
       setEndMessage("Parabéns! Você finalizou a prova.");
@@ -188,11 +211,27 @@ const ExamSimulator = () => {
     setSelectedSimulado(simulados[examId as keyof typeof simulados]);
   };
 
+  const [simulatedExam, setSimulatedExam] = useState<SimulatedExam | null>(
+    null,
+  );
+
   const startExam = () => {
     if (!selectedExamId) {
       alert("Por favor, selecione um simulado antes de começar.");
       return;
     }
+
+    // Initialize the SimulatedExam object
+    const newExam: SimulatedExam = {
+      id: selectedExamId, // Use the selected exam ID
+      userId: "user678", // Replace with the actual user ID
+      questions: selectedSimulado.map((q) => q.id), // Store question IDs
+      answers: {}, // Initialize empty answers
+      startTime: new Date(), // Set the start time
+    };
+
+    setSimulatedExam(newExam);
+    console.log(setSimulatedExam);
     setIsActive(true);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -273,6 +312,9 @@ const ExamSimulator = () => {
                       </SelectItem>
                       <SelectItem value="CLF-C02-02">
                         Exame CLF-C02-02 (65 questões)
+                      </SelectItem>
+                      <SelectItem value="CLF-C02-GPT">
+                        Exame CLF-C02-GPT (65 questões)
                       </SelectItem>
                       <SelectItem value="CLF-C02-FULL-NOGPT">
                         Exame Infinito (130 questões)
