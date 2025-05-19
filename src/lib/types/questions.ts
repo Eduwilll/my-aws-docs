@@ -39,13 +39,13 @@ export type ExamCategory =
   | "serverless"
   | "containers";
 
-export type ExamDominion = "DOMAIN_1" | "DOMAIN_2" | "DOMAIN_3" | "DOMAIN_4";
+// export type ExamDominion = "DOMAIN_1" | "DOMAIN_2" | "DOMAIN_3" | "DOMAIN_4";
 
 export const ExamDominionMap = {
-  DOMAIN_1: "DOMAIN_1",
-  DOMAIN_2: "DOMAIN_2",
-  DOMAIN_3: "DOMAIN_3",
-  DOMAIN_4: "DOMAIN_4",
+  DOMAIN_1: "Conceitos de Nuvem",
+  DOMAIN_2: "Segurança e Conformidade",
+  DOMAIN_3: "Tecnologia",
+  DOMAIN_4: "Cobrança e Preços",
 } as const;
 
 export type ExamDominionKey = keyof typeof ExamDominionMap;

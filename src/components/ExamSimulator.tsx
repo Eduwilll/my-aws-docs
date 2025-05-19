@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Timer, Check, ChevronRight, RotateCcw, Award } from "lucide-react";
 
 import type { Question, SimulatedExam } from "@/lib/types/questions";
+import { ExamDominionMap } from "@/lib/types/questions";
 import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
 
@@ -127,6 +128,9 @@ const ExamSimulator = () => {
   };
 
   const handleSubmitAnswers = () => {
+    console.log(
+      "currentQuestion.dominio:" + ExamDominionMap[currentQuestion.dominio],
+    );
     const correctAnswerIds = currentOptions
       .filter((option) => option.isCorrect)
       .map((option) => option.id);
@@ -277,9 +281,14 @@ const ExamSimulator = () => {
                     Questão {currentQuestionIndex + 1} de{" "}
                     {selectedSimulado.length}
                   </Badge>
-                  <Badge variant="secondary" className="text-sm">
-                    {currentQuestion.category}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary" className="text-sm">
+                      {currentQuestion.category}
+                    </Badge>
+                    <Badge variant="secondary" className="text-sm">
+                      {ExamDominionMap[currentQuestion.dominio]}
+                    </Badge>
+                  </div>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
