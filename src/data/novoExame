@@ -1,0 +1,919 @@
+## SIMULADO 1 - AWS Cloud Practitioner (CLF-C02) ##
+
+Por Marcelo Avelino
+
+---
+
+**Pergunta 1:** Qual é a opção de armazenamento padrão do serviço S3?  
+a) **Standard**  
+b) Infrequent Access  
+c) Frequent Access  
+d) Glacier
+
+**Explicação:**  
+**Correta:** Standard é a opção padrão devido à alta durabilidade e
+disponibilidade.  
+**Incorretas:** Infrequent Access e Glacier têm tempos de recuperação
+mais longos; Frequent Access não é uma classe de armazenamento.
+
+**Pergunta 2:** Uma aplicação de terceiros produzirá um arquivo em um
+formato incompatível com o seu sistema. Qual serviço da AWS pode ser
+usado para transformar esse arquivo?  
+a) AWS DMS  
+b) AWS DataSync  
+c) AWS DTS  
+d) **AWS Glue**
+
+**Explicação:**  
+**Correta:** AWS Glue é um serviço de ETL que automatiza a transformação
+de dados.  
+**Incorretas:** DataSync é para sincronização de dados; DMS é para
+migração de bancos de dados; DTS não é um serviço da AWS.
+
+**Pergunta 3:** Qual é o banco de dados relacional totalmente gerenciado
+pela AWS e que pode ser 5x mais rápido que o MySQL?  
+a) **Aurora**  
+b) Neptune  
+c) MariaDB  
+d) DynamoDB
+
+**Explicação:**  
+**Correta:** Amazon Aurora é otimizado para MySQL e PostgreSQL.  
+**Incorretas:** Neptune é um banco de dados de grafos; MariaDB não tem a
+mesma otimização; DynamoDB é NoSQL.
+
+**Pergunta 4:** Uma empresa busca aprimorar a eficiência dos custos ao
+utilizar o serviço S3. Como seria possível otimizar essa situação?  
+a) Criando uma cópia desses objetos em outra região  
+b) Criando uma cópia desses objetos em outra zona de disponibilidade  
+c) **Configurando o S3 Lifecycle para que os objetos expirem em 30 dias
+para serem automaticamente excluídos**  
+d) Configurando o CloudWatch para monitorar o S3 e enviar um email
+solicitando a exclusão dos arquivos
+
+**Explicação:**  
+**Correta:** O S3 Lifecycle automatiza a exclusão de dados antigos.  
+**Incorretas:** As outras opções não otimizam custos automaticamente;
+CloudWatch apenas monitora.
+
+**Pergunta 5:** Uma agência de publicidade pretende lançar um site com
+conteúdo estático. Qual serviço seria mais apropriado e econômico?  
+a) Elastic File System (EFS)  
+b) Docker  
+c) **Simple Storage Service (S3)**  
+d) Elastic Compute Cloud (EC2)
+
+**Explicação:**  
+**Correta:** S3 é ideal para sites estáticos, sendo econômico.  
+**Incorretas:** EFS e EC2 são mais caros e complexos; Docker não é um
+serviço de armazenamento.
+
+**Pergunta 6:** Uma empresa tem o interesse em empregar o AWS IQ para
+agilizar a entrega de um projeto na nuvem. Como esse serviço pode ser
+utilizado?  
+a) Analisando e gerando dados para gerar insights  
+b) Ensinando linguagem de programação em nuvem  
+c) Automatizando a infraestrutura na nuvem  
+d) **Conectando especialistas da AWS para projetos de curto prazo**
+
+**Explicação:**  
+**Correta:** AWS IQ conecta clientes a especialistas para projetos
+específicos.  
+**Incorretas:** As outras opções não são funções do AWS IQ.
+
+**Pergunta 7:** Quais recursos referem-se ao Amazon S3? (Selecione 2
+alternativas)  
+a) **Objeto é um arquivo ou meta dado que descreve o arquivo**  
+b) Lambdas são funções sem servidores  
+c) **Bucket é um container de objetos**  
+d) Elastic Load Balancer são balanceadores de carga
+
+**Explicação:**  
+**Corretas:** A e C são conceitos fundamentais do S3.  
+**Incorretas:** B e D se referem a outros serviços da AWS.
+
+**Pergunta 8:** Uma organização almeja padronizar o processo de criação
+e configuração de todos os bancos de dados em sua infraestrutura por
+meio de código, permitindo a implementação automática através de
+pipelines de CI/CD. Qual serviço seria a recomendação para atender a
+esse propósito?  
+a) AWS RDS  
+b) AWS IAC  
+c) AWS CodePipeline  
+d) **AWS CloudFormation**
+
+**Explicação:**  
+**Correta:** CloudFormation permite gerenciar infraestrutura como
+código.  
+**Incorretas:** RDS é para bancos de dados; IAC não é um serviço;
+CodePipeline é para CI/CD.
+
+**Pergunta 9:** O que é possível fazer com o Amazon QuickSight?  
+a) Capturar dados de dispositivos e streaming  
+b) Executar MapReduce em dados distribuídos  
+c) Consultar dados no S3  
+d) **Criar dashboards de BI com machine learning**
+
+**Explicação:**  
+**Correta:** QuickSight é usado para criar dashboards e análises.  
+**Incorretas:** A, B, e C não são funcionalidades principais do
+QuickSight.
+
+**Pergunta 10:** Qual serviço fornece informações sobre os custos de
+infraestrutura na AWS?  
+a) AWS Inspector  
+b) AWS Budgets  
+c) **AWS Cost Explorer**  
+d) AWS Trusted Advisor
+
+**Explicação:**  
+**Correta:** Cost Explorer permite visualizar e analisar custos.  
+**Incorretas:** Budgets é para planejamento; Inspector e Trusted Advisor
+têm outras finalidades.
+
+**Pergunta 11:** Como o AWS Compute Optimizer ajuda a identificar
+configurações ideais na AWS?  
+a) Análise de mercado  
+b) Mineração de dados  
+c) **Machine learning**  
+d) Redes sociais
+
+**Explicação:**  
+**Correta:** Compute Optimizer usa machine learning para otimizar
+configurações.  
+**Incorretas:** As outras opções não se aplicam ao Compute Optimizer.
+
+**Pergunta 12:** Qual é a capacidade de armazenamento do S3?  
+a) 5 Gigabytes  
+b) 50 Gigabytes  
+c) **Capacidade virtualmente ilimitada**  
+d) 1 Terabyte
+
+**Explicação:**  
+**Correta:** S3 oferece capacidade praticamente ilimitada.  
+**Incorretas:** As outras opções não refletem a verdadeira capacidade do
+S3.
+
+**Pergunta 13:** Qual serviço audita as atividades na AWS?  
+a) AWS Audit  
+b) AWS CloudSearch  
+c) **AWS CloudTrail**  
+d) AWS Elasticsearch
+
+**Explicação:**  
+**Correta:** CloudTrail registra todas as atividades na AWS.  
+**Incorretas:** As outras opções não são para auditoria.
+
+**Pergunta 14:** Quais são as formas de pagamento para instâncias EC2?
+(Selecione 3 alternativas)  
+a) **Spot**  
+b) **On-Demand**  
+c) On-Premise  
+d) **Reserved**  
+e) Tailor Made
+
+**Explicação:**  
+**Corretas:** Spot, On-Demand, e Reserved são opções de pagamento para
+EC2.  
+**Incorretas:** On-Premise e Tailor Made não são formas de pagamento na
+AWS.
+
+**Pergunta 15:** Qual serviço permite o acesso seguro a recursos na
+AWS?  
+a) IAM Users  
+b) IAM Policies  
+c) IAM Groups  
+d) **IAM Roles**
+
+**Explicação:**  
+**Correta:** IAM Roles concede permissões temporárias e seguras.  
+**Incorretas:** Users, Policies, e Groups têm outras funções no
+gerenciamento de acesso.
+
+**Pergunta 16:** Qual dos seguintes serviços de banco de dados é
+totalmente gerenciado pela AWS?  
+a) MariaDB  
+b) **DynamoDB**  
+c) SQL Server  
+d) MySQL
+
+**Explicação:**  
+**Correta:** DynamoDB é um banco de dados NoSQL totalmente gerenciado.  
+**Incorretas:** MariaDB, SQL Server, e MySQL são gerenciados, mas não
+são NoSQL.
+
+**Pergunta 17:** Quem possui acesso completo na conta AWS?  
+a) AWS IAM  
+b) **AWS Account Root User**  
+c) AWS Administrator  
+d) AWS Full User
+
+**Explicação:**  
+**Correta:** O root user tem acesso completo à conta.  
+**Incorretas:** IAM e Administrator gerenciam acesso, mas não têm
+controle total.
+
+**Pergunta 18:** Quais são as principais vantagens do AWS ECS?  
+a) Alta disponibilidade  
+b) Integração com serviços de rede  
+c) **Gerenciamento simplificado de contêineres**
+
+**Explicação:**  
+**Correta:** ECS facilita o gerenciamento de contêineres.  
+**Incorretas:** As outras opções são características, mas o
+gerenciamento simplificado é o diferencial.
+
+**Pergunta 19:** Análise os serviços abaixo: O primeiro permite que
+aplicativos enviem mensagens críticas para vários assinantes através de
+um mecanismo de "push", eliminando a necessidade de verificar
+periodicamente ou "puxar" por atualizações. O segundo é um serviço de
+fila de mensagens, usado por aplicativos distribuídos para trocar
+mensagens através de um modelo de enfileiramento, que pode ajudar a
+desacoplar componentes de software.  
+Qual opção apresenta, respectivamente, o primeiro e o segundo serviço?  
+a) **SNS e SQS**  
+b) SES e SES  
+c) SES e SNS  
+d) SQS e SNS
+
+**Explicação:**  
+**Correta:** SNS é para notificações push; SQS é para filas de
+mensagens.  
+**Incorretas:** As outras combinações não estão corretas.
+
+**Pergunta 20:** Uma empresa tem o interesse de acompanhar o percentual
+de utilização de memória em seus servidores durante um período
+específico de uso. Qual serviço da AWS seria adequado para atender a
+essa necessidade?  
+a) **AWS CloudWatch**  
+b) AWS Cost Explorer  
+c) AWS DataSync  
+d) AWS CloudTrail
+
+**Explicação:**  
+**Correta:** CloudWatch monitora recursos e métricas de uso.  
+**Incorretas:** Os outros serviços não são para monitoramento em tempo
+real.
+
+**Pergunta 21:** Uma agência de viagens online tem a necessidade de
+armazenar, analisar e correlacionar dados de logs de seus aplicativos,
+isso é essencial para identificar e resolver gargalos de desempenho e
+problemas de disponibilidade, a fim de garantir uma experiência
+otimizada para seus clientes. Qual serviço da AWS é mais indicado para
+atender a essa demanda?  
+a) Amazon EMR  
+b) Amazon CloudSearch  
+c) **Amazon OpenSearch**  
+d) Amazon Athena
+
+**Explicação:**  
+**Correta:** OpenSearch é ideal para logs e análise de desempenho.  
+**Incorretas:** EMR é para Big Data; CloudSearch para busca; Athena para
+consultas em S3.
+
+**Pergunta 22:** Uma das formas de garantir a elasticidade e economia no
+uso do EC2 é mantendo os arquivos de programas e de sistemas em serviços
+de armazenamento anexados a instâncias. Qual serviço pode ser utilizado
+para isso?  
+a) CodeCommit  
+b) Git  
+c) **EBS**  
+d) S3
+
+**Explicação:**  
+**Correta:** EBS fornece armazenamento em bloco para instâncias EC2.  
+**Incorretas:** CodeCommit e Git são para controle de versão; S3 é
+armazenamento de objetos.
+
+**Pergunta 23:** Uma empresa tem a intenção de desenvolver uma aplicação
+sem servidor, fazendo uso de Lambda, SQS e SNS. Nesse contexto, é
+necessário escolher um serviço que possa orquestrar e integrar esses
+recursos para fluxos de negócio. Qual serviço seria mais adequado para
+essa finalidade?  
+a) AWS Service Mesh  
+b) AWS EventBridge  
+c) AWS Workflow  
+d) **AWS Step Functions**
+
+**Explicação:**  
+**Correta:** Step Functions orquestra funções sem servidor e integra
+serviços.  
+**Incorretas:** Service Mesh é para microserviços; EventBridge é para
+eventos; Workflow não é um serviço da AWS.
+
+**Pergunta 24:** Quais itens fazem parte dos pilares do Well-Architected
+Framework? (Selecione 2 alternativas)  
+a) **Excelência Operacional**  
+b) Desacoplamento  
+c) Monitoramento  
+d) Escalabilidade  
+e) **Segurança**
+
+**Explicação:**  
+**Corretas:** Excelência Operacional e Segurança são pilares do
+Well-Architected.  
+**Incorretas:** Desacoplamento, Monitoramento, e Escalabilidade são
+práticas, não pilares principais.
+
+**Pergunta 25:** Durante a migração de sistemas, observou-se que há
+dados em uma aplicação que raramente são acessados e poderiam ser
+preservados em arquivos apenas para fins de auditoria. Qual serviço pode
+ser empregado para alcançar esse objetivo com o menor custo possível?  
+a) S3 Infrequent Access  
+b) S3 Intelligent Tiering  
+c) S3 Standard  
+d) **S3 Glacier**
+
+**Explicação:**  
+**Correta:** Glacier é ideal para arquivamento a longo prazo e baixo
+custo.  
+**Incorretas:** Infrequent Access e Intelligent Tiering têm custos
+maiores; Standard é para dados acessados frequentemente.
+
+**Pergunta 26:** Um time de desenvolvimento detectou baixo desempenho em
+um banco de dados relacional. A concorrência entre um alto volume de
+consultas e outras operações no banco de dados tem elevado a latência no
+tráfego de dados. Qual é a abordagem mais eficiente e econômica para
+solucionar esse problema?  
+a) Substituir o RDS pelo Dynamo  
+b) Atualizar a role de acesso ao banco  
+c) Criar novas instâncias do RDS em outra zona de disponibilidade  
+d) **Fazer o uso de Read Replicas**
+
+**Explicação:**  
+**Correta:** Read Replicas distribuem o tráfego de leitura e melhoram o
+desempenho.  
+**Incorretas:** As outras opções não são focadas em desempenho de
+leitura.
+
+**Pergunta 27:** Qual das classes a seguir pode resultar em custos mais
+elevados no uso do S3?  
+a) Glacier  
+b) **Standard**  
+c) Glacier Deep Archive  
+d) Standard Infrequent Access
+
+**Explicação:**  
+**Correta:** Standard tem custos mais elevados devido à alta
+disponibilidade e recuperação rápida.  
+**Incorretas:** Glacier e Deep Archive são para arquivamento a longo
+prazo; Infrequent Access é para dados menos acessados.
+
+**Pergunta 28:** Após concluir os testes, homologação e implantação de
+uma aplicação, usuários relatam a impossibilidade de acessá-la em
+ambiente de produção. No log do CloudWatch, uma mensagem de erro indica
+que a função Lambda enfrentou negação de acesso ao DynamoDB. Qual
+serviço precisa ser configurado para resolver este problema em
+produção?  
+a) **AWS IAM roles**  
+b) AWS Cognito  
+c) AWS CloudWatch  
+d) AWS Config
+
+**Explicação:**  
+**Correta:** IAM roles gerenciam permissões de acesso entre Lambda e
+DynamoDB.  
+**Incorretas:** Cognito é para identidade; CloudWatch para
+monitoramento; Config para conformidade.
+
+**Pergunta 29:** Um desenvolvedor precisa modificar determinadas partes
+do código de uma aplicação, mas no momento não possui acesso ao seu
+computador e nem a sua IDE preferida. Como esse cenário pode ser
+contornado utilizando serviços da AWS?  
+a) Utilizando o CodePipeline através de um navegador de internet  
+b) **Utilizando o Cloud9 através de um navegador de internet**  
+c) Utilizando o CodeBuild através de um navegador de internet  
+d) Utilizando o Athena através de um navegador de internet
+
+**Explicação:**  
+**Correta:** Cloud9 é uma IDE baseada em navegador para desenvolvimento
+remoto.  
+**Incorretas:** CodePipeline é para CI/CD; CodeBuild é para compilar;
+Athena é para consultas SQL.
+
+**Pergunta 30:** Quais dos seguintes planos de suporte oferecem acesso
+ao atendimento ao cliente, whitepapers, documentações e fóruns de
+suporte 24x7? (Selecione 2)  
+a) Full  
+b) **Basic**  
+c) **Enterprise**  
+d) Reserved
+
+**Explicação:**  
+**Corretas:** Basic e Enterprise oferecem suporte 24x7.  
+**Incorretas:** Full e Reserved não são planos de suporte na AWS.
+
+**Pergunta 31:** Uma organização busca implementar uma estratégia de
+Recuperação de Desastres (DR) para suas aplicações. Qual é a
+recomendação mais adequada para a utilização do AWS RDS?  
+a) **Multi Regions (Distribuir em regiões diferentes)**  
+b) Implementar uma cópia do banco numa instância EC2  
+c) Multi-AZ (Distribuir em zonas de disponibilidade diferentes)  
+d) Read Replicas (Fazer cópias de leitura)
+
+**Explicação:**  
+**Correta:** Multi Regions garante alta disponibilidade em caso de
+desastres.  
+**Incorretas:** As outras opções não oferecem a mesma abrangência em
+recuperação de desastres.
+
+**Pergunta 32:** Uma empresa precisa executar milhares de tarefas de
+computação em lote com eficiência. Qual é o serviço mais indicado para
+essa necessidade?  
+a) AWS EventBridge  
+b) AWS Workflow  
+c) AWS Kinesis  
+d) **AWS Batch**
+
+**Explicação:**  
+**Correta:** AWS Batch é otimizado para computação em lote.  
+**Incorretas:** EventBridge é para eventos; Workflow não é um serviço da
+AWS; Kinesis é para streaming de dados.
+
+**Pergunta 33:** A Chief Technology Officer (CTO) de uma rede hospitalar
+almeja incorporar o AWS Data Exchange em suas plataformas. Para que
+finalidade esse serviço pode ser utilizado nesse contexto?  
+a) Para criar relatórios financeiros de hospitais.  
+b) Para integrar as redes computacionais dos hospitais.  
+c) **Para compartilhar dados de pacientes com outras redes
+hospitalares.**  
+d) Para criar websites de informações médicas.
+
+**Explicação:**  
+**Correta:** Data Exchange facilita o compartilhamento seguro de dados
+entre organizações.  
+**Incorretas:** As outras opções não são focos do Data Exchange.
+
+**Pergunta 34:** Utilizando os serviços da AWS, qual é a sequência
+esperada numa pipeline de CI/CD?  
+a) CodeCommit, CodeDeploy, CodeBuild  
+b) CodeBuild, CodeCommit, CodeDeploy  
+c) CodeDeploy, CodeBuild, CodeCommit  
+d) **CodeCommit, CodeBuild, CodeDeploy**
+
+**Explicação:**  
+**Correta:** A sequência é: gerenciar código, compilar/testar, e
+implantar.  
+**Incorretas:** As outras sequências não seguem o fluxo lógico de CI/CD.
+
+**Pergunta 35:** Em relação ao framework de melhores práticas
+arquitetônicas da AWS, qual pilar se dedica a assegurar que uma carga de
+trabalho execute sua função prevista de forma correta e consistente, e
+que essa carga de trabalho seja resiliente, recuperando-se prontamente
+de falhas para atender às demandas do negócio e do cliente?  
+a) Excelência Operacional  
+b) Segurança  
+c) Performance Eficiente  
+d) **Confiabilidade**
+
+**Explicação:**  
+**Correta:** Confiabilidade garante resiliência e recuperação de
+falhas.  
+**Incorretas:** Os outros pilares focam em outros aspectos de melhores
+práticas.
+
+**Pergunta 36:** Qual é o serviço de alta performance desenvolvido para
+fornecer block-storage para instâncias EC2?  
+a) **EBS**  
+b) ELB  
+c) S3  
+d) KMS
+
+**Explicação:**  
+**Correta:** EBS fornece armazenamento de blocos de alta performance.  
+**Incorretas:** ELB é para balanceamento de carga; S3 para armazenamento
+de objetos; KMS para gerenciamento de chaves.
+
+**Pergunta 37:** Qual é o serviço serverless (sem servidor) que permite
+a execução de consultas utilizando padrão SQL para analisar dados no
+Amazon S3?  
+a) Amazon Query Analyzer  
+b) EMR  
+c) **Athena**  
+d) Amazon Elastic Search
+
+**Explicação:**  
+**Correta:** Athena permite consultas SQL diretamente nos dados no S3.  
+**Incorretas:** Query Analyzer não existe; EMR é para processamento de
+Big Data; Elastic Search é para busca e análise de dados.
+
+**Pergunta 38:** Uma empresa busca assegurar a segurança das instâncias
+de uma aplicação que está prestes a ser lançada. Qual é o serviço que
+auxilia na identificação de vulnerabilidades de segurança e riscos de
+exposição, seguindo as melhores práticas e conformidade com
+regulamentações?  
+a) AWS Macie  
+b) **AWS Inspector**  
+c) AWS GuardDuty  
+d) AWS KMS
+
+**Explicação:**  
+**Correta:** Inspector realiza avaliações de segurança em instâncias
+EC2.  
+**Incorretas:** Macie é para dados sensíveis; GuardDuty para ameaças de
+segurança; KMS para gerenciamento de chaves.
+
+**Pergunta 39:** Uma empresa está transferindo parte de uma aplicação
+que utiliza sistemas de arquivos para armazenar e processar determinados
+dados na AWS. Qual das opções indica o serviço que pode ser empregado
+para atender a essa parte específica da aplicação?  
+a) AWS Config  
+b) Key Management Service (AWS KMS)  
+c) **Elastic File System (EFS)**  
+d) EC2
+
+**Explicação:**  
+**Correta:** EFS é ideal para sistemas de arquivos na AWS.  
+**Incorretas:** Config é para conformidade; KMS para chaves; EC2 para
+computação.
+
+**Pergunta 40:** O que é o MFA - Multi-Factor Authentication
+(Autenticação Multi Fator)?  
+a) Um serviço que permite que instâncias EC2 acessem banco de dados
+DynamoDB  
+b) Um serviço que permite a conexão entre a máquina do cliente e um
+servidor na AWS através de um arquivo contendo pares de chaves  
+c) Um serviço que utiliza key pairs (par de chaves) na autenticação do
+usuário através da CLI (Linha de Comando)  
+d) **Um serviço que inclui uma etapa a mais no processo de autenticação
+de acesso à conta da AWS através do Console Web**
+
+**Explicação:**  
+**Correta:** MFA adiciona uma camada extra de segurança na
+autenticação.  
+**Incorretas:** As outras opções descrevem diferentes mecanismos de
+segurança.
+
+**Pergunta 41:** Qual das seguintes afirmações NÃO está relacionada ao
+AWS Lambda?  
+a) Pode ser acionado diretamente pelo AWS S3  
+b) Pode ser acionado diretamente pelo AWS SNS  
+c) Processa dados sem servidor  
+d) **Permite o gerenciamento total dos recursos de infraestrutura**
+
+**Explicação:**  
+**Correta:** Lambda não permite gerenciamento completo de
+infraestrutura, apenas execução de funções.  
+**Incorretas:** As outras opções são características do Lambda.
+
+**Pergunta 42:** Um arquiteto de soluções está em busca de um serviço
+capaz de identificar os sentimentos expressos em textos digitados
+durante conversas entre clientes e atendentes em um chat da sua
+instituição. Qual serviço pode ser utilizado para atender a essa
+necessidade?  
+a) Kendra  
+b) **Comprehend**  
+c) Translate  
+d) Polly
+
+**Explicação:**  
+**Correta:** Comprehend usa NLP para análise de sentimentos em textos.  
+**Incorretas:** Kendra é para busca; Translate para tradução; Polly para
+conversão de texto em fala.
+
+**Pergunta 43:** Um arquiteto de soluções da sua empresa recomendou o
+uso do AWS Wavelength. Qual a melhor definição para esse serviço?  
+a) **Uma região geográfica da AWS especialmente projetada para cargas de
+trabalho de baixa latência.**  
+b) Uma ferramenta de gerenciamento de banco de dados na AWS.  
+c) Uma tecnologia de monitoramento de tráfego de rede na AWS.  
+d) Uma linguagem de programação utilizada para desenvolver aplicativos
+na AWS.
+
+**Explicação:**  
+**Correta:** Wavelength é projetado para reduzir a latência em cargas de
+trabalho.  
+**Incorretas:** As outras opções não se aplicam à definição do
+Wavelength.
+
+**Pergunta 44:** O desenvolvedor de uma empresa implementou um sistema
+baseado em arquitetura de microsserviços e necessita realizar a
+depuração de problemas relacionados ao desempenho e à experiência do
+usuário. Qual serviço é mais apropriado para essa finalidade?  
+a) AWS CloudWatch  
+b) AWS OpenSearch  
+c) **AWS X-Ray**  
+d) AWS CloudSearch
+
+**Explicação:**  
+**Correta:** X-Ray permite análise de desempenho e depuração de
+microsserviços.  
+**Incorretas:** CloudWatch é para monitoramento geral; OpenSearch e
+CloudSearch são para busca.
+
+**Pergunta 45:** Como é possível manter a exposição constante de
+serviços em um mesmo endereço IP e facilitar a substituição simples dos
+hosts associados a esse endereço em sua infraestrutura?  
+a) **Utilizando um IP Elástico**  
+b) Utilizando o Route 53  
+c) Utilizando um IPv6  
+d) Utilizando um IPv4
+
+**Explicação:**  
+**Correta:** Elastic IP permite endereço IP estático para instâncias
+EC2.  
+**Incorretas:** Route 53 é para DNS; IPv6 e IPv4 não garantem endereço
+estático após reinicializações.
+
+**Pergunta 46:** Qual serviço da AWS é recomendado para estimar o custo
+de implementação dos serviços AWS para uma empresa?  
+a) AWS Organizations  
+b) **AWS Pricing Calculator**  
+c) AWS Billing  
+d) AWS Cost Explorer
+
+**Explicação:**  
+**Correta:** Pricing Calculator ajuda no planejamento de custos.  
+**Incorretas:** Organizations é para gerenciamento de contas; Billing é
+para faturas; Cost Explorer é para análise de custos passados.
+
+**Pergunta 47:** Com base nos princípios de excelência operacional,
+segurança, confiabilidade, desempenho eficiente, sustentabilidade e
+otimização de custos, qual é o framework que auxilia os arquitetos de
+nuvem na construção de aplicações seguras, altamente eficientes,
+resilientes e otimizadas?  
+a) AWS Pillar  
+b) AWS CloudFormation  
+c) **AWS Well-Architected**  
+d) Framework .Net
+
+**Explicação:**  
+**Correta:** Well-Architected Framework é uma referência para
+arquiteturas eficientes.  
+**Incorretas:** Pillar não é um framework; CloudFormation é para
+gerenciar infraestrutura como código; Framework .Net é uma plataforma de
+desenvolvimento.
+
+**Pergunta 48:** Utilização de recursos de rede, computadores virtuais e
+armazenamento de dados com alto nível de flexibilidade, gerenciamento e
+controle sobre os recursos de TI são características de qual tipo de uso
+de cloud?  
+a) BaaS  
+b) **IaaS**  
+c) PaaS  
+d) SaaS
+
+**Explicação:**  
+**Correta:** IaaS oferece controle direto sobre infraestrutura de TI.  
+**Incorretas:** BaaS é para backend como serviço; PaaS é para plataforma
+como serviço; SaaS é software como serviço.
+
+**Pergunta 49:** Qual serviço da AWS possui um catálogo onde os clientes
+podem encontrar aplicações desenvolvidas por terceiros, prontas para
+serem instaladas e executadas para atender as mais diversas necessidades
+de negócio?  
+a) **AWS Marketplace**  
+b) AWS AMI  
+c) AWS MFA  
+d) AWS OpsWorks
+
+**Explicação:**  
+**Correta:** Marketplace oferece um catálogo de aplicações de
+terceiros.  
+**Incorretas:** AMI são imagens de máquinas; MFA é autenticação
+multifator; OpsWorks é para automação de configuração.
+
+**Pergunta 50:** Qual opção que melhor descreve o modelo de
+Responsabilidade Compartilhada da AWS (shared responsibility)?  
+a) O cliente protege o data center, enquanto usuário protege sua
+senha.  
+b) **A AWS protege o data center, enquanto o cliente protege as
+aplicações.**  
+c) A AWS protege o data center, enquanto a Microsoft protege o
+Windows.  
+d) O desenvolvedor é responsável por implementar a aplicação, enquanto o
+gestor faz a aprovação.
+
+**Explicação:**  
+**Correta:** No modelo de responsabilidade compartilhada, a AWS é
+responsável pela infraestrutura, e o cliente pelas aplicações.  
+**Incorretas:** As outras opções não refletem a divisão correta de
+responsabilidades.
+
+**Pergunta 51:** Uma empresa optou por migrar algumas aplicações
+monolíticas legadas para o ECS sem realizar refatorações. O que pode ser
+afirmado sobre essa estratégia?  
+a) **É possível, porém essa abordagem não resultará nos significativos
+benefícios que uma refatoração para microsserviços proporcionaria.**  
+b) É possível e trará mais velocidade para a migração e implementação de
+novas funcionalidades.  
+c) Não é possível, pois o serviço não aceita aplicações monolíticas.  
+d) É possível e recomendado.
+
+**Explicação:**  
+**Correta:** A migração sem refatoração é viável, mas não maximiza os
+benefícios dos microsserviços.  
+**Incorretas:** B exagera os benefícios; C está errada sobre a
+aceitação; D não é recomendado sem refatoração.
+
+**Pergunta 52:** Um grupo de desenvolvedores com conhecimento limitado
+em infraestrutura está interessado em adotar uma arquitetura de
+microsserviços em containers sem servidor. Qual serviço poderia
+ajudá-los, uma vez que não exige conhecimento especializado em
+containers e pode ser implementado com facilidade?  
+a) Elastic Kubernetes Service (EKS)  
+b) Elastic Container Service (ECS)  
+c) **Fargate**  
+d) Elastic Container Registry (ECR)
+
+**Explicação:**  
+**Correta:** Fargate simplifica a execução de containers sem servidor.  
+**Incorretas:** EKS e ECS requerem mais conhecimento; ECR é um registro
+de imagens.
+
+**Pergunta 53:** O AWS Trusted Advisor é um serviço de monitoramento e
+recomendação que auxilia o cliente a otimizar o uso de recursos de sua
+conta de maneira alinhada com as melhores práticas para evitar muitos
+benefícios. Quais itens abaixo representam tais benefícios? (Selecione 3
+alternativas)  
+a) **Segurança**  
+b) Proteção de Hardware  
+c) **Otimização de Custos**  
+d) **Performance**
+
+**Explicação:**  
+**Corretas:** Segurança, Otimização de Custos, e Performance são
+benefícios do Trusted Advisor.  
+**Incorretas:** Proteção de Hardware não é coberta pelo Trusted Advisor.
+
+**Pergunta 54:** Um e-commerce lida, em média, com 2000 usuários
+diários. Em dias de aumento nas vendas, o sistema atinge picos de 3000
+usuários, resultando em lentidão e, por vezes, indisponibilidade. Como
+automatizar o processo de provisionamento de instâncias adicionais de
+servidor para lidar automaticamente com essas cargas durante os períodos
+de pico?  
+a) **Utilizando o Auto Scaling**  
+b) Migrando a aplicação para uma máquina melhor  
+c) Implementando EBS Snapshots  
+d) Incluindo mais uma máquina física e alterando o ELB
+
+**Explicação:**  
+**Correta:** Auto Scaling ajusta automaticamente a capacidade com base
+na demanda.  
+**Incorretas:** B não é automatizado; C não está relacionado à
+escalabilidade; D não é prático na cloud.
+
+**Pergunta 55:** Uma aplicação necessita armazenar dados não
+estruturados de clientes. Qual serviço é mais apropriado para essa
+finalidade?  
+a) Amazon EMR  
+b) Amazon RedShift  
+c) Amazon Aurora  
+d) **Amazon DynamoDB**
+
+**Explicação:**  
+**Correta:** DynamoDB é ideal para dados não estruturados e
+semi-estruturados.  
+**Incorretas:** EMR é para processamento de Big Data; RedShift é para
+data warehousing; Aurora é um banco relacional.
+
+**Pergunta 56:** Uma empresa pretende manter suas cargas de trabalho no
+ambiente on-premises e armazenar parte de seus arquivos na AWS, adotando
+uma arquitetura de nuvem híbrida. Qual serviço proporciona uma variedade
+de recursos para a implementação dessa integração de armazenamento?  
+a) AWS Database Migration Service  
+b) Amazon Virtual Private Cloud (VPC)  
+c) AWS Organizations  
+d) **AWS Storage Gateway**
+
+**Explicação:**  
+**Correta:** Storage Gateway facilita a integração de armazenamento
+híbrido.  
+**Incorretas:** Database Migration Service é para migração de bancos de
+dados; VPC é para redes virtuais; Organizations é para gerenciar contas.
+
+**Pergunta 57:** Qual o serviço de banco de dados em grafo gerenciado
+pela AWS que possibilita diversos tipos de relacionamentos entre os seus
+nós e pode ajudar em diversos contextos, representando conexões
+presentes em situações cotidianas, como em redes sociais, cadeias
+logísticas, ambientes empresariais, entre outros?  
+a) Amazon JanusGraph  
+b) Amazon Neo4j  
+c) Amazon Graph  
+d) **Amazon Neptune**
+
+**Explicação:**  
+**Correta:** Neptune é otimizado para grafos altamente conectados, como
+redes sociais.  
+**Incorretas:** As demais opções não são serviços oferecidos pela AWS.
+
+**Pergunta 58:** Uma startup necessita realizar a implementação do
+armazenamento e sincronização de dados de um sistema de login seguro
+para aplicativos. Qual serviço da AWS pode ser empregado para atender a
+essa necessidade?  
+a) AWS Redis  
+b) AWS ElastiCache  
+c) **AWS Cognito**  
+d) AWS DynamoDB
+
+**Explicação:**  
+**Correta:** Cognito gerencia identidades de usuários e fornece tokens
+para acesso seguro.  
+**Incorretas:** Redis e ElastiCache são para cache; DynamoDB é um banco
+de dados, não específico para autenticação.
+
+**Pergunta 59:** Sua empresa deseja lançar um novo produto e para isso
+precisa criar um novo domínio público para associá-lo a um site. Qual é
+a maneira mais rápida de fazer isso?  
+a) **Criar um novo domínio no AWS Route 53**  
+b) Criar um novo domínio no RegistroCom  
+c) Criar um novo domínio numa instância EC2 e incluir o novo domínio  
+d) Desenvolver o novo site no AWS Beanstalk, que provisiona toda a infra
+para o desenvolvedor apenas programar.
+
+**Explicação:**  
+**Correta:** Route 53 é um serviço DNS que facilita a criação de novos
+domínios.  
+**Incorretas:** RegistroCom apenas registra; EC2 não é usado como
+servidor DNS; Beanstalk é para aplicações, não para registros de
+domínio.
+
+**Pergunta 60:** O que é Free Tier (Nível Gratuito)?  
+a) Um serviço de firewall que protege suas aplicações  
+b) **É um modelo de uso onde você não é cobrado na AWS**  
+c) É uma camada de banco de dados NoSQL  
+d) É um modelo open source (código aberto) para o desenvolvimento de
+aplicações em camadas
+
+**Explicação:**  
+**Correta:** Free Tier permite usar determinados serviços AWS
+gratuitamente por um tempo limitado.  
+**Incorretas:** As outras opções não descrevem o Free Tier.
+
+**Pergunta 61:** Uma agência está buscando incorporar ao seu site uma
+funcionalidade que permita realizar pesquisas em todos os textos das
+páginas e arquivos, visando aprimorar a navegação e a experiência dos
+usuários. Qual serviço SaaS disponível na AWS oferece ferramentas
+robustas para atender a esse propósito e pode ser facilmente integrado à
+sua aplicação?  
+a) **Amazon CloudSearch**  
+b) Amazon OpenSearch  
+c) Amazon Athena  
+d) Amazon CloudWatch
+
+**Explicação:**  
+**Correta:** CloudSearch permite busca e indexação avançadas para
+sites.  
+**Incorretas:** OpenSearch é para busca mas em um contexto mais amplo;
+Athena é para consultas SQL em S3; CloudWatch é para monitoramento.
+
+**Pergunta 62:** Quais são os cinco planos de suporte ofertados pela
+AWS?  
+a) **Basic, Developer, Business, Enterprise On-Ramp, Enterprise**  
+b) Basic, Developer, Business, Advanced, Enterprise On-Ramp  
+c) Standard, Developer, Business, Enterprise On-Ramp, Enterprise  
+d) Bronze, Silver, Gold, Diamond, Ruby
+
+**Explicação:**  
+**Correta:** Basic, Developer, Business, Enterprise On-Ramp, e
+Enterprise são os planos de suporte da AWS.  
+**Incorretas:** As demais opções incluem planos que não existem ou não
+são parte do suporte da AWS.
+
+**Pergunta 63:** Uma aplicação disponibiliza dados por meio de APIs REST
+para várias aplicações externas. Considerando possíveis cenários de
+manutenção e evolução futuras, qual serviço pode auxiliar na gestão de
+múltiplas versões de uma API, garantindo a compatibilidade contínua com
+todos os seus consumidores?  
+a) AWS Route53  
+b) AWS EventBridge  
+c) **API Gateway**  
+d) AWS Zuul
+
+**Explicação:**  
+**Correta:** API Gateway gerencia versões de APIs, facilitando a
+evolução controlada.  
+**Incorretas:** Zuul não existe na AWS; Route53 é DNS; EventBridge é
+para eventos.
+
+**Pergunta 64:** Uma empresa deu início a um processo de transformação
+digital em todas as suas plataformas e optou por implementar uma
+arquitetura de sistemas orientada a eventos. Qual dos serviços a seguir
+pode ser utilizado como um barramento escalável de eventos para
+facilitar a implementação dessa arquitetura?  
+a) Amazon EventSync  
+b) Amazon Lambda  
+c) Amazon SOS  
+d) **Amazon EventBridge**
+
+**Explicação:**  
+**Correta:** EventBridge é um barramento de eventos que simplifica a
+criação de aplicações orientadas a eventos.  
+**Incorretas:** EventSync não existe na AWS; Lambda é para funções sem
+servidor; SOS não existe na AWS.
+
+**Pergunta 65:** A equipe de segurança da informação de uma empresa
+classificou um e-mail como tendo alto risco de conter dados sensíveis
+devido à ausência de criptografia nas mensagens trocadas entre os
+usuários e os servidores. Qual serviço poderia ser eficaz para remediar
+esse problema?  
+a) AWS Cognito  
+b) AWS IAM  
+c) **AWS Certificate Manager**  
+d) AWS KMS
+
+**Explicação:**  
+**Correta:** Certificate Manager gerencia certificados digitais para
+criptografia de dados em trânsito.  
+**Incorretas:** Cognito é para gerenciamento de identidade; IAM para
+controle de acesso; KMS para gerenciamento de chaves criptográficas.

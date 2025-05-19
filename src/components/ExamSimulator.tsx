@@ -16,13 +16,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Timer, Check, ChevronRight, RotateCcw, Award } from "lucide-react";
+
+import type { Question, SimulatedExam } from "@/lib/types/questions";
+import { Separator } from "@radix-ui/react-select";
+import { Badge } from "@/components/ui/badge";
+
+//Questions
 import { questions } from "@/data/questions-clf-c02";
 import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
 import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
-import type { Question, SimulatedExam } from "@/lib/types/questions";
-import { Separator } from "@radix-ui/react-select";
-import { Badge } from "@/components/ui/badge";
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
