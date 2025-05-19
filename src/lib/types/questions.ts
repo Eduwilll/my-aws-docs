@@ -1,17 +1,22 @@
 // src/lib/types/questions.ts
+import type { ExamDomainKey } from "./exam-domains";
+
 export interface Question {
   id: string;
   text: string;
+  text_en?: string;
   type: typeChoice;
   options: {
     id: string;
     text: string;
+    text_en?: string;
     isCorrect: boolean;
     explanation: string;
+    explanation_en?: string;
   }[];
   // explanation: string;
   category: ExamCategory;
-  dominio: ExamDominionKey;
+  dominio: ExamDomainKey;
   difficulty: "easy" | "medium" | "hard";
   references: string[];
 }

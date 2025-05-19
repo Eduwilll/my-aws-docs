@@ -18,7 +18,12 @@ import { Progress } from "@/components/ui/progress";
 import { Timer, Check, ChevronRight, RotateCcw, Award } from "lucide-react";
 
 import type { Question, SimulatedExam } from "@/lib/types/questions";
-import { ExamDominionMap } from "@/lib/types/questions";
+import {
+  CLF_C02_DomainMap,
+  SAA_C03_DomainMap,
+  CLF_C02_DomainDetails,
+  SAA_C03_DomainDetails,
+} from "@/lib/types/exam-domains";
 import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +32,7 @@ import { questions } from "@/data/questions-clf-c02";
 import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
 import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
+import { questionsSaaC03 } from "@/data/questions-saa-c03";
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -49,6 +55,7 @@ const ExamSimulator = () => {
     "CLF-C02-02": questionsClfC0202,
     "CLF-C02-GPT": GPTquestions,
     "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
+    "SAA-C03": questionsSaaC03,
   };
   // Save Local Storage
   // useEffect(() => {
@@ -129,7 +136,8 @@ const ExamSimulator = () => {
 
   const handleSubmitAnswers = () => {
     console.log(
-      "currentQuestion.dominio:" + ExamDominionMap[currentQuestion.dominio],
+      "currentQuestion.dominio:" +
+        getDomainMap(selectedExamId)[currentQuestion.dominio],
     );
     const correctAnswerIds = currentOptions
       .filter((option) => option.isCorrect)
@@ -250,6 +258,36 @@ const ExamSimulator = () => {
   };
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
+  const getDomainMap = (examId: string) => {
+    switch (examId) {
+      case "SAA-C03":
+        return SAA_C03_DomainMap;
+      case "CLF-C02":
+      case "CLF-C02-01":
+      case "CLF-C02-02":
+      case "CLF-C02-GPT":
+      case "CLF-C02-FULL-NOGPT":
+        return CLF_C02_DomainMap;
+      default:
+        return CLF_C02_DomainMap;
+    }
+  };
+
+  const getDomainDetails = (examId: string) => {
+    switch (examId) {
+      case "SAA-C03":
+        return SAA_C03_DomainDetails;
+      case "CLF-C02":
+      case "CLF-C02-01":
+      case "CLF-C02-02":
+      case "CLF-C02-GPT":
+      case "CLF-C02-FULL-NOGPT":
+        return CLF_C02_DomainDetails;
+      default:
+        return CLF_C02_DomainDetails;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto space-y-4">
@@ -286,7 +324,7 @@ const ExamSimulator = () => {
                       {currentQuestion.category}
                     </Badge>
                     <Badge variant="secondary" className="text-sm">
-                      {ExamDominionMap[currentQuestion.dominio]}
+                      {getDomainMap(selectedExamId)[currentQuestion.dominio]}
                     </Badge>
                   </div>
                 </div>
@@ -330,6 +368,9 @@ const ExamSimulator = () => {
                       </SelectItem>
                       <SelectItem value="CLF-C02-FULL-NOGPT">
                         Exame Infinito (130 questões)
+                      </SelectItem>
+                      <SelectItem value="SAA-C03">
+                        Exame SAA-C03 (1 questão)
                       </SelectItem>
                     </SelectContent>
                   </Select>
