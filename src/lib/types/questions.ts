@@ -44,15 +44,6 @@ export type ExamCategory =
   | "serverless"
   | "containers";
 
-export const ExamDominionMap = {
-  DOMAIN_1: "Conceitos de Nuvem",
-  DOMAIN_2: "Segurança e Conformidade",
-  DOMAIN_3: "Tecnologia",
-  DOMAIN_4: "Cobrança e Preços",
-} as const;
-
-export type ExamDominionKey = keyof typeof ExamDominionMap;
-
 export type typeChoice = "single_choice" | "multiple_choice";
 
 export interface SimulatedExam {

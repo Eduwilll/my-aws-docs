@@ -137,7 +137,7 @@ const ExamSimulator = () => {
   const handleSubmitAnswers = () => {
     console.log(
       "currentQuestion.dominio:" +
-        getDomainMap(selectedExamId)[currentQuestion.dominio],
+        getDomainName(selectedExamId, currentQuestion.dominio),
     );
     const correctAnswerIds = currentOptions
       .filter((option) => option.isCorrect)
@@ -273,6 +273,11 @@ const ExamSimulator = () => {
     }
   };
 
+  const getDomainName = (examId: string, domain: string) => {
+    const domainMap = getDomainMap(examId);
+    return domainMap[domain as keyof typeof domainMap] || "Unknown Domain";
+  };
+
   const getDomainDetails = (examId: string) => {
     switch (examId) {
       case "SAA-C03":
@@ -324,7 +329,7 @@ const ExamSimulator = () => {
                       {currentQuestion.category}
                     </Badge>
                     <Badge variant="secondary" className="text-sm">
-                      {getDomainMap(selectedExamId)[currentQuestion.dominio]}
+                      {getDomainName(selectedExamId, currentQuestion.dominio)}
                     </Badge>
                   </div>
                 </div>
