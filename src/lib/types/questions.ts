@@ -51,6 +51,16 @@ export type ExamCategory =
 
 export type typeChoice = "single_choice" | "multiple_choice";
 
+export type StudyMode = "practice" | "exam" | "domain_focus";
+
+export interface StudySettings {
+  mode: StudyMode;
+  selectedDomains?: ExamDomainKey[];
+  selectedCategories?: ExamCategory[];
+  timeLimit?: number; // in minutes
+  showImmediateFeedback: boolean;
+}
+
 export interface SimulatedExam {
   id: string;
   userId: string;
@@ -60,6 +70,7 @@ export interface SimulatedExam {
   endTime?: Date;
   score?: number;
   timeSpent?: number; // in minutes
+  studySettings: StudySettings;
 }
 
 export interface UserProgress {
