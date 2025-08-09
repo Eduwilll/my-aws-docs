@@ -88,6 +88,8 @@ const ExamSimulator = () => {
     useState<DetailedExamResult | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
   const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedExamData, setSavedExamData] = useState<any>(null);
 
   // Initialize user progress hook
   const {
@@ -110,48 +112,38 @@ const ExamSimulator = () => {
     "CLF-C02-CC-01": questionCLFC02CC01,
     "SAA-C03": questionsSaaC03,
   };
-  // Save Local Storage
+  // Check for saved exam state on component mount
   useEffect(() => {
     // Only access localStorage if we're in the browser
     if (typeof window === "undefined") return;
 
-    const savedExamId = localStorage.getItem("selectedExamId");
-    const savedSimulado = localStorage.getItem("selectedSimulado");
-    const savedCurrentQuestionIndex = localStorage.getItem(
-      "currentQuestionIndex",
-    );
-    const savedScore = localStorage.getItem("score");
-    const savedTimeLeft = localStorage.getItem("timeLeft");
-    const savedSelectedAnswers = localStorage.getItem("selectedAnswers");
-    const activeSimulado = localStorage.getItem("isActive");
+    const savedState = localStorage.getItem("examState");
+    if (savedState) {
+      try {
+        const examState = JSON.parse(savedState);
+        // Check if the saved state is recent (within 24 hours)
+        const savedTime = new Date(examState.timestamp);
+        const now = new Date();
+        const hoursDiff =
+          (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
 
-    if (savedExamId && savedSimulado) {
-      setIsActive(activeSimulado === "true");
-      setSelectedExamId(savedExamId);
-      setSelectedSimulado(JSON.parse(savedSimulado));
-      setCurrentQuestionIndex(Number(savedCurrentQuestionIndex) || 0);
-      setScore(Number(savedScore) || 0);
-      setTimeLeft(Number(savedTimeLeft) || 90 * 60);
-      setSelectedAnswers(
-        savedSelectedAnswers ? JSON.parse(savedSelectedAnswers) : [],
-      );
+        if (hoursDiff < 24 && examState.isActive) {
+          setSavedExamData(examState);
+          setShowResumeDialog(true);
+        } else {
+          // Clear old saved state
+          clearExamState();
+        }
+      } catch (error) {
+        console.error("Error parsing saved exam state:", error);
+        clearExamState();
+      }
     }
   }, []);
 
+  // Save exam state automatically
   useEffect(() => {
-    // Only save to localStorage if we're in the browser
-    if (typeof window === "undefined") return;
-
-    localStorage.setItem("isActive", isActive.toString());
-    localStorage.setItem("selectedExamId", selectedExamId);
-    localStorage.setItem("selectedSimulado", JSON.stringify(selectedSimulado));
-    localStorage.setItem(
-      "currentQuestionIndex",
-      currentQuestionIndex.toString(),
-    );
-    localStorage.setItem("score", score.toString());
-    localStorage.setItem("timeLeft", timeLeft.toString());
-    localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
+    saveExamState();
   }, [
     isActive,
     selectedExamId,
@@ -160,6 +152,11 @@ const ExamSimulator = () => {
     score,
     timeLeft,
     selectedAnswers,
+    studyMode,
+    selectedDomains,
+    selectedCategories,
+    allAnswers,
+    examStartTime,
   ]);
 
   // Get current question data
@@ -363,6 +360,8 @@ const ExamSimulator = () => {
       setShowScore(true);
       setIsActive(false);
       setEndMessage("Parabéns! Você finalizou a prova.");
+      // Clear saved state when exam is completed
+      clearExamState();
     }
   };
 
@@ -460,6 +459,8 @@ const ExamSimulator = () => {
     setExamStartTime(examStart);
     setAllAnswers({});
     setQuestionStartTime(new Date());
+    // Clear any previous saved state when starting a new exam
+    clearExamState();
   };
 
   const handleToggleFavorite = (questionId: string) => {
@@ -484,6 +485,63 @@ const ExamSimulator = () => {
     return Object.values(simulados).flat();
   };
 
+  const saveExamState = () => {
+    if (typeof window === "undefined" || !isActive) return;
+
+    const examState = {
+      isActive,
+      selectedExamId,
+      selectedSimulado,
+      currentQuestionIndex,
+      score,
+      timeLeft,
+      selectedAnswers,
+      studyMode,
+      selectedDomains,
+      selectedCategories,
+      allAnswers,
+      examStartTime: examStartTime?.toISOString(),
+      timestamp: new Date().toISOString(),
+    };
+
+    localStorage.setItem("examState", JSON.stringify(examState));
+  };
+
+  const clearExamState = () => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("examState");
+  };
+
+  const resumeSavedExam = () => {
+    if (!savedExamData) return;
+
+    setIsActive(savedExamData.isActive);
+    setSelectedExamId(savedExamData.selectedExamId);
+    setSelectedSimulado(savedExamData.selectedSimulado);
+    setCurrentQuestionIndex(savedExamData.currentQuestionIndex);
+    setScore(savedExamData.score);
+    setTimeLeft(savedExamData.timeLeft);
+    setSelectedAnswers(savedExamData.selectedAnswers);
+    setStudyMode(savedExamData.studyMode);
+    setSelectedDomains(savedExamData.selectedDomains || []);
+    setSelectedCategories(savedExamData.selectedCategories || []);
+    setAllAnswers(savedExamData.allAnswers || {});
+    setExamStartTime(
+      savedExamData.examStartTime
+        ? new Date(savedExamData.examStartTime)
+        : null,
+    );
+
+    setShowResumeDialog(false);
+    setSavedExamData(null);
+  };
+
+  const discardSavedExam = () => {
+    setShowResumeDialog(false);
+    setSavedExamData(null);
+    clearExamState();
+  };
+
   const resetExam = () => {
     setIsActive(false);
     setShowScore(false);
@@ -497,6 +555,9 @@ const ExamSimulator = () => {
     setAllAnswers({});
     setExamStartTime(null);
     setCurrentView("exam");
+    setShowResumeDialog(false);
+    setSavedExamData(null);
+    clearExamState();
   };
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
@@ -539,6 +600,66 @@ const ExamSimulator = () => {
 
   return (
     <div className="min-h-screen p-4">
+      {/* Resume Exam Dialog */}
+      {showResumeDialog && savedExamData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Exame em Andamento
+              </CardTitle>
+              <CardDescription>
+                Encontramos um exame que você estava fazendo. Deseja continuar
+                de onde parou?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong>Exame:</strong> {savedExamData.selectedExamId}
+                </p>
+                <p>
+                  <strong>Modo:</strong>{" "}
+                  {savedExamData.studyMode === "practice"
+                    ? "Prática"
+                    : savedExamData.studyMode === "exam"
+                      ? "Exame Simulado"
+                      : "Estudo Focado"}
+                </p>
+                <p>
+                  <strong>Progresso:</strong>{" "}
+                  {savedExamData.currentQuestionIndex + 1} de{" "}
+                  {savedExamData.selectedSimulado?.length || 0} questões
+                </p>
+                <p>
+                  <strong>Pontuação atual:</strong> {savedExamData.score} pontos
+                </p>
+                {savedExamData.studyMode === "exam" && (
+                  <p>
+                    <strong>Tempo restante:</strong>{" "}
+                    {Math.floor(savedExamData.timeLeft / 60)}m{" "}
+                    {savedExamData.timeLeft % 60}s
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button onClick={resumeSavedExam} className="flex-1">
+                  Continuar Exame
+                </Button>
+                <Button
+                  onClick={discardSavedExam}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Começar Novo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto space-y-4">
         <Card className="border-none shadow-lg">
           <CardHeader className="space-y-2">
