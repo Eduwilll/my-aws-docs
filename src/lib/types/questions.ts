@@ -73,16 +73,77 @@ export interface SimulatedExam {
   studySettings: StudySettings;
 }
 
-export interface UserProgress {
-  userId: string;
-  examsTaken: number;
-  averageScore: number;
-  categoryScores: {
-    [key in ExamCategory]: {
+export interface QuestionAttempt {
+  questionId: string;
+  selectedAnswers: string[];
+  correctAnswers: string[];
+  isCorrect: boolean;
+  isPartial: boolean;
+  timestamp: Date;
+  timeSpent?: number; // seconds spent on this question
+}
+
+export interface DetailedExamResult {
+  exam: SimulatedExam;
+  questionAttempts: QuestionAttempt[];
+  categoryBreakdown: {
+    [key in ExamCategory]?: {
       correct: number;
       total: number;
       percentage: number;
     };
   };
-  recentExams: SimulatedExam[];
+  domainBreakdown: {
+    [key: string]: {
+      correct: number;
+      total: number;
+      percentage: number;
+    };
+  };
+}
+
+export interface FavoriteQuestion {
+  questionId: string;
+  examId: string;
+  markedAt: Date;
+  notes?: string;
+  reviewCount: number;
+  lastReviewed?: Date;
+}
+
+export interface UserProgress {
+  userId: string;
+  examsTaken: number;
+  averageScore: number;
+  totalQuestionsAnswered: number;
+  totalCorrectAnswers: number;
+  categoryScores: {
+    [key in ExamCategory]?: {
+      correct: number;
+      total: number;
+      percentage: number;
+      lastAttempt?: Date;
+    };
+  };
+  domainScores: {
+    [key: string]: {
+      correct: number;
+      total: number;
+      percentage: number;
+      lastAttempt?: Date;
+    };
+  };
+  recentExams: DetailedExamResult[];
+  favoriteQuestions: FavoriteQuestion[];
+  weakAreas: {
+    category: ExamCategory;
+    domain: string;
+    incorrectCount: number;
+    totalAttempts: number;
+  }[];
+  studyStreak: {
+    current: number;
+    longest: number;
+    lastStudyDate?: Date;
+  };
 }

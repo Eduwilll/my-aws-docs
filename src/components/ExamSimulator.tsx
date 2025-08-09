@@ -15,15 +15,30 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Timer, Check, ChevronRight, RotateCcw, Award } from "lucide-react";
+import {
+  Timer,
+  Check,
+  ChevronRight,
+  RotateCcw,
+  Award,
+  Star,
+  BarChart3,
+  BookOpen,
+} from "lucide-react";
 
 import type {
   Question,
   SimulatedExam,
   StudyMode,
   ExamCategory,
+  DetailedExamResult,
+  QuestionAttempt,
 } from "@/lib/types/questions";
 import type { ExamDomainKey } from "@/lib/types/exam-domains";
+import { useUserProgress } from "@/hooks/useUserProgress";
+import { ProgressReport } from "@/components/ProgressReport";
+import { ExamDetails } from "@/components/ExamDetails";
+import { FavoriteQuestions } from "@/components/FavoriteQuestions";
 import {
   CLF_C02_DomainMap,
   SAA_C03_DomainMap,
@@ -66,6 +81,25 @@ const ExamSimulator = () => {
       status: "correct" | "incorrect" | "partial" | null;
     };
   }>({});
+  const [currentView, setCurrentView] = useState<
+    "exam" | "progress" | "favorites" | "exam-details"
+  >("exam");
+  const [selectedExamDetails, setSelectedExamDetails] =
+    useState<DetailedExamResult | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+
+  // Initialize user progress hook
+  const {
+    userProgress,
+    addExamResult,
+    addFavoriteQuestion,
+    removeFavoriteQuestion,
+    updateFavoriteQuestion,
+    isFavoriteQuestion,
+    getFavoriteQuestion,
+    clearAllProgress,
+  } = useUserProgress("user-" + crypto.randomUUID());
 
   const simulados = {
     "CLF-C02": questions,
@@ -77,42 +111,56 @@ const ExamSimulator = () => {
     "SAA-C03": questionsSaaC03,
   };
   // Save Local Storage
-  // useEffect(() => {
-  //   const savedExamId = localStorage.getItem("selectedExamId");
-  //   const savedSimulado = localStorage.getItem("selectedSimulado");
-  //   const savedCurrentQuestionIndex = localStorage.getItem("currentQuestionIndex");
-  //   const savedScore = localStorage.getItem("score");
-  //   const savedTimeLeft = localStorage.getItem("timeLeft");
-  //   const savedSelectedAnswers = localStorage.getItem("selectedAnswers");
-  //   const activeSimulado = localStorage.getItem("isActive");
+  useEffect(() => {
+    // Only access localStorage if we're in the browser
+    if (typeof window === "undefined") return;
 
-  //   if (savedExamId && savedSimulado) {
-  //     setIsActive(activeSimulado === "true");
-  //     setSelectedExamId(savedExamId);
-  //     setSelectedSimulado(JSON.parse(savedSimulado));
-  //     setCurrentQuestionIndex(Number(savedCurrentQuestionIndex) || 0);
-  //     setScore(Number(savedScore) || 0);
-  //     setTimeLeft(Number(savedTimeLeft) || 90 * 60);
-  //     setSelectedAnswers(JSON.parse(savedSelectedAnswers) || [""]);
-  //   }
-  // }, []);
+    const savedExamId = localStorage.getItem("selectedExamId");
+    const savedSimulado = localStorage.getItem("selectedSimulado");
+    const savedCurrentQuestionIndex = localStorage.getItem(
+      "currentQuestionIndex",
+    );
+    const savedScore = localStorage.getItem("score");
+    const savedTimeLeft = localStorage.getItem("timeLeft");
+    const savedSelectedAnswers = localStorage.getItem("selectedAnswers");
+    const activeSimulado = localStorage.getItem("isActive");
 
-  // useEffect(() => {
-  //   localStorage.setItem("isActive", isActive.toString());
-  //   localStorage.setItem("selectedExamId", selectedExamId);
-  //   localStorage.setItem("selectedSimulado", JSON.stringify(selectedSimulado));
-  //   localStorage.setItem("currentQuestionIndex", currentQuestionIndex.toString());
-  //   localStorage.setItem("score", score.toString());
-  //   localStorage.setItem("timeLeft", timeLeft.toString());
-  //   localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
-  // }, [
-  //   selectedExamId,
-  //   selectedSimulado,
-  //   currentQuestionIndex,
-  //   score,
-  //   timeLeft,
-  //   selectedAnswers,
-  // ]);
+    if (savedExamId && savedSimulado) {
+      setIsActive(activeSimulado === "true");
+      setSelectedExamId(savedExamId);
+      setSelectedSimulado(JSON.parse(savedSimulado));
+      setCurrentQuestionIndex(Number(savedCurrentQuestionIndex) || 0);
+      setScore(Number(savedScore) || 0);
+      setTimeLeft(Number(savedTimeLeft) || 90 * 60);
+      setSelectedAnswers(
+        savedSelectedAnswers ? JSON.parse(savedSelectedAnswers) : [],
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only save to localStorage if we're in the browser
+    if (typeof window === "undefined") return;
+
+    localStorage.setItem("isActive", isActive.toString());
+    localStorage.setItem("selectedExamId", selectedExamId);
+    localStorage.setItem("selectedSimulado", JSON.stringify(selectedSimulado));
+    localStorage.setItem(
+      "currentQuestionIndex",
+      currentQuestionIndex.toString(),
+    );
+    localStorage.setItem("score", score.toString());
+    localStorage.setItem("timeLeft", timeLeft.toString());
+    localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
+  }, [
+    isActive,
+    selectedExamId,
+    selectedSimulado,
+    currentQuestionIndex,
+    score,
+    timeLeft,
+    selectedAnswers,
+  ]);
 
   // Get current question data
   const currentQuestion =
@@ -215,15 +263,99 @@ const ExamSimulator = () => {
 
     if (currentQuestionIndex + 1 < selectedSimulado.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setQuestionStartTime(new Date());
     } else {
       // Finalize the exam
-      if (simulatedExam) {
+      if (simulatedExam && examStartTime) {
+        const endTime = new Date();
+        const timeSpentInSeconds = Math.floor(
+          (endTime.getTime() - examStartTime.getTime()) / 1000,
+        );
+
         const updatedExam: SimulatedExam = {
           ...simulatedExam,
-          endTime: new Date(), // Set the end time
-          score: score, // Set the final score
-          timeSpent: 90 * 60 - timeLeft, // Calculate time spent in minutes
+          endTime: endTime,
+          score: score,
+          timeSpent: timeSpentInSeconds,
         };
+
+        // Create detailed exam result
+        const questionAttempts: QuestionAttempt[] = selectedSimulado.map(
+          (question) => {
+            const userAnswer = allAnswers[question.id];
+            const correctAnswers = question.options
+              .filter((opt) => opt.isCorrect)
+              .map((opt) => opt.id);
+
+            return {
+              questionId: question.id,
+              selectedAnswers: userAnswer?.answers || [],
+              correctAnswers,
+              isCorrect: userAnswer?.status === "correct",
+              isPartial: userAnswer?.status === "partial",
+              timestamp: new Date(),
+            };
+          },
+        );
+
+        // Calculate category and domain breakdowns
+        const categoryBreakdown: any = {};
+        const domainBreakdown: any = {};
+
+        selectedSimulado.forEach((question) => {
+          const attempt = questionAttempts.find(
+            (a) => a.questionId === question.id,
+          );
+          if (!attempt) return;
+
+          // Category breakdown
+          if (!categoryBreakdown[question.category]) {
+            categoryBreakdown[question.category] = {
+              correct: 0,
+              total: 0,
+              percentage: 0,
+            };
+          }
+          categoryBreakdown[question.category].total++;
+          if (attempt.isCorrect) {
+            categoryBreakdown[question.category].correct++;
+          }
+
+          // Domain breakdown
+          const domainName = getDomainName(selectedExamId, question.dominio);
+          if (!domainBreakdown[domainName]) {
+            domainBreakdown[domainName] = {
+              correct: 0,
+              total: 0,
+              percentage: 0,
+            };
+          }
+          domainBreakdown[domainName].total++;
+          if (attempt.isCorrect) {
+            domainBreakdown[domainName].correct++;
+          }
+        });
+
+        // Calculate percentages
+        Object.keys(categoryBreakdown).forEach((category) => {
+          const stats = categoryBreakdown[category];
+          stats.percentage = (stats.correct / stats.total) * 100;
+        });
+
+        Object.keys(domainBreakdown).forEach((domain) => {
+          const stats = domainBreakdown[domain];
+          stats.percentage = (stats.correct / stats.total) * 100;
+        });
+
+        const detailedResult: DetailedExamResult = {
+          exam: updatedExam,
+          questionAttempts,
+          categoryBreakdown,
+          domainBreakdown,
+        };
+
+        // Add to user progress
+        addExamResult(detailedResult);
 
         setSimulatedExam(updatedExam);
         console.log("Exam Completed:", updatedExam); // Log or save the exam data
@@ -306,12 +438,13 @@ const ExamSimulator = () => {
       showImmediateFeedback: studyMode === "practice",
     };
 
+    const examStart = new Date();
     const newExam: SimulatedExam = {
       id: selectedExamId,
       userId: "user-" + crypto.randomUUID(),
       questions: filteredQuestions.map((q) => q.id),
       answers: {},
-      startTime: new Date(),
+      startTime: examStart,
       studySettings,
     };
 
@@ -324,7 +457,46 @@ const ExamSimulator = () => {
     setSelectedAnswers([]);
     setShowExplanation(false);
     setEndMessage(null);
+    setExamStartTime(examStart);
     setAllAnswers({});
+    setQuestionStartTime(new Date());
+  };
+
+  const handleToggleFavorite = (questionId: string) => {
+    if (isFavoriteQuestion(questionId)) {
+      removeFavoriteQuestion(questionId);
+    } else {
+      addFavoriteQuestion(questionId, selectedExamId);
+    }
+  };
+
+  const handleViewExamDetails = (examResult: DetailedExamResult) => {
+    setSelectedExamDetails(examResult);
+    setCurrentView("exam-details");
+  };
+
+  const handleViewQuestion = (question: Question) => {
+    // This could open a modal or navigate to a detailed question view
+    console.log("View question:", question);
+  };
+
+  const getAllQuestions = (): Question[] => {
+    return Object.values(simulados).flat();
+  };
+
+  const resetExam = () => {
+    setIsActive(false);
+    setShowScore(false);
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setTimeLeft(90 * 60);
+    setSelectedAnswers([]);
+    setShowExplanation(false);
+    setAnswerStatus(null);
+    setEndMessage(null);
+    setAllAnswers({});
+    setExamStartTime(null);
+    setCurrentView("exam");
   };
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
@@ -336,7 +508,7 @@ const ExamSimulator = () => {
       case "CLF-C02-01":
       case "CLF-C02-02":
       case "CLF-C02-GPT":
-      case "CLF-C02-GPT":
+      case "CLF-C02-CC-01":
       case "CLF-C02-FULL-NOGPT":
         return CLF_C02_DomainMap;
       default:
@@ -366,8 +538,8 @@ const ExamSimulator = () => {
   };
 
   return (
-    <div className="min-h-screen  p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
+    <div className="min-h-screen p-4">
+      <div className="max-w-6xl mx-auto space-y-4">
         <Card className="border-none shadow-lg">
           <CardHeader className="space-y-2">
             <div className="flex items-center justify-between">
@@ -379,14 +551,48 @@ const ExamSimulator = () => {
                   Exame Simulado para o certificado AWS Cloud Practitioner
                 </CardDescription>
               </div>
-              {isActive && studyMode === "exam" && (
-                <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
-                  <Timer className="w-4 h-4" />
-                  <span className="font-mono font-medium">
-                    {formatTime(timeLeft)}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {isActive && studyMode === "exam" && (
+                  <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
+                    <Timer className="w-4 h-4" />
+                    <span className="font-mono font-medium">
+                      {formatTime(timeLeft)}
+                    </span>
+                  </div>
+                )}
+                {!isActive && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant={currentView === "exam" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentView("exam")}
+                    >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Exame
+                    </Button>
+                    <Button
+                      variant={
+                        currentView === "progress" ? "default" : "outline"
+                      }
+                      size="sm"
+                      onClick={() => setCurrentView("progress")}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Progresso
+                    </Button>
+                    <Button
+                      variant={
+                        currentView === "favorites" ? "default" : "outline"
+                      }
+                      size="sm"
+                      onClick={() => setCurrentView("favorites")}
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      Favoritas ({userProgress.favoriteQuestions.length})
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {isActive && (
@@ -411,7 +617,34 @@ const ExamSimulator = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            {!isActive && !showScore && (
+            {currentView === "progress" && (
+              <ProgressReport
+                userProgress={userProgress}
+                onViewExamDetails={handleViewExamDetails}
+              />
+            )}
+
+            {currentView === "favorites" && (
+              <FavoriteQuestions
+                favoriteQuestions={userProgress.favoriteQuestions}
+                questions={getAllQuestions()}
+                onRemoveFavorite={removeFavoriteQuestion}
+                onUpdateFavorite={updateFavoriteQuestion}
+                onViewQuestion={handleViewQuestion}
+              />
+            )}
+
+            {currentView === "exam-details" && selectedExamDetails && (
+              <ExamDetails
+                examResult={selectedExamDetails}
+                questions={getAllQuestions()}
+                onBack={() => setCurrentView("progress")}
+                onToggleFavorite={handleToggleFavorite}
+                isFavoriteQuestion={isFavoriteQuestion}
+              />
+            )}
+
+            {currentView === "exam" && !isActive && !showScore && (
               <div className="space-y-8 py-8">
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-bold">
@@ -611,165 +844,189 @@ const ExamSimulator = () => {
               </div>
             )}
 
-            {isActive && !showScore && currentQuestion && (
-              <div className="space-y-6">
-                {/* background color: #bg-background text-foreground */}
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {studyMode === "practice"
-                        ? "Modo Prática"
-                        : studyMode === "exam"
-                          ? "Modo Exame"
-                          : "Estudo Focado"}
-                    </Badge>
-                    {studyMode !== "exam" && (
-                      <Badge variant="secondary" className="text-xs">
-                        {currentQuestion.difficulty}
-                      </Badge>
+            {currentView === "exam" &&
+              isActive &&
+              !showScore &&
+              currentQuestion && (
+                <div className="space-y-6">
+                  {/* background color: #bg-background text-foreground */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {studyMode === "practice"
+                            ? "Modo Prática"
+                            : studyMode === "exam"
+                              ? "Modo Exame"
+                              : "Estudo Focado"}
+                        </Badge>
+                        {studyMode !== "exam" && (
+                          <Badge variant="secondary" className="text-xs">
+                            {currentQuestion.difficulty}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleFavorite(currentQuestion.id)}
+                        className={
+                          isFavoriteQuestion(currentQuestion.id)
+                            ? "text-yellow-500"
+                            : "text-gray-400"
+                        }
+                      >
+                        <Star
+                          className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
+                        />
+                      </Button>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {currentQuestion.text}
+                    </h3>
+                    {currentQuestion.type === "multiple_choice" && (
+                      <p className="text-sm text-blue-600 mt-2 font-medium">
+                        Seleciona todas as opções corretas
+                      </p>
                     )}
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {currentQuestion.text}
-                  </h3>
-                  {currentQuestion.type === "multiple_choice" && (
-                    <p className="text-sm text-blue-600 mt-2 font-medium">
-                      Seleciona todas as opções corretas
-                    </p>
-                  )}
-                </div>
 
-                <div className="space-y-3">
-                  {currentOptions.map((option) => (
+                  <div className="space-y-3">
+                    {currentOptions.map((option) => (
+                      <Button
+                        key={option.id}
+                        variant={getButtonVariant(option.id)}
+                        className="w-full justify-start text-left p-4 h-auto whitespace-normal"
+                        onClick={() =>
+                          !showExplanation &&
+                          (currentQuestion.type === "multiple_choice"
+                            ? handleAnswerToggle(option.id)
+                            : setSelectedAnswers([option.id]))
+                        }
+                        disabled={showExplanation}
+                      >
+                        {option.text}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {!showExplanation && selectedAnswers.length > 0 && (
                     <Button
-                      key={option.id}
-                      variant={getButtonVariant(option.id)}
-                      className="w-full justify-start text-left p-4 h-auto whitespace-normal"
-                      onClick={() =>
-                        !showExplanation &&
-                        (currentQuestion.type === "multiple_choice"
-                          ? handleAnswerToggle(option.id)
-                          : setSelectedAnswers([option.id]))
-                      }
-                      disabled={showExplanation}
+                      onClick={handleSubmitAnswers}
+                      className="w-full sm:w-auto"
                     >
-                      {option.text}
+                      {studyMode === "practice"
+                        ? "Verificar Resposta"
+                        : currentQuestionIndex === selectedSimulado.length - 1
+                          ? "Finalizar Exame"
+                          : "Próxima Questão"}
                     </Button>
-                  ))}
-                </div>
+                  )}
 
-                {!showExplanation && selectedAnswers.length > 0 && (
-                  <Button
-                    onClick={handleSubmitAnswers}
-                    className="w-full sm:w-auto"
-                  >
-                    {studyMode === "practice"
-                      ? "Verificar Resposta"
-                      : currentQuestionIndex === selectedSimulado.length - 1
-                        ? "Finalizar Exame"
-                        : "Próxima Questão"}
-                  </Button>
-                )}
+                  {showExplanation && (
+                    <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
+                      <div className="flex items-center gap-2">
+                        {answerStatus === "correct" && (
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                            Resposta Correta
+                          </Badge>
+                        )}
+                        {answerStatus === "partial" && (
+                          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                            Parcialmente Correta
+                          </Badge>
+                        )}
+                        {answerStatus === "incorrect" && (
+                          <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                            Resposta Incorreta
+                          </Badge>
+                        )}
+                      </div>
 
-                {showExplanation && (
-                  <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
-                    <div className="flex items-center gap-2">
-                      {answerStatus === "correct" && (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                          Resposta Correta
-                        </Badge>
-                      )}
-                      {answerStatus === "partial" && (
-                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                          Parcialmente Correta
-                        </Badge>
-                      )}
-                      {answerStatus === "incorrect" && (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                          Resposta Incorreta
-                        </Badge>
-                      )}
-                    </div>
+                      <div className="space-y-4">
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-green-700">
+                            Respostas Corretas:
+                          </h3>
+                          <ul className="space-y-3">
+                            {correctOptions.map((option) => (
+                              <li key={option.id} className="flex gap-3">
+                                <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
+                                <div>
+                                  <p className="font-medium">{option.text}</p>
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    {option.explanation}
+                                  </p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-green-700">
-                          Respostas Corretas:
-                        </h3>
-                        <ul className="space-y-3">
-                          {correctOptions.map((option) => (
-                            <li key={option.id} className="flex gap-3">
-                              <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                              <div>
+                        <Separator />
+
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-red-700">
+                            Outras Opções Explicadas:
+                          </h3>
+                          <ul className="space-y-3">
+                            {incorrectOptions.map((option) => (
+                              <li key={option.id} className="space-y-1">
                                 <p className="font-medium">{option.text}</p>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-gray-600">
                                   {option.explanation}
                                 </p>
-                              </div>
-                            </li>
-                          ))}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-gray-700">
+                          References:
+                        </h4>
+                        <ul className="space-y-1">
+                          {currentQuestion.references.map(
+                            (reference, index) => (
+                              <li key={index}>
+                                <a
+                                  href={reference}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline text-sm"
+                                >
+                                  {reference}
+                                </a>
+                              </li>
+                            ),
+                          )}
                         </ul>
                       </div>
 
-                      <Separator />
-
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-red-700">
-                          Outras Opções Explicadas:
-                        </h3>
-                        <ul className="space-y-3">
-                          {incorrectOptions.map((option) => (
-                            <li key={option.id} className="space-y-1">
-                              <p className="font-medium">{option.text}</p>
-                              <p className="text-sm text-gray-600">
-                                {option.explanation}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <Button
+                        onClick={handleNextQuestion}
+                        className="w-full sm:w-auto"
+                        // variant={
+                        //   answerStatus === "correct" ? "default" : "secondary"
+                        // }
+                      >
+                        {currentQuestionIndex ===
+                        selectedSimulado.length - 1 ? (
+                          "Finalizar Exame"
+                        ) : (
+                          <>
+                            Proxima Questão
+                            <ChevronRight className="w-4 h-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-gray-700">References:</h4>
-                      <ul className="space-y-1">
-                        {currentQuestion.references.map((reference, index) => (
-                          <li key={index}>
-                            <a
-                              href={reference}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm"
-                            >
-                              {reference}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <Button
-                      onClick={handleNextQuestion}
-                      className="w-full sm:w-auto"
-                      // variant={
-                      //   answerStatus === "correct" ? "default" : "secondary"
-                      // }
-                    >
-                      {currentQuestionIndex === selectedSimulado.length - 1 ? (
-                        "Finalizar Exame"
-                      ) : (
-                        <>
-                          Proxima Questão
-                          <ChevronRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {showScore && (
+            {currentView === "exam" && showScore && (
               <div className="text-center space-y-6 py-8">
                 <div className="inline-flex p-4 bg-background text-foreground rounded-full">
                   <Award className="w-12 h-12 text-blue-600" />
@@ -793,10 +1050,10 @@ const ExamSimulator = () => {
                   <p className="text-gray-600 mt-2">
                     {score} corretas de {selectedSimulado.length} questões
                   </p>
-                  {studyMode === "exam" && (
+                  {simulatedExam?.timeSpent && (
                     <p className="text-sm text-gray-500 mt-1">
-                      Tempo gasto: {Math.round((90 * 60 - timeLeft) / 60)}{" "}
-                      minutos
+                      Tempo gasto: {Math.floor(simulatedExam.timeSpent / 60)}m{" "}
+                      {simulatedExam.timeSpent % 60}s
                     </p>
                   )}
                 </div>
@@ -862,10 +1119,20 @@ const ExamSimulator = () => {
                   </div>
                 )}
 
-                <Button onClick={startExam} className="gap-2">
-                  <RotateCcw className="w-4 h-4" />
-                  Tentar Novamente
-                </Button>
+                <div className="flex gap-4 justify-center">
+                  <Button
+                    onClick={resetExam}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Escolher Outro Exame
+                  </Button>
+                  <Button onClick={startExam} className="gap-2">
+                    <RotateCcw className="w-4 h-4" />
+                    Tentar Novamente
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
