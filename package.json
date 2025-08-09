@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix",
     "precommit": "lint-staged",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'No tests yet'",
+    "test": "vitest",
     "prepare": "husky install",
     "clean": "rimraf dist node_modules",
     "start": "npm run dev"

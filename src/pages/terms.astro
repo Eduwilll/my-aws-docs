@@ -1,0 +1,317 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { TermsContentManager } from "@/lib/terms/content";
+
+// Get the current terms content
+const termsContent = TermsContentManager.getCurrentContent();
+const sectionsInOrder = TermsContentManager.getSectionsInOrder();
+const summary = TermsContentManager.generateSummary();
+
+// Format the last updated date for display
+const lastUpdatedFormatted = termsContent.lastUpdated.toLocaleDateString(
+  "pt-BR",
+  {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  },
+);
+
+// Format the effective date
+const effectiveDateFormatted =
+  termsContent.metadata.effectiveDate.toLocaleDateString("pt-BR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+---
+
+<BaseLayout title="Termos de Serviço">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- Header Section -->
+    <header class="mb-12">
+      <h1 class="text-4xl font-bold mb-6 text-primary">Termos de Serviço</h1>
+
+      <!-- Version and Date Information -->
+      <div class="bg-secondary p-6 rounded-lg shadow-md mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <span class="font-semibold text-muted-foreground">Versão:</span>
+            <span class="ml-2 font-mono bg-primary/10 px-2 py-1 rounded"
+              >{summary.version}</span
+            >
+          </div>
+          <div>
+            <span class="font-semibold text-muted-foreground"
+              >Última Atualização:</span
+            >
+            <span class="ml-2">{lastUpdatedFormatted}</span>
+          </div>
+          <div>
+            <span class="font-semibold text-muted-foreground"
+              >Data Efetiva:</span
+            >
+            <span class="ml-2">{effectiveDateFormatted}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table of Contents -->
+      <nav
+        class="bg-background border border-border rounded-lg p-6 mb-8"
+        aria-label="Índice dos Termos de Serviço"
+      >
+        <h2 class="text-xl font-semibold mb-4">Índice</h2>
+        <ol class="space-y-2">
+          {
+            sectionsInOrder.map((section) => (
+              <li>
+                <a
+                  href={`#section-${section.id}`}
+                  class="text-primary hover:text-primary/80 transition-colors duration-200 flex items-center"
+                >
+                  <span class="mr-2">•</span>
+                  {section.title}
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+    </header>
+
+    <!-- Terms Content -->
+    <main class="space-y-12">
+      {
+        sectionsInOrder.map((section) => (
+          <section
+            id={`section-${section.id}`}
+            class="scroll-mt-8"
+            aria-labelledby={`heading-${section.id}`}
+          >
+            <h2
+              id={`heading-${section.id}`}
+              class="text-2xl font-semibold mb-6 text-primary border-b border-border pb-2"
+            >
+              {section.title}
+            </h2>
+
+            <div class="prose prose-lg max-w-none">
+              <div
+                class="text-muted-foreground leading-relaxed whitespace-pre-line"
+                set:html={section.content.replace(/\n/g, "<br>")}
+              />
+            </div>
+
+            {section.lastModified && (
+              <div class="mt-4 text-xs text-muted-foreground">
+                Última modificação:{" "}
+                {section.lastModified.toLocaleDateString("pt-BR")}
+              </div>
+            )}
+          </section>
+        ))
+      }
+    </main>
+
+    <!-- Footer Information -->
+    <footer class="mt-16 pt-8 border-t border-border">
+      <div class="bg-secondary p-6 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Informações Importantes</h3>
+
+        <div class="space-y-4 text-sm text-muted-foreground">
+          <p>
+            <strong>Jurisdição:</strong>
+            {termsContent.metadata.jurisdiction}
+          </p>
+          <p>
+            <strong>Idioma:</strong>
+            {
+              termsContent.metadata.language === "pt-BR"
+                ? "Português (Brasil)"
+                : termsContent.metadata.language
+            }
+          </p>
+          <p>
+            <strong>Total de Seções:</strong>
+            {summary.sectionCount}
+          </p>
+
+          <div
+            class="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg"
+          >
+            <p class="text-primary font-medium mb-2">📋 Importante</p>
+            <p class="text-sm">
+              Ao continuar usando nosso serviço, você confirma ter lido,
+              compreendido e concordado com estes termos. Se você não concorda
+              com qualquer parte destes termos, deve interromper o uso do
+              serviço imediatamente.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div
+        class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
+      >
+        <a
+          href="/"
+          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-200"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Voltar para Página Inicial
+        </a>
+
+        <div class="flex gap-4 text-sm">
+          <a
+            href="/privacy"
+            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+          >
+            Política de Privacidade
+          </a>
+          <span class="text-muted-foreground">|</span>
+          <a
+            href="/about"
+            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+          >
+            Sobre
+          </a>
+          <span class="text-muted-foreground">|</span>
+          <a
+            href="mailto:suporte@simuladoraws.com.br"
+            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+          >
+            Contato
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Print Styles -->
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      body {
+        font-size: 12pt;
+        line-height: 1.4;
+      }
+
+      h1 {
+        font-size: 18pt;
+        margin-bottom: 12pt;
+      }
+
+      h2 {
+        font-size: 14pt;
+        margin-top: 12pt;
+        margin-bottom: 6pt;
+        page-break-after: avoid;
+      }
+
+      section {
+        page-break-inside: avoid;
+        margin-bottom: 12pt;
+      }
+
+      .bg-secondary,
+      .bg-background {
+        background: white !important;
+        border: 1px solid #ccc !important;
+      }
+    }
+
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Focus styles for accessibility */
+    a:focus {
+      outline: 2px solid hsl(var(--primary));
+      outline-offset: 2px;
+    }
+
+    /* Enhanced readability */
+    .prose {
+      line-height: 1.7;
+    }
+
+    /* Table of contents styling */
+    nav ol {
+      counter-reset: section-counter;
+    }
+
+    nav ol li {
+      counter-increment: section-counter;
+    }
+
+    /* Responsive typography */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .prose {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+
+  <!-- Accessibility and SEO enhancements -->
+  <script>
+    // Add skip link functionality
+    document.addEventListener("DOMContentLoaded", function () {
+      // Enhance keyboard navigation
+      const tocLinks = document.querySelectorAll(
+        'nav[aria-label="Índice dos Termos de Serviço"] a',
+      );
+
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute("href");
+          const targetElement = document.querySelector(targetId);
+
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+
+            // Set focus for screen readers
+            targetElement.setAttribute("tabindex", "-1");
+            targetElement.focus();
+          }
+        });
+      });
+
+      // Add print functionality
+      const printButton = document.createElement("button");
+      printButton.textContent = "🖨️ Imprimir";
+      printButton.className =
+        "fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg hover:bg-primary/90 transition-colors no-print";
+      printButton.onclick = () => window.print();
+      document.body.appendChild(printButton);
+    });
+  </script>
+</BaseLayout>
