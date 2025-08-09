@@ -33,6 +33,7 @@ import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
 import { GPTquestions } from "@/data/questions";
 import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
 import { questionsSaaC03 } from "@/data/questions-saa-c03";
+import { questionCLFC02CC01 } from "@/data/CLF-C02-CC-01";
 
 const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -55,6 +56,7 @@ const ExamSimulator = () => {
     "CLF-C02-02": questionsClfC0202,
     "CLF-C02-GPT": GPTquestions,
     "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
+    "CLF-C02-CC-01": questionCLFC02CC01,
     "SAA-C03": questionsSaaC03,
   };
   // Save Local Storage
@@ -266,6 +268,7 @@ const ExamSimulator = () => {
       case "CLF-C02-01":
       case "CLF-C02-02":
       case "CLF-C02-GPT":
+      case "CLF-C02-GPT":
       case "CLF-C02-FULL-NOGPT":
         return CLF_C02_DomainMap;
       default:
@@ -285,6 +288,7 @@ const ExamSimulator = () => {
       case "CLF-C02":
       case "CLF-C02-01":
       case "CLF-C02-02":
+      case "CLF-C02-CC-01":
       case "CLF-C02-GPT":
       case "CLF-C02-FULL-NOGPT":
         return CLF_C02_DomainDetails;
@@ -294,7 +298,7 @@ const ExamSimulator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen  p-4">
       <div className="max-w-4xl mx-auto space-y-4">
         <Card className="border-none shadow-lg">
           <CardHeader className="space-y-2">
@@ -374,6 +378,9 @@ const ExamSimulator = () => {
                       <SelectItem value="CLF-C02-FULL-NOGPT">
                         Exame Infinito (130 questões)
                       </SelectItem>
+                      <SelectItem value="CLF-C02-CC-01">
+                        Exame CLF-C02-CC-01 (65 questões)
+                      </SelectItem>
                       <SelectItem value="SAA-C03">
                         Exame SAA-C03 (1 questão)
                       </SelectItem>
@@ -393,6 +400,7 @@ const ExamSimulator = () => {
 
             {isActive && !showScore && currentQuestion && (
               <div className="space-y-6">
+                {/* background color: #bg-background text-foreground */}
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                   <h3 className="text-lg font-medium text-gray-900">
                     {currentQuestion.text}
@@ -433,7 +441,7 @@ const ExamSimulator = () => {
                 )}
 
                 {showExplanation && (
-                  <div className="space-y-6 bg-gray-50 p-6 rounded-lg border">
+                  <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
                     <div className="flex items-center gap-2">
                       {answerStatus === "correct" && (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
@@ -532,7 +540,7 @@ const ExamSimulator = () => {
 
             {showScore && (
               <div className="text-center space-y-6 py-8">
-                <div className="inline-flex p-4 bg-blue-50 rounded-full">
+                <div className="inline-flex p-4 bg-background text-foreground rounded-full">
                   <Award className="w-12 h-12 text-blue-600" />
                 </div>
 

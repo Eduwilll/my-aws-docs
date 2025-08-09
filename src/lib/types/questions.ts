@@ -23,8 +23,10 @@ export interface Question {
 
 export type ExamCategory =
   | "cloud-concepts"
+  | "cloud_concepts"
   | "security-and-compliance"
   | "technology"
+  | "billing"
   | "billing-and-pricing"
   | "architecture-design"
   | "deployment"
@@ -41,6 +43,9 @@ export type ExamCategory =
   | "application_integration"
   | "machine-learning"
   | "devops"
+  | "support"
+  | "management_governance"
+  | "migration_transfer"
   | "serverless"
   | "containers";
 
