@@ -308,7 +308,7 @@ const ExamSimulator = () => {
 
     const newExam: SimulatedExam = {
       id: selectedExamId,
-      userId: "user678",
+      userId: "user-" + crypto.randomUUID(),
       questions: filteredQuestions.map((q) => q.id),
       answers: {},
       startTime: new Date(),
