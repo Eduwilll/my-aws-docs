@@ -514,6 +514,20 @@ export class TermsContentManager {
       timestamp: new Date(),
     };
   }
+
+  /**
+   * Sanitize content to prevent XSS and ensure safe rendering
+   */
+  static sanitizeContent(content: string): string {
+    // Basic HTML entity encoding
+    return content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;")
+      .replace(/\//g, "&#x2F;");
+  }
 }
 
 // Export the default content for easy access

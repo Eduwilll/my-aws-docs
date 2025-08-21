@@ -1,10 +1,21 @@
-module.exports = {
-  extends: ["eslint:recommended", "plugin:astro/recommended", "prettier"],
-  parserOptions: {
-    ecmaVersion: "latest",
-    sourceType: "module",
+module.exports = [
+  {
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      ".astro/**",
+      "public/**",
+      "*.config.*",
+      "*.d.ts"
+    ],
   },
-  rules: {
-    "no-console": "warn",
+  {
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    rules: {
+      "no-console": "warn",
+    },
   },
-};
+];

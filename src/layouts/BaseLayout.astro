@@ -11,6 +11,7 @@ const myString: DescribedString = {
 
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
+import TermsNavigationLinks from "../components/TermsNavigationLinks";
 import { Github, Twitter, Linkedin, Cloud, Menu, X } from "lucide-react";
 const { title } = Astro.props;
 const { description } = myString;
@@ -199,15 +200,9 @@ const { description } = myString;
         <p class="text-muted-foreground">
           &copy; 2024 Eduwilll. Todos os direitos reservados.
         </p>
-        <p class="text-muted-foreground mt-2">
-          <a href="/terms" class="hover:text-primary transition-colors">
-            Termos de Serviço
-          </a>
-          <span class="mx-2">|</span>
-          <a href="/privacy" class="hover:text-primary transition-colors">
-            Política de Privacidade
-          </a>
-        </p>
+        <div class="mt-2">
+          <TermsNavigationLinks variant="footer" client:load />
+        </div>
       </div>
     </footer>
 

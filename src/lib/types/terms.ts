@@ -122,16 +122,23 @@ export interface TermsVersionManagerProps {
 export interface TermsError {
   code: string;
   message: string;
+  technicalMessage?: string;
   details?: any;
   timestamp: Date;
+  userFriendly?: boolean;
+  retryable?: boolean;
+  recoveryActions?: string[];
 }
 
 export enum TermsErrorCode {
   STORAGE_UNAVAILABLE = "STORAGE_UNAVAILABLE",
+  STORAGE_QUOTA_EXCEEDED = "STORAGE_QUOTA_EXCEEDED",
   VERSION_MISMATCH = "VERSION_MISMATCH",
   INVALID_ACCEPTANCE = "INVALID_ACCEPTANCE",
   NETWORK_ERROR = "NETWORK_ERROR",
   VALIDATION_ERROR = "VALIDATION_ERROR",
+  DATA_CORRUPTION = "DATA_CORRUPTION",
+  RETRY_EXHAUSTED = "RETRY_EXHAUSTED",
 }
 
 // Utility types for type safety

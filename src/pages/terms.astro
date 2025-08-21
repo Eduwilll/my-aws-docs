@@ -27,51 +27,76 @@ const effectiveDateFormatted =
 ---
 
 <BaseLayout title="Termos de Serviço">
-  <div class="max-w-4xl mx-auto px-4">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Skip to content link for screen readers -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+    >
+      Pular para o conteúdo principal
+    </a>
+
     <!-- Header Section -->
-    <header class="mb-12">
-      <h1 class="text-4xl font-bold mb-6 text-primary">Termos de Serviço</h1>
+    <header class="mb-8 sm:mb-12">
+      <h1
+        class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-primary"
+      >
+        Termos de Serviço
+      </h1>
 
       <!-- Version and Date Information -->
-      <div class="bg-secondary p-6 rounded-lg shadow-md mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span class="font-semibold text-muted-foreground">Versão:</span>
-            <span class="ml-2 font-mono bg-primary/10 px-2 py-1 rounded"
+      <div class="bg-secondary p-4 sm:p-6 rounded-lg shadow-md mb-6 sm:mb-8">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-center">
+            <span class="font-semibold text-muted-foreground mb-1 sm:mb-0"
+              >Versão:</span
+            >
+            <span
+              class="sm:ml-2 font-mono bg-primary/10 px-2 py-1 rounded text-xs sm:text-sm w-fit"
               >{summary.version}</span
             >
           </div>
-          <div>
-            <span class="font-semibold text-muted-foreground"
+          <div class="flex flex-col sm:flex-row sm:items-center">
+            <span class="font-semibold text-muted-foreground mb-1 sm:mb-0"
               >Última Atualização:</span
             >
-            <span class="ml-2">{lastUpdatedFormatted}</span>
+            <span class="sm:ml-2 text-xs sm:text-sm"
+              >{lastUpdatedFormatted}</span
+            >
           </div>
-          <div>
-            <span class="font-semibold text-muted-foreground"
+          <div class="flex flex-col sm:flex-row sm:items-center">
+            <span class="font-semibold text-muted-foreground mb-1 sm:mb-0"
               >Data Efetiva:</span
             >
-            <span class="ml-2">{effectiveDateFormatted}</span>
+            <span class="sm:ml-2 text-xs sm:text-sm"
+              >{effectiveDateFormatted}</span
+            >
           </div>
         </div>
       </div>
 
       <!-- Table of Contents -->
       <nav
-        class="bg-background border border-border rounded-lg p-6 mb-8"
+        class="bg-background border border-border rounded-lg p-4 sm:p-6 mb-6 sm:mb-8"
         aria-label="Índice dos Termos de Serviço"
+        role="navigation"
       >
-        <h2 class="text-xl font-semibold mb-4">Índice</h2>
-        <ol class="space-y-2">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Índice</h2>
+        <ol class="space-y-1 sm:space-y-2" role="list">
           {
-            sectionsInOrder.map((section) => (
-              <li>
+            sectionsInOrder.map((section, index) => (
+              <li role="listitem">
                 <a
                   href={`#section-${section.id}`}
-                  class="text-primary hover:text-primary/80 transition-colors duration-200 flex items-center"
+                  class="text-primary hover:text-primary/80 focus:text-primary/80 transition-colors duration-200 flex items-center text-sm sm:text-base py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  aria-describedby={`toc-item-${index}`}
                 >
-                  <span class="mr-2">•</span>
-                  {section.title}
+                  <span class="mr-2 text-muted-foreground" aria-hidden="true">
+                    •
+                  </span>
+                  <span class="break-words">{section.title}</span>
                 </a>
               </li>
             ))
@@ -81,31 +106,32 @@ const effectiveDateFormatted =
     </header>
 
     <!-- Terms Content -->
-    <main class="space-y-12">
+    <main class="space-y-8 sm:space-y-12" id="main-content" tabindex="-1">
       {
         sectionsInOrder.map((section) => (
           <section
             id={`section-${section.id}`}
-            class="scroll-mt-8"
+            class="scroll-mt-16 sm:scroll-mt-8"
             aria-labelledby={`heading-${section.id}`}
           >
             <h2
               id={`heading-${section.id}`}
-              class="text-2xl font-semibold mb-6 text-primary border-b border-border pb-2"
+              class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-primary border-b border-border pb-2 focus:outline-none"
+              tabindex="-1"
             >
               {section.title}
             </h2>
 
-            <div class="prose prose-lg max-w-none">
+            <div class="prose prose-sm sm:prose-lg max-w-none">
               <div
-                class="text-muted-foreground leading-relaxed whitespace-pre-line"
+                class="text-muted-foreground leading-relaxed whitespace-pre-line text-sm sm:text-base"
                 set:html={section.content.replace(/\n/g, "<br>")}
               />
             </div>
 
             {section.lastModified && (
-              <div class="mt-4 text-xs text-muted-foreground">
-                Última modificação:{" "}
+              <div class="mt-3 sm:mt-4 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-md">
+                <span class="font-medium">Última modificação:</span>{" "}
                 {section.lastModified.toLocaleDateString("pt-BR")}
               </div>
             )}
@@ -115,33 +141,49 @@ const effectiveDateFormatted =
     </main>
 
     <!-- Footer Information -->
-    <footer class="mt-16 pt-8 border-t border-border">
-      <div class="bg-secondary p-6 rounded-lg">
-        <h3 class="text-lg font-semibold mb-4">Informações Importantes</h3>
+    <footer class="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-border">
+      <div class="bg-secondary p-4 sm:p-6 rounded-lg">
+        <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          Informações Importantes
+        </h3>
 
-        <div class="space-y-4 text-sm text-muted-foreground">
-          <p>
-            <strong>Jurisdição:</strong>
-            {termsContent.metadata.jurisdiction}
-          </p>
-          <p>
-            <strong>Idioma:</strong>
-            {
-              termsContent.metadata.language === "pt-BR"
-                ? "Português (Brasil)"
-                : termsContent.metadata.language
-            }
-          </p>
-          <p>
-            <strong>Total de Seções:</strong>
-            {summary.sectionCount}
-          </p>
+        <div class="space-y-3 sm:space-y-4 text-sm text-muted-foreground">
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+          >
+            <p>
+              <strong class="text-foreground">Jurisdição:</strong>
+              <span class="block sm:inline sm:ml-1"
+                >{termsContent.metadata.jurisdiction}</span
+              >
+            </p>
+            <p>
+              <strong class="text-foreground">Idioma:</strong>
+              <span class="block sm:inline sm:ml-1">
+                {
+                  termsContent.metadata.language === "pt-BR"
+                    ? "Português (Brasil)"
+                    : termsContent.metadata.language
+                }
+              </span>
+            </p>
+            <p>
+              <strong class="text-foreground">Total de Seções:</strong>
+              <span class="block sm:inline sm:ml-1">{summary.sectionCount}</span
+              >
+            </p>
+          </div>
 
           <div
-            class="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg"
+            class="mt-4 sm:mt-6 p-3 sm:p-4 bg-primary/5 border border-primary/20 rounded-lg"
+            role="note"
+            aria-label="Aviso importante sobre os termos"
           >
-            <p class="text-primary font-medium mb-2">📋 Importante</p>
-            <p class="text-sm">
+            <p class="text-primary font-medium mb-2 flex items-center">
+              <span class="mr-2" aria-hidden="true">📋</span>
+              <span>Importante</span>
+            </p>
+            <p class="text-xs sm:text-sm leading-relaxed">
               Ao continuar usando nosso serviço, você confirma ter lido,
               compreendido e concordado com estes termos. Se você não concorda
               com qualquer parte destes termos, deve interromper o uso do
@@ -152,18 +194,21 @@ const effectiveDateFormatted =
       </div>
 
       <!-- Navigation Links -->
-      <div
-        class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
+      <nav
+        class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6"
+        aria-label="Navegação do rodapé"
       >
         <a
           href="/"
-          class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-200"
+          class="inline-flex items-center text-primary hover:text-primary/80 focus:text-primary/80 transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          aria-label="Voltar para a página inicial"
         >
           <svg
-            class="w-4 h-4 mr-2"
+            class="w-4 h-4 mr-2 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -171,37 +216,45 @@ const effectiveDateFormatted =
               stroke-width="2"
               d="M15 19l-7-7 7-7"></path>
           </svg>
-          Voltar para Página Inicial
+          <span>Voltar para Página Inicial</span>
         </a>
 
-        <div class="flex gap-4 text-sm">
+        <div class="flex flex-wrap gap-2 sm:gap-4 text-sm">
           <a
             href="/privacy"
-            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+            class="text-muted-foreground hover:text-primary focus:text-primary transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Acessar Política de Privacidade"
           >
             Política de Privacidade
           </a>
-          <span class="text-muted-foreground">|</span>
+          <span class="text-muted-foreground select-none" aria-hidden="true"
+            >|</span
+          >
           <a
             href="/about"
-            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+            class="text-muted-foreground hover:text-primary focus:text-primary transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Sobre o simulador"
           >
             Sobre
           </a>
-          <span class="text-muted-foreground">|</span>
+          <span class="text-muted-foreground select-none" aria-hidden="true"
+            >|</span
+          >
           <a
             href="mailto:suporte@simuladoraws.com.br"
-            class="text-muted-foreground hover:text-primary transition-colors duration-200"
+            class="text-muted-foreground hover:text-primary focus:text-primary transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Entrar em contato por email"
           >
             Contato
           </a>
         </div>
-      </div>
+      </nav>
     </footer>
   </div>
 
-  <!-- Print Styles -->
+  <!-- Enhanced Styles for Accessibility and Responsiveness -->
   <style>
+    /* Print Styles */
     @media print {
       .no-print {
         display: none !important;
@@ -210,11 +263,13 @@ const effectiveDateFormatted =
       body {
         font-size: 12pt;
         line-height: 1.4;
+        color: black !important;
       }
 
       h1 {
         font-size: 18pt;
         margin-bottom: 12pt;
+        color: black !important;
       }
 
       h2 {
@@ -222,6 +277,7 @@ const effectiveDateFormatted =
         margin-top: 12pt;
         margin-bottom: 6pt;
         page-break-after: avoid;
+        color: black !important;
       }
 
       section {
@@ -234,6 +290,12 @@ const effectiveDateFormatted =
         background: white !important;
         border: 1px solid #ccc !important;
       }
+
+      /* Hide interactive elements in print */
+      button,
+      .focus\:ring-2 {
+        display: none !important;
+      }
     }
 
     /* Smooth scrolling for anchor links */
@@ -241,10 +303,61 @@ const effectiveDateFormatted =
       scroll-behavior: smooth;
     }
 
-    /* Focus styles for accessibility */
-    a:focus {
+    /* Reduced motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .text-muted-foreground {
+        color: hsl(var(--foreground)) !important;
+      }
+
+      .border-border {
+        border-color: hsl(var(--foreground)) !important;
+      }
+    }
+
+    /* Enhanced focus styles for accessibility */
+    a:focus-visible,
+    button:focus-visible {
       outline: 2px solid hsl(var(--primary));
       outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* Skip link styles */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .sr-only:focus,
+    .focus\:not-sr-only:focus {
+      position: static;
+      width: auto;
+      height: auto;
+      padding: 0.5rem 1rem;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
     }
 
     /* Enhanced readability */
@@ -252,36 +365,102 @@ const effectiveDateFormatted =
       line-height: 1.7;
     }
 
-    /* Table of contents styling */
-    nav ol {
-      counter-reset: section-counter;
-    }
-
-    nav ol li {
-      counter-increment: section-counter;
-    }
-
-    /* Responsive typography */
-    @media (max-width: 768px) {
+    /* Responsive typography with better scaling */
+    @media (max-width: 640px) {
       h1 {
-        font-size: 2rem;
+        font-size: 1.75rem;
+        line-height: 1.2;
       }
 
       h2 {
-        font-size: 1.5rem;
+        font-size: 1.375rem;
+        line-height: 1.3;
       }
 
       .prose {
-        font-size: 0.95rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+      }
+
+      .prose {
+        font-size: 0.8125rem;
+      }
+    }
+
+    /* Better touch targets for mobile */
+    @media (max-width: 768px) {
+      a,
+      button {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    /* Dark mode enhancements */
+    @media (prefers-color-scheme: dark) {
+      .bg-primary\/5 {
+        background-color: hsl(var(--primary) / 0.1) !important;
+      }
+    }
+
+    /* Focus management for sections */
+    section:focus {
+      outline: none;
+    }
+
+    section:target {
+      animation: highlight 2s ease-in-out;
+    }
+
+    @keyframes highlight {
+      0% {
+        background-color: hsl(var(--primary) / 0.1);
+      }
+      100% {
+        background-color: transparent;
+      }
+    }
+
+    /* Ensure proper contrast for separators */
+    [role="separator"] {
+      opacity: 0.6;
+    }
+
+    /* Better spacing for mobile navigation */
+    @media (max-width: 640px) {
+      nav[aria-label="Navegação do rodapé"] {
+        align-items: stretch;
+      }
+
+      nav[aria-label="Navegação do rodapé"] > div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      nav[aria-label="Navegação do rodapé"] [aria-hidden="true"] {
+        display: none;
       }
     }
   </style>
 
-  <!-- Accessibility and SEO enhancements -->
+  <!-- Enhanced Accessibility and Interaction Scripts -->
   <script>
-    // Add skip link functionality
     document.addEventListener("DOMContentLoaded", function () {
-      // Enhance keyboard navigation
+      // Enhanced keyboard navigation for table of contents
       const tocLinks = document.querySelectorAll(
         'nav[aria-label="Índice dos Termos de Serviço"] a',
       );
@@ -293,25 +472,128 @@ const effectiveDateFormatted =
           const targetElement = document.querySelector(targetId);
 
           if (targetElement) {
+            // Smooth scroll with reduced motion support
+            const prefersReducedMotion = window.matchMedia(
+              "(prefers-reduced-motion: reduce)",
+            ).matches;
+
             targetElement.scrollIntoView({
-              behavior: "smooth",
+              behavior: prefersReducedMotion ? "auto" : "smooth",
               block: "start",
             });
 
-            // Set focus for screen readers
+            // Set focus for screen readers and keyboard users
             targetElement.setAttribute("tabindex", "-1");
             targetElement.focus();
+
+            // Announce to screen readers
+            const announcement = document.createElement("div");
+            announcement.setAttribute("aria-live", "polite");
+            announcement.setAttribute("aria-atomic", "true");
+            announcement.className = "sr-only";
+            announcement.textContent = `Navegou para a seção: ${targetElement.querySelector("h2").textContent}`;
+            document.body.appendChild(announcement);
+
+            // Clean up announcement after screen reader has time to read it
+            setTimeout(() => {
+              document.body.removeChild(announcement);
+            }, 1000);
+          }
+        });
+
+        // Enhanced keyboard support
+        link.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            this.click();
           }
         });
       });
 
-      // Add print functionality
+      // Add responsive print functionality
       const printButton = document.createElement("button");
-      printButton.textContent = "🖨️ Imprimir";
+      printButton.innerHTML = `
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        <span class="hidden sm:inline">Imprimir</span>
+        <span class="sm:hidden">🖨️</span>
+      `;
       printButton.className =
-        "fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg hover:bg-primary/90 transition-colors no-print";
+        "fixed bottom-4 right-4 bg-primary text-primary-foreground px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg hover:bg-primary/90 focus:bg-primary/90 transition-colors no-print focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center text-sm";
+      printButton.setAttribute(
+        "aria-label",
+        "Imprimir página dos termos de serviço",
+      );
       printButton.onclick = () => window.print();
       document.body.appendChild(printButton);
+
+      // Add keyboard shortcut for print (Ctrl+P)
+      document.addEventListener("keydown", function (e) {
+        if (e.ctrlKey && e.key === "p") {
+          e.preventDefault();
+          window.print();
+        }
+      });
+
+      // Enhance focus management for skip links
+      const skipLink = document.querySelector('a[href="#main-content"]');
+      if (skipLink) {
+        skipLink.addEventListener("click", function (e) {
+          e.preventDefault();
+          const mainContent = document.querySelector("#main-content");
+          if (mainContent) {
+            mainContent.focus();
+            mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      }
+
+      // Add high contrast mode detection and enhancement
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-contrast: high)").matches
+      ) {
+        document.body.classList.add("high-contrast");
+      }
+
+      // Monitor for contrast preference changes
+      if (window.matchMedia) {
+        const contrastQuery = window.matchMedia("(prefers-contrast: high)");
+        contrastQuery.addEventListener("change", function (e) {
+          if (e.matches) {
+            document.body.classList.add("high-contrast");
+          } else {
+            document.body.classList.remove("high-contrast");
+          }
+        });
+      }
+
+      // Add resize handler for responsive adjustments
+      let resizeTimeout;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function () {
+          // Adjust print button position on mobile
+          const printBtn = document.querySelector(".fixed.bottom-4.right-4");
+          if (printBtn && window.innerWidth < 640) {
+            printBtn.style.bottom = "1rem";
+            printBtn.style.right = "1rem";
+          }
+        }, 250);
+      });
+
+      // Announce page load completion to screen readers
+      const loadAnnouncement = document.createElement("div");
+      loadAnnouncement.setAttribute("aria-live", "polite");
+      loadAnnouncement.className = "sr-only";
+      loadAnnouncement.textContent =
+        "Página dos Termos de Serviço carregada completamente";
+      document.body.appendChild(loadAnnouncement);
+
+      setTimeout(() => {
+        document.body.removeChild(loadAnnouncement);
+      }, 2000);
     });
   </script>
 </BaseLayout>

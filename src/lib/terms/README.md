@@ -7,6 +7,7 @@ This module provides comprehensive terms of service functionality for the AWS si
 - **Brazilian Portuguese Legal Content**: Complete terms of service in Portuguese with proper legal structure
 - **Version Management**: Semantic versioning with comparison and update utilities
 - **Content Validation**: Comprehensive validation and sanitization of terms content
+- **User Consent Tracking**: localStorage-based consent management with fallback support
 - **Type Safety**: Full TypeScript support with detailed interfaces
 - **Testing**: Comprehensive unit and integration tests
 
@@ -73,6 +74,55 @@ if (updateResult.success) {
 }
 ```
 
+### User Consent Tracking
+
+```typescript
+import { 
+  ConsentManager,
+  ConsentValidator,
+  hasValidConsent,
+  recordUserAcceptance,
+  getCurrentUserAcceptance
+} from '@/lib/terms';
+
+// Quick consent check
+const hasConsent = await hasValidConsent('1.0.0');
+
+// Record user acceptance
+const success = await recordUserAcceptance('1.0.0');
+
+// Get current user acceptance
+const acceptance = await getCurrentUserAcceptance();
+
+// Advanced consent management
+const config = {
+  currentVersion: '1.0.0',
+  requireAcceptance: true,
+  gracePeriodDays: 30,
+  showChangesHighlight: true,
+  enableVersionHistory: true,
+  maxStoredVersions: 5,
+};
+
+const manager = new ConsentManager(config);
+
+// Check if user needs to accept terms
+const needsAcceptance = await manager.needsAcceptance();
+
+// Get detailed consent status
+const status = await manager.getConsentStatus();
+
+// Record acceptance with additional data
+const result = await manager.recordAcceptance('1.0.0', ConsentType.INITIAL, {
+  userId: 'user123',
+  ipAddress: '192.168.1.1',
+  userAgent: navigator.userAgent
+});
+
+// Export user data (LGPD compliance)
+const exportData = await manager.exportConsentData();
+```
+
 ## Content Structure
 
 The terms content follows a structured format:
@@ -124,11 +174,46 @@ The content validator enforces these rules:
 - **Type Safety**: TypeScript interfaces prevent runtime errors
 - **Immutable Operations**: All getter methods return copies, not references
 
+## Consent Tracking Features
+
+### Storage Strategy
+
+The consent tracking system uses a multi-layered storage approach:
+
+1. **Primary Storage**: localStorage for persistent client-side storage
+2. **Fallback Storage**: In-memory storage when localStorage is unavailable
+3. **Error Handling**: Graceful degradation with user notification
+4. **Data Validation**: Comprehensive validation of all consent data
+
+### Consent Data Structure
+
+```typescript
+interface UserTermsAcceptance {
+  version: string;           // Version accepted (e.g., "1.0.0")
+  acceptedAt: Date;          // Timestamp of acceptance
+  status: AcceptanceStatus;  // ACCEPTED, DECLINED, PENDING, EXPIRED
+  consentType: ConsentType;  // INITIAL, UPDATE, RENEWAL
+  userId?: string;           // Optional user identifier
+  ipAddress?: string;        // Optional IP address
+  userAgent?: string;        // Optional browser information
+}
+```
+
+### Version Compatibility
+
+The system handles version compatibility with:
+
+- **Exact Version Matching**: Requires exact version match by default
+- **Grace Period Support**: Configurable grace period for updates
+- **Migration Rules**: Future support for backward compatibility rules
+- **Change Highlighting**: Shows changes between versions
+
 ## Testing
 
 The module includes comprehensive tests:
 
-- **Unit Tests**: 36 tests covering all utility functions
+- **Content Management**: 36 tests covering all utility functions
+- **Consent Tracking**: 48 tests covering localStorage operations, validation, and error handling
 - **Integration Tests**: 5 tests covering complete workflows
 - **Content Validation**: Tests for the default Brazilian Portuguese content
 
@@ -168,6 +253,16 @@ The Brazilian Portuguese content is designed to comply with:
 - **Brazilian Consumer Protection Code** - User rights and business obligations
 - **Educational Service Regulations** - Proper disclaimers for educational content
 
+## LGPD Compliance Features
+
+The consent tracking system includes specific features for Brazilian LGPD compliance:
+
+- **Minimal Data Collection**: Only collects necessary consent data
+- **User Data Export**: `exportConsentData()` method for data portability
+- **Data Deletion**: `clearConsent()` method for right to erasure
+- **Consent Tracking**: Detailed timestamps and version tracking
+- **Transparent Processing**: Clear consent status and history
+
 ## Future Enhancements
 
 The system is designed to support:
@@ -176,5 +271,6 @@ The system is designed to support:
 - Database storage migration
 - Content management system integration
 - Automated legal compliance checking
-- User acceptance tracking
 - Email notification systems
+- Advanced consent analytics
+- Cross-device consent synchronization
