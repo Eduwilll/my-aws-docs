@@ -24,4 +24,7 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# Kiro IDE files
+.kiro/
+
 .vercel
