@@ -16,7 +16,7 @@ const Header = () => {
           {/* Logo and Title */}
           <div className="flex items-center space-x-4">
             <Cloud size={48} color="#0B64F4" />
-            <h1 className="text-2xl font-bold">Escola da Nuvem</h1>
+            <h1 className="text-2xl font-bold">My AWS Docs</h1>
           </div>
 
           {/* Mobile Menu Button */}
