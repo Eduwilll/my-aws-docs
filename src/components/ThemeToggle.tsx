@@ -29,15 +29,13 @@ const ThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  if (!mounted) return null;
-
   return (
     <button
       onClick={toggleTheme}
       className="p-2 rounded-full text-primary transition-colors"
       aria-label="Toggle Theme"
     >
-      {theme === "light" ? <Moon /> : <Sun />}
+      {!mounted ? <Moon /> : theme === "light" ? <Moon /> : <Sun />}
     </button>
   );
 };
