@@ -24,6 +24,7 @@ import {
   Star,
   BarChart3,
   BookOpen,
+  Keyboard,
 } from "lucide-react";
 
 import type {
@@ -36,9 +37,11 @@ import type {
 } from "@/lib/types/questions";
 import type { ExamDomainKey } from "@/lib/types/exam-domains";
 import { useUserProgress } from "@/hooks/useUserProgress";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ProgressReport } from "@/components/ProgressReport";
 import { ExamDetails } from "@/components/ExamDetails";
 import { FavoriteQuestions } from "@/components/FavoriteQuestions";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import TermsNavigationLinks from "@/components/TermsNavigationLinks";
 import TermsVersionManager from "@/components/TermsVersionManager";
 import {
@@ -96,6 +99,7 @@ const ExamSimulator = () => {
   const [savedExamData, setSavedExamData] = useState<any>(null);
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
+  const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
 
   // Initialize user progress hook
   const {
@@ -108,6 +112,96 @@ const ExamSimulator = () => {
     getFavoriteQuestion,
     clearAllProgress,
   } = useUserProgress("user-" + crypto.randomUUID());
+
+  // Keyboard shortcuts configuration
+  const handleKeyboardNextQuestion = () => {
+    if (
+      isActive &&
+      !showExplanation &&
+      currentQuestionIndex < selectedSimulado.length - 1
+    ) {
+      handleNextQuestion();
+    }
+  };
+
+  const handleKeyboardPreviousQuestion = () => {
+    if (isActive && !showExplanation && currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      setSelectedAnswers([]);
+      setShowExplanation(false);
+      setAnswerStatus(null);
+      setQuestionStartTime(new Date());
+    }
+  };
+
+  const handleSelectAnswerByIndex = (index: number) => {
+    if (isActive && !showExplanation && currentQuestion?.options?.[index]) {
+      const optionId = currentQuestion.options[index].id;
+      handleAnswerToggle(optionId);
+    }
+  };
+
+  const handleSubmitAnswerShortcut = () => {
+    if (isActive && !showExplanation && selectedAnswers.length > 0) {
+      handleSubmitAnswers();
+    }
+  };
+
+  const handleSkipQuestion = () => {
+    if (isActive && !showExplanation) {
+      // Clear current answers and move to next question
+      setSelectedAnswers([]);
+      handleKeyboardNextQuestion();
+    }
+  };
+
+  // Initialize keyboard shortcuts hook
+  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts({
+    onNextQuestion: handleKeyboardNextQuestion,
+    onPreviousQuestion: handleKeyboardPreviousQuestion,
+    onSelectAnswer: handleSelectAnswerByIndex,
+    onSubmitAnswer: handleSubmitAnswerShortcut,
+    onSkipQuestion: handleSkipQuestion,
+    isModalOpen: showResumeDialog,
+    isInputFocused: isInputFocused,
+    currentQuestionIndex,
+    totalQuestions: selectedSimulado.length,
+  });
+
+  // Input focus detection for keyboard shortcuts
+  useEffect(() => {
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.contentEditable === "true" ||
+        target.getAttribute("role") === "textbox";
+      setIsInputFocused(isInput);
+    };
+
+    const handleFocusOut = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.contentEditable === "true" ||
+        target.getAttribute("role") === "textbox";
+      if (isInput) {
+        setIsInputFocused(false);
+      }
+    };
+
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("focusout", handleFocusOut);
+
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("focusout", handleFocusOut);
+    };
+  }, []);
 
   // Terms configuration
   const termsConfig: TermsConfig = {
@@ -826,6 +920,15 @@ const ExamSimulator = () => {
                         <Star className="w-4 h-4 mr-2" />
                         Favoritas ({userProgress.favoriteQuestions.length})
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowShortcutsModal(true)}
+                        title="Atalhos do Teclado (Pressione ? para abrir)"
+                      >
+                        <Keyboard className="w-4 h-4 mr-2" />
+                        Atalhos
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1207,10 +1310,20 @@ const ExamSimulator = () => {
                                 ? "text-yellow-500"
                                 : "text-gray-400"
                             }
+                            title="Adicionar aos Favoritos"
                           >
                             <Star
                               className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
                             />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowShortcutsModal(true)}
+                            className="text-gray-400 hover:text-gray-600"
+                            title="Atalhos do Teclado (Pressione ? para abrir)"
+                          >
+                            <Keyboard className="h-4 w-4" />
                           </Button>
                           <TermsNavigationLinks variant="button" size="sm" />
                         </div>
@@ -1485,6 +1598,12 @@ const ExamSimulator = () => {
           </div>
         </div>
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+      />
     </TermsVersionManager>
   );
 };
