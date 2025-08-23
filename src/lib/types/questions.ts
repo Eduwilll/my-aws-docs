@@ -21,6 +21,20 @@ export interface Question {
   references: string[];
 }
 
+export interface QuestionCollection {
+  metadata: {
+    id: string;
+    name: string;
+    description: string;
+    source: QuestionSource;
+    version: string;
+    createdAt: string;
+    updatedAt: string;
+    tags?: string[];
+  };
+  questions: Question[];
+}
+
 export type ExamCategory =
   | "cloud-concepts"
   | "cloud_concepts"
@@ -50,6 +64,14 @@ export type ExamCategory =
   | "containers";
 
 export type typeChoice = "single_choice" | "multiple_choice";
+
+export type QuestionSource =
+  | "OFFICIAL" // Questões de exames oficiais
+  | "USER" // Criadas por usuários
+  | "AI" // Geradas por inteligência artificial
+  | "INSTRUCTOR" // Criadas por professores/organizadores
+  | "SYSTEM" // Geradas automaticamente pelo sistema
+  | "IMPORTED"; // Importadas de bases externas
 
 export type StudyMode = "practice" | "exam" | "domain_focus";
 

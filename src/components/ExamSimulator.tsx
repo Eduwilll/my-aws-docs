@@ -54,6 +54,12 @@ import { hasValidConsent } from "@/lib/terms";
 import type { TermsConfig } from "@/lib/types/terms";
 import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
+import {
+  getExamSourceInfo,
+  getSourceLabel,
+  getSourceColor,
+  getSourceIcon,
+} from "@/lib/utils/examSources";
 
 //Questions
 import { questions } from "@/data/questions-clf-c02";
@@ -948,6 +954,19 @@ const ExamSimulator = () => {
                       <Badge variant="secondary" className="text-sm">
                         {getDomainName(selectedExamId, currentQuestion.dominio)}
                       </Badge>
+                      {selectedExamId && (
+                        <Badge
+                          variant="outline"
+                          className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
+                        >
+                          {getSourceIcon(
+                            getExamSourceInfo(selectedExamId).primarySource,
+                          )}{" "}
+                          {getSourceLabel(
+                            getExamSourceInfo(selectedExamId).primarySource,
+                          )}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <Progress value={progress} className="h-2" />
@@ -1163,27 +1182,35 @@ const ExamSimulator = () => {
                           <SelectValue placeholder="Selecione seu exame" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="CLF-C02">
-                            Exame CLF-C02 (65 questões)
-                          </SelectItem>
-                          <SelectItem value="CLF-C02-01">
-                            Exame CLF-C02-01 (65 questões)
-                          </SelectItem>
-                          <SelectItem value="CLF-C02-02">
-                            Exame CLF-C02-02 (65 questões)
-                          </SelectItem>
-                          <SelectItem value="CLF-C02-GPT">
-                            Exame CLF-C02-GPT (65 questões)
-                          </SelectItem>
-                          <SelectItem value="CLF-C02-FULL-NOGPT">
-                            Exame Infinito (130 questões)
-                          </SelectItem>
-                          <SelectItem value="CLF-C02-CC-01">
-                            Exame CLF-C02-CC-01 (65 questões)
-                          </SelectItem>
-                          <SelectItem value="SAA-C03">
-                            Exame SAA-C03 (1 questão)
-                          </SelectItem>
+                          {Object.keys(simulados).map((examId) => {
+                            const sourceInfo = getExamSourceInfo(examId);
+                            return (
+                              <SelectItem key={examId} value={examId}>
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {sourceInfo.name} (
+                                      {sourceInfo.questionCount} questões)
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {sourceInfo.description}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 ml-2">
+                                    <span className="text-xs">
+                                      {getSourceIcon(sourceInfo.primarySource)}
+                                    </span>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
+                                    >
+                                      {getSourceLabel(sourceInfo.primarySource)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1295,6 +1322,19 @@ const ExamSimulator = () => {
                           {studyMode !== "exam" && (
                             <Badge variant="secondary" className="text-xs">
                               {currentQuestion.difficulty}
+                            </Badge>
+                          )}
+                          {selectedExamId && (
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
+                            >
+                              {getSourceIcon(
+                                getExamSourceInfo(selectedExamId).primarySource,
+                              )}{" "}
+                              {getSourceLabel(
+                                getExamSourceInfo(selectedExamId).primarySource,
+                              )}
                             </Badge>
                           )}
                         </div>
