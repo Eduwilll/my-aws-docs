@@ -1122,6 +1122,7 @@ export const questionsSaaC03: Question[] = [
       },
       {
         id: "D",
+        text: "Tornar-se global em minutos.",
         text_en: "Go global in minutes.",
         isCorrect: false,
         explanation:

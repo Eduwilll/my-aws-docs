@@ -106,6 +106,8 @@ const ExamSimulator = () => {
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
+  const [currentExamResult, setCurrentExamResult] =
+    useState<DetailedExamResult | null>(null);
 
   // Initialize user progress hook
   const {
@@ -492,6 +494,9 @@ const ExamSimulator = () => {
         // Add to user progress
         addExamResult(detailedResult);
 
+        // Store current exam result for immediate access
+        setCurrentExamResult(detailedResult);
+
         setSimulatedExam(updatedExam);
         console.log("Exam Completed:", updatedExam); // Log or save the exam data
       }
@@ -615,6 +620,7 @@ const ExamSimulator = () => {
     setExamStartTime(examStart);
     setAllAnswers({});
     setQuestionStartTime(new Date());
+    setCurrentExamResult(null);
     // Clear any previous saved state when starting a new exam
     clearExamState();
   };
@@ -713,6 +719,7 @@ const ExamSimulator = () => {
     setCurrentView("exam");
     setShowResumeDialog(false);
     setSavedExamData(null);
+    setCurrentExamResult(null);
     clearExamState();
   };
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
@@ -1312,7 +1319,7 @@ const ExamSimulator = () => {
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="secondary" className="text-xs">
                             {studyMode === "practice"
                               ? "Modo Prática"
                               : studyMode === "exam"
@@ -1324,7 +1331,7 @@ const ExamSimulator = () => {
                               {currentQuestion.difficulty}
                             </Badge>
                           )}
-                          {selectedExamId && (
+                          {/* {selectedExamId && (
                             <Badge
                               variant="outline"
                               className={`text-xs ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
@@ -1336,7 +1343,7 @@ const ExamSimulator = () => {
                                 getExamSourceInfo(selectedExamId).primarySource,
                               )}
                             </Badge>
-                          )}
+                          )} */}
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -1608,7 +1615,7 @@ const ExamSimulator = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-4 justify-center">
+                  <div className="flex gap-4 justify-center flex-wrap">
                     <Button
                       onClick={resetExam}
                       variant="outline"
@@ -1621,6 +1628,18 @@ const ExamSimulator = () => {
                       <RotateCcw className="w-4 h-4" />
                       Tentar Novamente
                     </Button>
+                    {currentExamResult && (
+                      <Button
+                        onClick={() => {
+                          handleViewExamDetails(currentExamResult);
+                        }}
+                        variant="secondary"
+                        className="gap-2"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        Ver Detalhes do Exame
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

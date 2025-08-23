@@ -44,7 +44,6 @@ export const CLF_C02_Questions: Question[] = [
     id: "clf-c02-q2",
     type: "single_choice",
     text: "Qual serviço da AWS é responsável pelo gerenciamento de identidade e acesso?",
-    source: "OFFICIAL",
     options: [
       {
         id: "a",
@@ -84,7 +83,6 @@ export const CLF_C02_Questions: Question[] = [
     id: "clf-c02-q3",
     type: "single_choice",
     text: "Qual serviço da AWS é mais adequado para executar cargas de trabalho em contêineres?",
-    source: "OFFICIAL",
     options: [
       {
         id: "a",
@@ -124,7 +122,6 @@ export const CLF_C02_Questions: Question[] = [
     id: "clf-c02-q4",
     type: "single_choice",
     text: "Qual plano de suporte AWS inclui acesso ao AWS Trusted Advisor completo?",
-    source: "OFFICIAL",
     options: [
       {
         id: "a",
