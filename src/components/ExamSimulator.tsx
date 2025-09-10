@@ -19,6 +19,7 @@ import {
   Timer,
   Check,
   ChevronRight,
+  ChevronLeft,
   RotateCcw,
   Award,
   Star,
@@ -26,6 +27,7 @@ import {
   BookOpen,
   Keyboard,
   Languages,
+  List,
 } from "lucide-react";
 
 import type {
@@ -43,6 +45,8 @@ import { ProgressReport } from "@/components/ProgressReport";
 import { ExamDetails } from "@/components/ExamDetails";
 import { FavoriteQuestions } from "@/components/FavoriteQuestions";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { KeyboardShortcutsDisplay } from "@/components/KeyboardShortcutsDisplay";
+import { QuestionNavigationPanel } from "@/components/QuestionNavigationPanel";
 import TermsNavigationLinks from "@/components/TermsNavigationLinks";
 import TermsVersionManager from "@/components/TermsVersionManager";
 import {
@@ -115,6 +119,13 @@ const ExamSimulator = () => {
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
   const [currentExamResult, setCurrentExamResult] =
     useState<DetailedExamResult | null>(null);
+  const [questionStatuses, setQuestionStatuses] = useState<{
+    [questionIndex: number]: {
+      answered: boolean;
+      skipped: boolean;
+      correct?: boolean | null;
+    };
+  }>({});
 
   // Initialize user progress hook
   const {
@@ -164,10 +175,30 @@ const ExamSimulator = () => {
 
   const handleSkipQuestion = () => {
     if (isActive && !showExplanation) {
+      // Mark question as skipped
+      setQuestionStatuses((prev) => ({
+        ...prev,
+        [currentQuestionIndex]: {
+          answered: false,
+          skipped: true,
+          correct: null,
+        },
+      }));
+
       // Clear current answers and move to next question
       setSelectedAnswers([]);
       handleKeyboardNextQuestion();
     }
+  };
+
+  const handleQuestionSelect = (questionIndex: number) => {
+    if (!isActive || showExplanation) return;
+
+    setCurrentQuestionIndex(questionIndex);
+    setSelectedAnswers([]);
+    setShowExplanation(false);
+    setAnswerStatus(null);
+    setQuestionStartTime(new Date());
   };
 
   // Initialize keyboard shortcuts hook
@@ -304,6 +335,7 @@ const ExamSimulator = () => {
     selectedCategories,
     allAnswers,
     examStartTime,
+    questionStatuses,
   ]);
 
   // Get current question data
@@ -374,6 +406,16 @@ const ExamSimulator = () => {
       [currentQuestion.id]: {
         answers: selectedAnswers,
         status: currentStatus,
+      },
+    }));
+
+    // Update question status
+    setQuestionStatuses((prev) => ({
+      ...prev,
+      [currentQuestionIndex]: {
+        answered: true,
+        skipped: false,
+        correct: studyMode === "practice" ? isFullyCorrect : null,
       },
     }));
 
@@ -628,6 +670,7 @@ const ExamSimulator = () => {
     setAllAnswers({});
     setQuestionStartTime(new Date());
     setCurrentExamResult(null);
+    setQuestionStatuses({});
     // Clear any previous saved state when starting a new exam
     clearExamState();
   };
@@ -669,6 +712,7 @@ const ExamSimulator = () => {
       selectedDomains,
       selectedCategories,
       allAnswers,
+      questionStatuses,
       examStartTime: examStartTime?.toISOString(),
       timestamp: new Date().toISOString(),
     };
@@ -695,6 +739,7 @@ const ExamSimulator = () => {
     setSelectedDomains(savedExamData.selectedDomains || []);
     setSelectedCategories(savedExamData.selectedCategories || []);
     setAllAnswers(savedExamData.allAnswers || {});
+    setQuestionStatuses(savedExamData.questionStatuses || {});
     setExamStartTime(
       savedExamData.examStartTime
         ? new Date(savedExamData.examStartTime)
@@ -727,6 +772,7 @@ const ExamSimulator = () => {
     setShowResumeDialog(false);
     setSavedExamData(null);
     setCurrentExamResult(null);
+    setQuestionStatuses({});
     clearExamState();
   };
   const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
@@ -890,470 +936,522 @@ const ExamSimulator = () => {
             </div>
           )}
 
-          <div className="max-w-6xl mx-auto space-y-4">
-            <Card className="border-none shadow-lg">
-              <CardHeader className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                      AWS Cloud Practitioner
-                    </CardTitle>
-                    <CardDescription>
-                      Exame Simulado para o certificado AWS Cloud Practitioner
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isActive && studyMode === "exam" && (
-                      <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
-                        <Timer className="w-4 h-4" />
-                        <span className="font-mono font-medium">
-                          {formatTime(timeLeft)}
-                        </span>
-                      </div>
-                    )}
-                    {!isActive && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant={
-                            currentView === "exam" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setCurrentView("exam")}
-                        >
-                          <BookOpen className="w-4 h-4 mr-2" />
-                          Exame
-                        </Button>
-                        <Button
-                          variant={
-                            currentView === "progress" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setCurrentView("progress")}
-                        >
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          Progresso
-                        </Button>
-                        <Button
-                          variant={
-                            currentView === "favorites" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setCurrentView("favorites")}
-                        >
-                          <Star className="w-4 h-4 mr-2" />
-                          Favoritas ({userProgress.favoriteQuestions.length})
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowShortcutsModal(true)}
-                          title="Atalhos do Teclado (Pressione ? para abrir)"
-                        >
-                          <Keyboard className="w-4 h-4 mr-2" />
-                          Atalhos
-                        </Button>
-                      </div>
-                    )}
+          <div className="max-w-7xl mx-auto">
+            <div
+              className={`${isActive ? "grid grid-cols-1 lg:grid-cols-4 gap-4" : "space-y-4"}`}
+            >
+              {/* Sidebar - Question Navigation Panel */}
+              {isActive && (
+                <div className="lg:col-span-1 order-2 lg:order-1">
+                  <div className="sticky top-4">
+                    <QuestionNavigationPanel
+                      currentQuestionIndex={currentQuestionIndex}
+                      totalQuestions={selectedSimulado.length}
+                      questionStatuses={questionStatuses}
+                      onQuestionSelect={handleQuestionSelect}
+                      onPreviousQuestion={handleKeyboardPreviousQuestion}
+                      onNextQuestion={handleKeyboardNextQuestion}
+                      canNavigatePrevious={currentQuestionIndex > 0}
+                      canNavigateNext={
+                        currentQuestionIndex < selectedSimulado.length - 1
+                      }
+                      studyMode={studyMode}
+                      isCompact={false}
+                    />
                   </div>
                 </div>
+              )}
 
-                {isActive && (
-                  <div className="space-y-2">
+              {/* Main Content */}
+              <div
+                className={`${isActive ? "lg:col-span-3 order-1 lg:order-2" : "w-full"}`}
+              >
+                <Card className="border-none shadow-lg">
+                  <CardHeader className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-sm">
-                        Questão {currentQuestionIndex + 1} de{" "}
-                        {selectedSimulado.length}
-                      </Badge>
-                      <div className="flex gap-2">
-                        <Badge variant="secondary" className="text-sm">
-                          {currentQuestion.category}
-                        </Badge>
-                        <Badge variant="secondary" className="text-sm">
-                          {getDomainName(
-                            selectedExamId,
-                            currentQuestion.dominio,
-                          )}
-                        </Badge>
-                        {selectedExamId && (
-                          <Badge
-                            variant="outline"
-                            className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
-                          >
-                            {getSourceIcon(
-                              getExamSourceInfo(selectedExamId).primarySource,
-                            )}{" "}
-                            {getSourceLabel(
-                              getExamSourceInfo(selectedExamId).primarySource,
-                            )}
-                          </Badge>
+                      <div className="space-y-1">
+                        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                          AWS Cloud Practitioner
+                        </CardTitle>
+                        <CardDescription>
+                          Exame Simulado para o certificado AWS Cloud
+                          Practitioner
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isActive && studyMode === "exam" && (
+                          <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
+                            <Timer className="w-4 h-4" />
+                            <span className="font-mono font-medium">
+                              {formatTime(timeLeft)}
+                            </span>
+                          </div>
+                        )}
+                        {!isActive && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant={
+                                currentView === "exam" ? "default" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setCurrentView("exam")}
+                            >
+                              <BookOpen className="w-4 h-4 mr-2" />
+                              Exame
+                            </Button>
+                            <Button
+                              variant={
+                                currentView === "progress"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setCurrentView("progress")}
+                            >
+                              <BarChart3 className="w-4 h-4 mr-2" />
+                              Progresso
+                            </Button>
+                            <Button
+                              variant={
+                                currentView === "favorites"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setCurrentView("favorites")}
+                            >
+                              <Star className="w-4 h-4 mr-2" />
+                              Favoritas ({userProgress.favoriteQuestions.length}
+                              )
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowShortcutsModal(true)}
+                              title="Atalhos do Teclado (Pressione ? para abrir)"
+                            >
+                              <Keyboard className="w-4 h-4 mr-2" />
+                              Atalhos
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-                )}
-              </CardHeader>
 
-              <CardContent className="p-6">
-                {currentView === "progress" && (
-                  <ProgressReport
-                    userProgress={userProgress}
-                    onViewExamDetails={handleViewExamDetails}
-                  />
-                )}
-
-                {currentView === "favorites" && (
-                  <FavoriteQuestions
-                    favoriteQuestions={userProgress.favoriteQuestions}
-                    questions={getAllQuestions()}
-                    onRemoveFavorite={removeFavoriteQuestion}
-                    onUpdateFavorite={updateFavoriteQuestion}
-                    onViewQuestion={handleViewQuestion}
-                  />
-                )}
-
-                {currentView === "exam-details" && selectedExamDetails && (
-                  <ExamDetails
-                    examResult={selectedExamDetails}
-                    questions={getAllQuestions()}
-                    onBack={() => setCurrentView("progress")}
-                    onToggleFavorite={handleToggleFavorite}
-                    isFavoriteQuestion={isFavoriteQuestion}
-                  />
-                )}
-
-                {currentView === "exam" && !isActive && !showScore && (
-                  <div className="space-y-8 py-8">
-                    <div className="text-center space-y-2">
-                      <h2 className="text-2xl font-bold">
-                        Bem-vindo ao Simulador de Exame da AWS
-                      </h2>
-                      <p className="text-gray-500">
-                        Escolha seu modo de estudo e comece a praticar
-                      </p>
-                    </div>
-
-                    <div className="max-w-2xl mx-auto space-y-6">
-                      {/* Study Mode Selection */}
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium">
-                          Modo de Estudo
-                        </label>
-                        <Select
-                          onValueChange={(value: StudyMode) =>
-                            setStudyMode(value)
-                          }
-                          value={studyMode}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecione o modo de estudo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="practice">
-                              Modo de Prática - Feedback imediato após cada
-                              questão
-                            </SelectItem>
-                            <SelectItem value="exam">
-                              Modo de Exame Simulado - Cronometrado, sem
-                              feedback até o final
-                            </SelectItem>
-                            <SelectItem value="domain_focus">
-                              Foco por Domínio/Categoria - Estudo direcionado
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Domain/Category Filters - Only show for domain_focus mode */}
-                      {studyMode === "domain_focus" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium">
-                              Domínios
-                            </label>
-                            <Select
-                              onValueChange={(value: ExamDomainKey) => {
-                                if (value && !selectedDomains.includes(value)) {
-                                  setSelectedDomains([
-                                    ...selectedDomains,
-                                    value,
-                                  ]);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Adicionar domínio" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="DOMAIN_1">
-                                  Conceitos de Nuvem
-                                </SelectItem>
-                                <SelectItem value="DOMAIN_2">
-                                  Segurança e Conformidade
-                                </SelectItem>
-                                <SelectItem value="DOMAIN_3">
-                                  Tecnologia
-                                </SelectItem>
-                                <SelectItem value="DOMAIN_4">
-                                  Faturamento e Preços
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {selectedDomains.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {selectedDomains.map((domain) => (
-                                  <Badge
-                                    key={domain}
-                                    variant="secondary"
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                      setSelectedDomains(
-                                        selectedDomains.filter(
-                                          (d) => d !== domain,
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    {getDomainName(
-                                      selectedExamId || "CLF-C02",
-                                      domain,
-                                    )}{" "}
-                                    ×
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium">
-                              Categorias
-                            </label>
-                            <Select
-                              onValueChange={(value: ExamCategory) => {
-                                if (
-                                  value &&
-                                  !selectedCategories.includes(value)
-                                ) {
-                                  setSelectedCategories([
-                                    ...selectedCategories,
-                                    value,
-                                  ]);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Adicionar categoria" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="cloud_concepts">
-                                  Conceitos de Nuvem
-                                </SelectItem>
-                                <SelectItem value="security">
-                                  Segurança
-                                </SelectItem>
-                                <SelectItem value="technology">
-                                  Tecnologia
-                                </SelectItem>
-                                <SelectItem value="billing">
-                                  Faturamento
-                                </SelectItem>
-                                <SelectItem value="compute">
-                                  Computação
-                                </SelectItem>
-                                <SelectItem value="storage">
-                                  Armazenamento
-                                </SelectItem>
-                                <SelectItem value="networking">
-                                  Redes
-                                </SelectItem>
-                                <SelectItem value="database">
-                                  Banco de Dados
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {selectedCategories.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {selectedCategories.map((category) => (
-                                  <Badge
-                                    key={category}
-                                    variant="secondary"
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                      setSelectedCategories(
-                                        selectedCategories.filter(
-                                          (c) => c !== category,
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    {category} ×
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Exam Selection */}
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium">Exame</label>
-                        <Select
-                          onValueChange={handleExamSelection}
-                          value={selectedExamId}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecione seu exame" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.keys(simulados).map((examId) => {
-                              const sourceInfo = getExamSourceInfo(examId);
-                              return (
-                                <SelectItem key={examId} value={examId}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">
-                                        {sourceInfo.name} (
-                                        {sourceInfo.questionCount} questões)
-                                      </span>
-                                      <span className="text-xs text-gray-500">
-                                        {sourceInfo.description}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 ml-2">
-                                      <span className="text-xs">
-                                        {getSourceIcon(
-                                          sourceInfo.primarySource,
-                                        )}
-                                      </span>
-                                      <Badge
-                                        variant="outline"
-                                        className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
-                                      >
-                                        {getSourceLabel(
-                                          sourceInfo.primarySource,
-                                        )}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {!checkingTerms && !termsAccepted && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                          <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0">
-                              <svg
-                                className="h-5 w-5 text-yellow-400"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
+                    {isActive && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-sm">
+                              Questão {currentQuestionIndex + 1} de{" "}
+                              {selectedSimulado.length}
+                            </Badge>
+                            <div className="flex gap-2">
+                              <Badge variant="secondary" className="text-sm">
+                                {currentQuestion.category}
+                              </Badge>
+                              <Badge variant="secondary" className="text-sm">
+                                {getDomainName(
+                                  selectedExamId,
+                                  currentQuestion.dominio,
+                                )}
+                              </Badge>
+                              {selectedExamId && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
+                                >
+                                  {getSourceIcon(
+                                    getExamSourceInfo(selectedExamId)
+                                      .primarySource,
+                                  )}{" "}
+                                  {getSourceLabel(
+                                    getExamSourceInfo(selectedExamId)
+                                      .primarySource,
+                                  )}
+                                </Badge>
+                              )}
                             </div>
-                            <div className="flex-1">
-                              <h3 className="text-sm font-medium text-yellow-800">
-                                Termos de Serviço Requeridos
-                              </h3>
-                              <p className="text-sm text-yellow-700 mt-1">
-                                Você deve aceitar nossos Termos de Serviço antes
-                                de iniciar o exame.
-                              </p>
-                              <div className="mt-3 flex flex-col gap-2">
-                                <TermsNavigationLinks
-                                  variant="link"
-                                  className="text-sm text-yellow-800 hover:text-yellow-900"
-                                />
-                                <button
-                                  onClick={async () => {
-                                    setCheckingTerms(true);
-                                    try {
-                                      const hasConsent = await hasValidConsent(
-                                        termsConfig.currentVersion,
-                                        termsConfig.gracePeriodDays,
-                                      );
-                                      setTermsAccepted(hasConsent);
-                                    } catch (error) {
-                                      console.error(
-                                        "Error rechecking terms:",
-                                        error,
-                                      );
-                                    } finally {
-                                      setCheckingTerms(false);
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                        </div>
+
+                        {/* Keyboard shortcuts display */}
+                        {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <KeyboardShortcutsDisplay isCompact={true} />
+                      </div> */}
+                      </div>
+                    )}
+                  </CardHeader>
+
+                  <CardContent className="p-6">
+                    {currentView === "progress" && (
+                      <ProgressReport
+                        userProgress={userProgress}
+                        onViewExamDetails={handleViewExamDetails}
+                      />
+                    )}
+
+                    {currentView === "favorites" && (
+                      <FavoriteQuestions
+                        favoriteQuestions={userProgress.favoriteQuestions}
+                        questions={getAllQuestions()}
+                        onRemoveFavorite={removeFavoriteQuestion}
+                        onUpdateFavorite={updateFavoriteQuestion}
+                        onViewQuestion={handleViewQuestion}
+                      />
+                    )}
+
+                    {currentView === "exam-details" && selectedExamDetails && (
+                      <ExamDetails
+                        examResult={selectedExamDetails}
+                        questions={getAllQuestions()}
+                        onBack={() => setCurrentView("progress")}
+                        onToggleFavorite={handleToggleFavorite}
+                        isFavoriteQuestion={isFavoriteQuestion}
+                      />
+                    )}
+
+                    {currentView === "exam" && !isActive && !showScore && (
+                      <div className="space-y-8 py-8">
+                        <div className="text-center space-y-2">
+                          <h2 className="text-2xl font-bold">
+                            Bem-vindo ao Simulador de Exame da AWS
+                          </h2>
+                          <p className="text-gray-500">
+                            Escolha seu modo de estudo e comece a praticar
+                          </p>
+                        </div>
+
+                        <div className="max-w-2xl mx-auto space-y-6">
+                          {/* Study Mode Selection */}
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">
+                              Modo de Estudo
+                            </label>
+                            <Select
+                              onValueChange={(value: StudyMode) =>
+                                setStudyMode(value)
+                              }
+                              value={studyMode}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione o modo de estudo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="practice">
+                                  Modo de Prática - Feedback imediato após cada
+                                  questão
+                                </SelectItem>
+                                <SelectItem value="exam">
+                                  Modo de Exame Simulado - Cronometrado, sem
+                                  feedback até o final
+                                </SelectItem>
+                                <SelectItem value="domain_focus">
+                                  Foco por Domínio/Categoria - Estudo
+                                  direcionado
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Domain/Category Filters - Only show for domain_focus mode */}
+                          {studyMode === "domain_focus" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-3">
+                                <label className="text-sm font-medium">
+                                  Domínios
+                                </label>
+                                <Select
+                                  onValueChange={(value: ExamDomainKey) => {
+                                    if (
+                                      value &&
+                                      !selectedDomains.includes(value)
+                                    ) {
+                                      setSelectedDomains([
+                                        ...selectedDomains,
+                                        value,
+                                      ]);
                                     }
                                   }}
-                                  className="text-xs text-yellow-800 hover:text-yellow-900 underline text-left"
-                                  disabled={checkingTerms}
                                 >
-                                  {checkingTerms
-                                    ? "Verificando..."
-                                    : "Verificar novamente"}
-                                </button>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Adicionar domínio" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="DOMAIN_1">
+                                      Conceitos de Nuvem
+                                    </SelectItem>
+                                    <SelectItem value="DOMAIN_2">
+                                      Segurança e Conformidade
+                                    </SelectItem>
+                                    <SelectItem value="DOMAIN_3">
+                                      Tecnologia
+                                    </SelectItem>
+                                    <SelectItem value="DOMAIN_4">
+                                      Faturamento e Preços
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {selectedDomains.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedDomains.map((domain) => (
+                                      <Badge
+                                        key={domain}
+                                        variant="secondary"
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          setSelectedDomains(
+                                            selectedDomains.filter(
+                                              (d) => d !== domain,
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        {getDomainName(
+                                          selectedExamId || "CLF-C02",
+                                          domain,
+                                        )}{" "}
+                                        ×
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="space-y-3">
+                                <label className="text-sm font-medium">
+                                  Categorias
+                                </label>
+                                <Select
+                                  onValueChange={(value: ExamCategory) => {
+                                    if (
+                                      value &&
+                                      !selectedCategories.includes(value)
+                                    ) {
+                                      setSelectedCategories([
+                                        ...selectedCategories,
+                                        value,
+                                      ]);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Adicionar categoria" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="cloud_concepts">
+                                      Conceitos de Nuvem
+                                    </SelectItem>
+                                    <SelectItem value="security">
+                                      Segurança
+                                    </SelectItem>
+                                    <SelectItem value="technology">
+                                      Tecnologia
+                                    </SelectItem>
+                                    <SelectItem value="billing">
+                                      Faturamento
+                                    </SelectItem>
+                                    <SelectItem value="compute">
+                                      Computação
+                                    </SelectItem>
+                                    <SelectItem value="storage">
+                                      Armazenamento
+                                    </SelectItem>
+                                    <SelectItem value="networking">
+                                      Redes
+                                    </SelectItem>
+                                    <SelectItem value="database">
+                                      Banco de Dados
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {selectedCategories.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedCategories.map((category) => (
+                                      <Badge
+                                        key={category}
+                                        variant="secondary"
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          setSelectedCategories(
+                                            selectedCategories.filter(
+                                              (c) => c !== category,
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        {category} ×
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
+                          )}
+
+                          {/* Exam Selection */}
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Exame</label>
+                            <Select
+                              onValueChange={handleExamSelection}
+                              value={selectedExamId}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione seu exame" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.keys(simulados).map((examId) => {
+                                  const sourceInfo = getExamSourceInfo(examId);
+                                  return (
+                                    <SelectItem key={examId} value={examId}>
+                                      <div className="flex items-center justify-between w-full">
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">
+                                            {sourceInfo.name} (
+                                            {sourceInfo.questionCount} questões)
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            {sourceInfo.description}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 ml-2">
+                                          <span className="text-xs">
+                                            {getSourceIcon(
+                                              sourceInfo.primarySource,
+                                            )}
+                                          </span>
+                                          <Badge
+                                            variant="outline"
+                                            className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
+                                          >
+                                            {getSourceLabel(
+                                              sourceInfo.primarySource,
+                                            )}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
                           </div>
+
+                          {!checkingTerms && !termsAccepted && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                              <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                  <svg
+                                    className="h-5 w-5 text-yellow-400"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="text-sm font-medium text-yellow-800">
+                                    Termos de Serviço Requeridos
+                                  </h3>
+                                  <p className="text-sm text-yellow-700 mt-1">
+                                    Você deve aceitar nossos Termos de Serviço
+                                    antes de iniciar o exame.
+                                  </p>
+                                  <div className="mt-3 flex flex-col gap-2">
+                                    <TermsNavigationLinks
+                                      variant="link"
+                                      className="text-sm text-yellow-800 hover:text-yellow-900"
+                                    />
+                                    <button
+                                      onClick={async () => {
+                                        setCheckingTerms(true);
+                                        try {
+                                          const hasConsent =
+                                            await hasValidConsent(
+                                              termsConfig.currentVersion,
+                                              termsConfig.gracePeriodDays,
+                                            );
+                                          setTermsAccepted(hasConsent);
+                                        } catch (error) {
+                                          console.error(
+                                            "Error rechecking terms:",
+                                            error,
+                                          );
+                                        } finally {
+                                          setCheckingTerms(false);
+                                        }
+                                      }}
+                                      className="text-xs text-yellow-800 hover:text-yellow-900 underline text-left"
+                                      disabled={checkingTerms}
+                                    >
+                                      {checkingTerms
+                                        ? "Verificando..."
+                                        : "Verificar novamente"}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            onClick={startExam}
+                            disabled={
+                              !selectedExamId || checkingTerms || !termsAccepted
+                            }
+                            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                          >
+                            {checkingTerms && "Verificando Termos..."}
+                            {!checkingTerms &&
+                              !termsAccepted &&
+                              "Aceite os Termos para Continuar"}
+                            {!checkingTerms &&
+                              termsAccepted &&
+                              studyMode === "practice" &&
+                              "Iniciar Modo de Prática"}
+                            {!checkingTerms &&
+                              termsAccepted &&
+                              studyMode === "exam" &&
+                              "Iniciar Exame Simulado"}
+                            {!checkingTerms &&
+                              termsAccepted &&
+                              studyMode === "domain_focus" &&
+                              "Iniciar Estudo Focado"}
+                          </Button>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      <Button
-                        onClick={startExam}
-                        disabled={
-                          !selectedExamId || checkingTerms || !termsAccepted
-                        }
-                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-                      >
-                        {checkingTerms && "Verificando Termos..."}
-                        {!checkingTerms &&
-                          !termsAccepted &&
-                          "Aceite os Termos para Continuar"}
-                        {!checkingTerms &&
-                          termsAccepted &&
-                          studyMode === "practice" &&
-                          "Iniciar Modo de Prática"}
-                        {!checkingTerms &&
-                          termsAccepted &&
-                          studyMode === "exam" &&
-                          "Iniciar Exame Simulado"}
-                        {!checkingTerms &&
-                          termsAccepted &&
-                          studyMode === "domain_focus" &&
-                          "Iniciar Estudo Focado"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {currentView === "exam" &&
-                  isActive &&
-                  !showScore &&
-                  currentQuestion && (
-                    <div className="space-y-6">
-                      {/* background color: #bg-background text-foreground */}
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {studyMode === "practice"
-                                ? "Modo Prática"
-                                : studyMode === "exam"
-                                  ? "Modo Exame"
-                                  : "Estudo Focado"}
-                            </Badge>
-                            {studyMode !== "exam" && (
-                              <Badge variant="secondary" className="text-xs">
-                                {currentQuestion.difficulty}
-                              </Badge>
-                            )}
-                            {/* {selectedExamId && (
+                    {currentView === "exam" &&
+                      isActive &&
+                      !showScore &&
+                      currentQuestion && (
+                        <div className="space-y-6">
+                          {/* background color: #bg-background text-foreground */}
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-xs">
+                                  {studyMode === "practice"
+                                    ? "Modo Prática"
+                                    : studyMode === "exam"
+                                      ? "Modo Exame"
+                                      : "Estudo Focado"}
+                                </Badge>
+                                {studyMode !== "exam" && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {currentQuestion.difficulty}
+                                  </Badge>
+                                )}
+                                {/* {selectedExamId && (
                             <Badge
                               variant="outline"
                               className={`text-xs ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
@@ -1366,93 +1464,103 @@ const ExamSimulator = () => {
                               )}
                             </Badge>
                           )} */}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleToggleFavorite(currentQuestion.id)
-                              }
-                              className={
-                                isFavoriteQuestion(currentQuestion.id)
-                                  ? "text-yellow-500"
-                                  : "text-gray-400"
-                              }
-                              title="Adicionar aos Favoritos"
-                            >
-                              <Star
-                                className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
-                              />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowShortcutsModal(true)}
-                              className="text-gray-400 hover:text-gray-600"
-                              title="Atalhos do Teclado (Pressione ? para abrir)"
-                            >
-                              <Keyboard className="h-4 w-4" />
-                            </Button>
-                            <TermsNavigationLinks variant="button" size="sm" />
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <h3 className="text-lg font-medium text-gray-900 flex-1">
-                            {currentQuestion.text}
-                          </h3>
-                          {currentQuestion.text_en && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
+                              </div>
+                              <div className="flex items-center gap-2">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                                  onClick={() =>
+                                    handleToggleFavorite(currentQuestion.id)
+                                  }
+                                  className={
+                                    isFavoriteQuestion(currentQuestion.id)
+                                      ? "text-yellow-500"
+                                      : "text-gray-400"
+                                  }
+                                  title="Adicionar aos Favoritos"
                                 >
-                                  <Languages className="h-4 w-4" />
+                                  <Star
+                                    className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
+                                  />
                                 </Button>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="left"
-                                className="max-w-md p-3 bg-white border shadow-lg"
-                              >
-                                <div className="space-y-2">
-                                  <p className="text-xs font-medium text-blue-600">
-                                    English:
-                                  </p>
-                                  <p className="text-lg">
-                                    {currentQuestion.text_en}
-                                  </p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                        {currentQuestion.type === "multiple_choice" && (
-                          <p className="text-sm text-blue-600 mt-2 font-medium">
-                            Seleciona todas as opções corretas
-                          </p>
-                        )}
-                      </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setShowShortcutsModal(true)}
+                                  className="text-gray-400 hover:text-gray-600"
+                                  title="Atalhos do Teclado (Pressione ? para abrir)"
+                                >
+                                  <Keyboard className="h-4 w-4" />
+                                </Button>
+                                <TermsNavigationLinks
+                                  variant="button"
+                                  size="sm"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <h3 className="text-lg font-medium text-gray-900 flex-1">
+                                {currentQuestion.text}
+                              </h3>
+                              {currentQuestion.text_en && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                                    >
+                                      <Languages className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="left"
+                                    className="max-w-md p-3 bg-white border shadow-lg"
+                                  >
+                                    <div className="space-y-2">
+                                      <p className="text-xs font-medium text-blue-600">
+                                        English:
+                                      </p>
+                                      <p className="text-lg">
+                                        {currentQuestion.text_en}
+                                      </p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                            {currentQuestion.type === "multiple_choice" && (
+                              <p className="text-sm text-blue-600 mt-2 font-medium">
+                                Seleciona todas as opções corretas
+                              </p>
+                            )}
+                          </div>
 
-                      <div className="space-y-3">
-                        {currentOptions.map((option) => (
-                          <div key={option.id} className="relative">
-                            <Button
-                              variant={getButtonVariant(option.id)}
-                              className="w-full justify-start text-left p-4 h-auto whitespace-normal pr-12"
-                              onClick={() =>
-                                !showExplanation &&
-                                (currentQuestion.type === "multiple_choice"
-                                  ? handleAnswerToggle(option.id)
-                                  : setSelectedAnswers([option.id]))
-                              }
-                              disabled={showExplanation}
-                            >
-                              {option.text}
-                            </Button>
-                            {/* Options in English */}
-                            {/* {option.text_en && (
+                          <div className="space-y-3">
+                            {currentOptions.map((option, index) => (
+                              <div key={option.id} className="relative">
+                                <Button
+                                  variant={getButtonVariant(option.id)}
+                                  className="w-full justify-between text-left p-4 h-auto whitespace-normal"
+                                  onClick={() =>
+                                    !showExplanation &&
+                                    (currentQuestion.type === "multiple_choice"
+                                      ? handleAnswerToggle(option.id)
+                                      : setSelectedAnswers([option.id]))
+                                  }
+                                  disabled={showExplanation}
+                                >
+                                  <span className="flex-1 pr-3">
+                                    {option.text}
+                                  </span>
+                                  {!showExplanation && (
+                                    <kbd className="px-2 py-1 text-xs bg-white/80 border rounded font-mono flex-shrink-0">
+                                      {index + 1}
+                                    </kbd>
+                                  )}
+                                </Button>
+                                {/* Options in English */}
+                                {/* {option.text_en && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -1475,60 +1583,115 @@ const ExamSimulator = () => {
                                 </TooltipContent>
                               </Tooltip>
                             )} */}
-                          </div>
-                        ))}
-                      </div>
-
-                      {!showExplanation && selectedAnswers.length > 0 && (
-                        <Button
-                          onClick={handleSubmitAnswers}
-                          className="w-full sm:w-auto"
-                        >
-                          {studyMode === "practice"
-                            ? "Verificar Resposta"
-                            : currentQuestionIndex ===
-                                selectedSimulado.length - 1
-                              ? "Finalizar Exame"
-                              : "Próxima Questão"}
-                        </Button>
-                      )}
-
-                      {showExplanation && (
-                        <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
-                          <div className="flex items-center gap-2">
-                            {answerStatus === "correct" && (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                                Resposta Correta
-                              </Badge>
-                            )}
-                            {answerStatus === "partial" && (
-                              <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                                Parcialmente Correta
-                              </Badge>
-                            )}
-                            {answerStatus === "incorrect" && (
-                              <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                                Resposta Incorreta
-                              </Badge>
-                            )}
+                              </div>
+                            ))}
                           </div>
 
-                          <div className="space-y-4">
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-green-700">
-                                Respostas Corretas:
-                              </h3>
-                              <ul className="space-y-3">
-                                {correctOptions.map((option) => (
-                                  <li key={option.id} className="flex gap-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                                    <div className="flex-1">
-                                      <div className="flex items-start gap-2">
-                                        <p className="font-medium flex-1">
-                                          {option.text}
-                                        </p>
-                                        {/* Explanation in English  */}
-                                        {/* {option.text_en && (
+                          {!showExplanation && (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              {/* Navigation buttons */}
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={handleKeyboardPreviousQuestion}
+                                  disabled={currentQuestionIndex === 0}
+                                  className="flex items-center gap-2"
+                                >
+                                  <ChevronLeft className="w-4 h-4" />
+                                  Anterior
+                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
+                                    ←
+                                  </kbd>
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  onClick={handleKeyboardNextQuestion}
+                                  disabled={
+                                    currentQuestionIndex ===
+                                    selectedSimulado.length - 1
+                                  }
+                                  className="flex items-center gap-2"
+                                >
+                                  Próxima
+                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
+                                    →
+                                  </kbd>
+                                  <ChevronRight className="w-4 h-4" />
+                                </Button>
+                              </div>
+
+                              {/* Action buttons */}
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={handleSubmitAnswers}
+                                  disabled={selectedAnswers.length === 0}
+                                  className="flex items-center gap-2"
+                                >
+                                  {studyMode === "practice"
+                                    ? "Verificar Resposta"
+                                    : currentQuestionIndex ===
+                                        selectedSimulado.length - 1
+                                      ? "Finalizar Exame"
+                                      : "Próxima Questão"}
+                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 border border-white/30 rounded">
+                                    Enter
+                                  </kbd>
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  onClick={handleSkipQuestion}
+                                  className="flex items-center gap-2"
+                                >
+                                  Pular Questão
+                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
+                                    Space
+                                  </kbd>
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {showExplanation && (
+                            <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
+                              <div className="flex items-center gap-2">
+                                {answerStatus === "correct" && (
+                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                                    Resposta Correta
+                                  </Badge>
+                                )}
+                                {answerStatus === "partial" && (
+                                  <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                                    Parcialmente Correta
+                                  </Badge>
+                                )}
+                                {answerStatus === "incorrect" && (
+                                  <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                                    Resposta Incorreta
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="space-y-4">
+                                <div className="space-y-3">
+                                  <h3 className="font-semibold text-green-700">
+                                    Respostas Corretas:
+                                  </h3>
+                                  <ul className="space-y-3">
+                                    {correctOptions.map((option) => (
+                                      <li
+                                        key={option.id}
+                                        className="flex gap-3"
+                                      >
+                                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
+                                        <div className="flex-1">
+                                          <div className="flex items-start gap-2">
+                                            <p className="font-medium flex-1">
+                                              {option.text}
+                                            </p>
+                                            {/* Explanation in English  */}
+                                            {/* {option.text_en && (
                                           <Tooltip>
                                             <TooltipTrigger asChild>
                                               <Button
@@ -1556,245 +1719,253 @@ const ExamSimulator = () => {
                                             </TooltipContent>
                                           </Tooltip>
                                         )} */}
-                                      </div>
-                                      <p className="text-sm text-gray-600 mt-1">
-                                        {option.explanation}
-                                      </p>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
+                                          </div>
+                                          <p className="text-sm text-gray-600 mt-1">
+                                            {option.explanation}
+                                          </p>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
 
-                            <Separator />
+                                <Separator />
 
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-red-700">
-                                Outras Opções Explicadas:
-                              </h3>
-                              <ul className="space-y-3">
-                                {incorrectOptions.map((option) => (
-                                  <li key={option.id} className="space-y-1">
-                                    <div className="flex items-start gap-2">
-                                      <p className="font-medium flex-1">
-                                        {option.text}
-                                      </p>
-                                      {option.text_en && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-                                            >
-                                              <Languages className="h-3 w-3" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent
-                                            side="left"
-                                            className="max-w-sm p-3 bg-white border shadow-lg"
-                                          >
-                                            <div className="space-y-2">
-                                              <p className="text-xs font-medium text-blue-600">
-                                                English:
-                                              </p>
-                                              <p className="text-sm">
-                                                {option.text_en}
-                                              </p>
-                                              {option.explanation_en && (
-                                                <>
+                                <div className="space-y-3">
+                                  <h3 className="font-semibold text-red-700">
+                                    Outras Opções Explicadas:
+                                  </h3>
+                                  <ul className="space-y-3">
+                                    {incorrectOptions.map((option) => (
+                                      <li key={option.id} className="space-y-1">
+                                        <div className="flex items-start gap-2">
+                                          <p className="font-medium flex-1">
+                                            {option.text}
+                                          </p>
+                                          {option.text_en && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                                                >
+                                                  <Languages className="h-3 w-3" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent
+                                                side="left"
+                                                className="max-w-sm p-3 bg-white border shadow-lg"
+                                              >
+                                                <div className="space-y-2">
                                                   <p className="text-xs font-medium text-blue-600">
-                                                    Explanation:
+                                                    English:
                                                   </p>
                                                   <p className="text-sm">
-                                                    {option.explanation_en}
+                                                    {option.text_en}
                                                   </p>
-                                                </>
-                                              )}
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-gray-600">
-                                      {option.explanation}
-                                    </p>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <h4 className="font-medium text-gray-700">
-                              References:
-                            </h4>
-                            <ul className="space-y-1">
-                              {currentQuestion.references.map(
-                                (reference, index) => (
-                                  <li key={index}>
-                                    <a
-                                      href={reference}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline text-sm"
-                                    >
-                                      {reference}
-                                    </a>
-                                  </li>
-                                ),
-                              )}
-                            </ul>
-                          </div>
-
-                          <Button
-                            onClick={handleNextQuestion}
-                            className="w-full sm:w-auto"
-                            // variant={
-                            //   answerStatus === "correct" ? "default" : "secondary"
-                            // }
-                          >
-                            {currentQuestionIndex ===
-                            selectedSimulado.length - 1 ? (
-                              "Finalizar Exame"
-                            ) : (
-                              <>
-                                Proxima Questão
-                                <ChevronRight className="w-4 h-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                {currentView === "exam" && showScore && (
-                  <div className="text-center space-y-6 py-8">
-                    <div className="inline-flex p-4 bg-background text-foreground rounded-full">
-                      <Award className="w-12 h-12 text-blue-600" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <h2 className="text-2xl font-bold">
-                        {studyMode === "practice"
-                          ? "Prática Concluída!"
-                          : studyMode === "exam"
-                            ? "Exame Concluído!"
-                            : "Estudo Focado Concluído!"}
-                      </h2>
-                      {endMessage && (
-                        <p className="text-gray-600">{endMessage}</p>
-                      )}
-                    </div>
-
-                    <div className="max-w-xs mx-auto p-6 bg-gray-50 rounded-lg">
-                      <div className="text-4xl font-bold text-blue-600">
-                        {Math.round((score / selectedSimulado.length) * 100)}%
-                      </div>
-                      <p className="text-gray-600 mt-2">
-                        {score} corretas de {selectedSimulado.length} questões
-                      </p>
-                      {simulatedExam?.timeSpent && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Tempo gasto:{" "}
-                          {Math.floor(simulatedExam.timeSpent / 60)}m{" "}
-                          {simulatedExam.timeSpent % 60}s
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Show detailed results for exam mode */}
-                    {studyMode === "exam" && (
-                      <div className="max-w-2xl mx-auto space-y-4">
-                        <h3 className="text-lg font-semibold">
-                          Revisão das Respostas
-                        </h3>
-                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                          {selectedSimulado.map((question, index) => {
-                            const userAnswer = allAnswers[question.id];
-                            const correctOptions = question.options.filter(
-                              (opt) => opt.isCorrect,
-                            );
-
-                            return (
-                              <div
-                                key={question.id}
-                                className="p-4 border rounded-lg text-left"
-                              >
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge
-                                    variant={
-                                      userAnswer?.status === "correct"
-                                        ? "default"
-                                        : "destructive"
-                                    }
-                                  >
-                                    Questão {index + 1}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    {question.category}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm mb-2">{question.text}</p>
-                                <div className="space-y-1 text-xs">
-                                  <p>
-                                    <strong>Resposta correta:</strong>{" "}
-                                    {correctOptions
-                                      .map((opt) => opt.text)
-                                      .join(", ")}
-                                  </p>
-                                  {userAnswer && (
-                                    <p>
-                                      <strong>Sua resposta:</strong>{" "}
-                                      {userAnswer.answers
-                                        .map(
-                                          (id) =>
-                                            question.options.find(
-                                              (opt) => opt.id === id,
-                                            )?.text,
-                                        )
-                                        .join(", ")}
-                                    </p>
-                                  )}
+                                                  {option.explanation_en && (
+                                                    <>
+                                                      <p className="text-xs font-medium text-blue-600">
+                                                        Explanation:
+                                                      </p>
+                                                      <p className="text-sm">
+                                                        {option.explanation_en}
+                                                      </p>
+                                                    </>
+                                                  )}
+                                                </div>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                          {option.explanation}
+                                        </p>
+                                      </li>
+                                    ))}
+                                  </ul>
                                 </div>
                               </div>
-                            );
-                          })}
+
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-gray-700">
+                                  References:
+                                </h4>
+                                <ul className="space-y-1">
+                                  {currentQuestion.references.map(
+                                    (reference, index) => (
+                                      <li key={index}>
+                                        <a
+                                          href={reference}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-sm"
+                                        >
+                                          {reference}
+                                        </a>
+                                      </li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+
+                              <Button
+                                onClick={handleNextQuestion}
+                                className="w-full sm:w-auto"
+                                // variant={
+                                //   answerStatus === "correct" ? "default" : "secondary"
+                                // }
+                              >
+                                {currentQuestionIndex ===
+                                selectedSimulado.length - 1 ? (
+                                  "Finalizar Exame"
+                                ) : (
+                                  <>
+                                    Proxima Questão
+                                    <ChevronRight className="w-4 h-4 ml-2" />
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {currentView === "exam" && showScore && (
+                      <div className="text-center space-y-6 py-8">
+                        <div className="inline-flex p-4 bg-background text-foreground rounded-full">
+                          <Award className="w-12 h-12 text-blue-600" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <h2 className="text-2xl font-bold">
+                            {studyMode === "practice"
+                              ? "Prática Concluída!"
+                              : studyMode === "exam"
+                                ? "Exame Concluído!"
+                                : "Estudo Focado Concluído!"}
+                          </h2>
+                          {endMessage && (
+                            <p className="text-gray-600">{endMessage}</p>
+                          )}
+                        </div>
+
+                        <div className="max-w-xs mx-auto p-6 bg-gray-50 rounded-lg">
+                          <div className="text-4xl font-bold text-blue-600">
+                            {Math.round(
+                              (score / selectedSimulado.length) * 100,
+                            )}
+                            %
+                          </div>
+                          <p className="text-gray-600 mt-2">
+                            {score} corretas de {selectedSimulado.length}{" "}
+                            questões
+                          </p>
+                          {simulatedExam?.timeSpent && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              Tempo gasto:{" "}
+                              {Math.floor(simulatedExam.timeSpent / 60)}m{" "}
+                              {simulatedExam.timeSpent % 60}s
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Show detailed results for exam mode */}
+                        {studyMode === "exam" && (
+                          <div className="max-w-2xl mx-auto space-y-4">
+                            <h3 className="text-lg font-semibold">
+                              Revisão das Respostas
+                            </h3>
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                              {selectedSimulado.map((question, index) => {
+                                const userAnswer = allAnswers[question.id];
+                                const correctOptions = question.options.filter(
+                                  (opt) => opt.isCorrect,
+                                );
+
+                                return (
+                                  <div
+                                    key={question.id}
+                                    className="p-4 border rounded-lg text-left"
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Badge
+                                        variant={
+                                          userAnswer?.status === "correct"
+                                            ? "default"
+                                            : "destructive"
+                                        }
+                                      >
+                                        Questão {index + 1}
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {question.category}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm mb-2">
+                                      {question.text}
+                                    </p>
+                                    <div className="space-y-1 text-xs">
+                                      <p>
+                                        <strong>Resposta correta:</strong>{" "}
+                                        {correctOptions
+                                          .map((opt) => opt.text)
+                                          .join(", ")}
+                                      </p>
+                                      {userAnswer && (
+                                        <p>
+                                          <strong>Sua resposta:</strong>{" "}
+                                          {userAnswer.answers
+                                            .map(
+                                              (id) =>
+                                                question.options.find(
+                                                  (opt) => opt.id === id,
+                                                )?.text,
+                                            )
+                                            .join(", ")}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-4 justify-center flex-wrap">
+                          <Button
+                            onClick={resetExam}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <BookOpen className="w-4 h-4" />
+                            Escolher Outro Exame
+                          </Button>
+                          <Button onClick={startExam} className="gap-2">
+                            <RotateCcw className="w-4 h-4" />
+                            Tentar Novamente
+                          </Button>
+                          {currentExamResult && (
+                            <Button
+                              onClick={() => {
+                                handleViewExamDetails(currentExamResult);
+                              }}
+                              variant="secondary"
+                              className="gap-2"
+                            >
+                              <BarChart3 className="w-4 h-4" />
+                              Ver Detalhes do Exame
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )}
-
-                    <div className="flex gap-4 justify-center flex-wrap">
-                      <Button
-                        onClick={resetExam}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        <BookOpen className="w-4 h-4" />
-                        Escolher Outro Exame
-                      </Button>
-                      <Button onClick={startExam} className="gap-2">
-                        <RotateCcw className="w-4 h-4" />
-                        Tentar Novamente
-                      </Button>
-                      {currentExamResult && (
-                        <Button
-                          onClick={() => {
-                            handleViewExamDetails(currentExamResult);
-                          }}
-                          variant="secondary"
-                          className="gap-2"
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                          Ver Detalhes do Exame
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Contextual Terms Links */}
             <div className="mt-6 pt-4 border-t border-border">
