@@ -125,22 +125,15 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
       <DialogContent
         ref={modalRef}
         className="max-w-2xl max-h-[90vh] overflow-y-auto focus:outline-none"
-        aria-labelledby="shortcuts-modal-title"
-        aria-describedby="shortcuts-modal-description"
-        aria-modal="true"
-        role="dialog"
         tabIndex={-1}
         onKeyDown={handleKeyDown}
       >
         <DialogHeader>
-          <DialogTitle
-            id="shortcuts-modal-title"
-            className="flex items-center gap-2 text-xl font-bold"
-          >
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <Keyboard className="h-5 w-5" />
             Keyboard Shortcuts
           </DialogTitle>
-          <DialogDescription id="shortcuts-modal-description">
+          <DialogDescription>
             Use these keyboard shortcuts to navigate and interact with the exam
             more efficiently.
           </DialogDescription>

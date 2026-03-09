@@ -81,6 +81,7 @@ import { questionsSaaC03 } from "@/data/questions-saa-c03";
 import { questionCLFC02CC01 } from "@/data/CLF-C02-CC-01";
 
 const ExamSimulator = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -126,6 +127,15 @@ const ExamSimulator = () => {
       correct?: boolean | null;
     };
   }>({});
+  const [userId] = useState(() =>
+    typeof window !== "undefined" && window.crypto
+      ? "user-" + crypto.randomUUID()
+      : "user-fallback",
+  );
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Initialize user progress hook
   const {
@@ -137,7 +147,7 @@ const ExamSimulator = () => {
     isFavoriteQuestion,
     getFavoriteQuestion,
     clearAllProgress,
-  } = useUserProgress("user-" + crypto.randomUUID());
+  } = useUserProgress(userId);
 
   // Keyboard shortcuts configuration
   const handleKeyboardNextQuestion = () => {
@@ -866,6 +876,10 @@ const ExamSimulator = () => {
     // For other errors, just log them
   };
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <TooltipProvider>
       <TermsVersionManager
@@ -1364,7 +1378,7 @@ const ExamSimulator = () => {
                                   </p>
                                   <div className="mt-3 flex flex-col gap-2">
                                     <TermsNavigationLinks
-                                      variant="link"
+                                      variant="inline"
                                       className="text-sm text-yellow-800 hover:text-yellow-900"
                                     />
                                     <button
@@ -1492,10 +1506,7 @@ const ExamSimulator = () => {
                                 >
                                   <Keyboard className="h-4 w-4" />
                                 </Button>
-                                <TermsNavigationLinks
-                                  variant="button"
-                                  size="sm"
-                                />
+                                <TermsNavigationLinks variant="inline" />
                               </div>
                             </div>
                             <div className="flex items-start gap-2">
