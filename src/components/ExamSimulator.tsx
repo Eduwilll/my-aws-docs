@@ -28,6 +28,8 @@ import {
   Keyboard,
   Languages,
   List,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 import type {
@@ -102,6 +104,7 @@ const simulados = {
 
 const ExamSimulator = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -155,6 +158,13 @@ const ExamSimulator = () => {
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Set initial sidebar state based on screen size (1366px laptop threshold)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsSidebarOpen(window.innerWidth >= 1366);
+    }
   }, []);
 
   // Initialize user progress hook
@@ -950,13 +960,13 @@ const ExamSimulator = () => {
             </div>
           )}
 
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <div
-              className={`${isActive ? "grid grid-cols-1 lg:grid-cols-4 gap-4" : "space-y-4"}`}
+              className={`${isActive ? "flex flex-col lg:flex-row justify-center items-start gap-6" : "space-y-4 max-w-7xl mx-auto w-full"}`}
             >
               {/* Sidebar - Question Navigation Panel */}
-              {isActive && (
-                <div className="lg:col-span-1 order-2 lg:order-1">
+              {isActive && isSidebarOpen && (
+                <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 transition-all duration-300">
                   <div className="sticky top-4">
                     <QuestionNavigationPanel
                       currentQuestionIndex={currentQuestionIndex}
@@ -978,19 +988,41 @@ const ExamSimulator = () => {
 
               {/* Main Content */}
               <div
-                className={`${isActive ? "lg:col-span-3 order-1 lg:order-2" : "w-full animate-in slide-in-from-bottom-8 duration-700"}`}
+                className={`${isActive ? "w-full max-w-4xl flex-shrink relative order-1 lg:order-2 transition-all duration-300" : "w-full animate-in slide-in-from-bottom-8 duration-700"}`}
               >
                 <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
                   <CardHeader className="space-y-2 pb-6 pt-8 px-8">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
-                          AWS Cloud Practitioner
-                        </CardTitle>
-                        <CardDescription>
-                          Exame Simulado para o certificado AWS Cloud
-                          Practitioner
-                        </CardDescription>
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        {isActive && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="hidden lg:flex mt-1 flex-shrink-0"
+                            title={
+                              isSidebarOpen
+                                ? "Ocultar Navegação"
+                                : "Mostrar Navegação"
+                            }
+                          >
+                            {isSidebarOpen ? (
+                              <PanelLeftClose className="w-5 h-5" />
+                            ) : (
+                              <PanelLeftOpen className="w-5 h-5" />
+                            )}
+                            <span className="sr-only">Alternar Navegação</span>
+                          </Button>
+                        )}
+                        <div className="space-y-1">
+                          <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
+                            AWS Cloud Practitioner
+                          </CardTitle>
+                          <CardDescription>
+                            Exame Simulado para o certificado AWS Cloud
+                            Practitioner
+                          </CardDescription>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {isActive && studyMode === "exam" && (

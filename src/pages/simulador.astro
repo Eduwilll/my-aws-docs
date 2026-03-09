@@ -5,7 +5,9 @@ import ExamSimulator from "../components/ExamSimulator";
 ---
 
 <BaseLayout title="Simulador AWS">
-  <section class="animate-in fade-in duration-700 max-w-5xl mx-auto py-8">
+  <section
+    class="animate-in fade-in duration-700 max-w-[1600px] w-full mx-auto py-8 px-4 sm:px-6 lg:px-8"
+  >
     <div class="mb-10 text-center">
       <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-gradient">
         Simulador de Exame
@@ -16,15 +18,13 @@ import ExamSimulator from "../components/ExamSimulator";
       </p>
     </div>
 
-    <div
-      class="glass-card p-2 sm:p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden transition-all"
-    >
+    <div class="relative w-full h-full">
       <div
-        class="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none"
+        class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10"
       >
       </div>
       <div
-        class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"
+        class="fixed bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none -z-10"
       >
       </div>
 
