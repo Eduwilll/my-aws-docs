@@ -69,7 +69,7 @@ import {
   getExamSourceInfo,
   getSourceLabel,
   getSourceColor,
-  getSourceIcon,
+  // getSourceIcon,
 } from "@/lib/utils/examSources";
 
 //Questions
@@ -1075,10 +1075,10 @@ const ExamSimulator = () => {
                                   variant="outline"
                                   className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
                                 >
-                                  {getSourceIcon(
+                                  {/* {getSourceIcon(
                                     getExamSourceInfo(selectedExamId)
                                       .primarySource,
-                                  )}{" "}
+                                  )}{" "} */}
                                   {getSourceLabel(
                                     getExamSourceInfo(selectedExamId)
                                       .primarySource,
@@ -1330,11 +1330,11 @@ const ExamSimulator = () => {
                                           </span>
                                         </div>
                                         <div className="flex items-center gap-1 ml-2">
-                                          <span className="text-xs">
+                                          {/* <span className="text-xs">
                                             {getSourceIcon(
                                               sourceInfo.primarySource,
                                             )}
-                                          </span>
+                                          </span> */}
                                           <Badge
                                             variant="outline"
                                             className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
@@ -1506,7 +1506,6 @@ const ExamSimulator = () => {
                                 >
                                   <Keyboard className="h-4 w-4" />
                                 </Button>
-                                <TermsNavigationLinks variant="inline" />
                               </div>
                             </div>
                             <div className="flex items-start gap-2">
