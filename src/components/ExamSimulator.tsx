@@ -964,13 +964,13 @@ const ExamSimulator = () => {
 
               {/* Main Content */}
               <div
-                className={`${isActive ? "lg:col-span-3 order-1 lg:order-2" : "w-full"}`}
+                className={`${isActive ? "lg:col-span-3 order-1 lg:order-2" : "w-full animate-in slide-in-from-bottom-8 duration-700"}`}
               >
-                <Card className="border-none shadow-lg">
-                  <CardHeader className="space-y-2">
+                <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                  <CardHeader className="space-y-2 pb-6 pt-8 px-8">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                        <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
                           AWS Cloud Practitioner
                         </CardTitle>
                         <CardDescription>

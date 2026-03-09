@@ -5,7 +5,32 @@ import ExamSimulator from "../components/ExamSimulator";
 ---
 
 <BaseLayout title="Simulador AWS">
-  <div>
-    <ExamSimulator client:load />
-  </div>
+  <section class="animate-in fade-in duration-700 max-w-5xl mx-auto py-8">
+    <div class="mb-10 text-center">
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-gradient">
+        Simulador de Exame
+      </h1>
+      <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+        Prepare-se para sua certificação AWS com perguntas baseadas em cenários
+        reais. Boa sorte!
+      </p>
+    </div>
+
+    <div
+      class="glass-card p-2 sm:p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden transition-all"
+    >
+      <div
+        class="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none"
+      >
+      </div>
+      <div
+        class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"
+      >
+      </div>
+
+      <div class="relative z-10 w-full h-full">
+        <ExamSimulator client:load />
+      </div>
+    </div>
+  </section>
 </BaseLayout>

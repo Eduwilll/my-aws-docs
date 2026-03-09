@@ -61,8 +61,10 @@ const { description } = myString;
       }
     </script>
   </head>
-  <body class="bg-background text-foreground">
-    <header class="bg-secondary py-4 px-4 sm:px-8 md:px-12 lg:px-16 shadow-md">
+  <body class="bg-background text-foreground min-h-screen flex flex-col">
+    <header
+      class="sticky top-0 z-50 w-full bg-background/70 backdrop-blur-xl border-b border-white/10 transition-all duration-300 py-4 px-4 sm:px-8 md:px-12 lg:px-16"
+    >
       <div class="max-w-screen-lg mx-auto">
         <div class="flex justify-between items-center">
           <a href="/">
@@ -163,12 +165,14 @@ const { description } = myString;
       </div>
     </header>
 
-    <main class="max-w-screen-lg mx-auto py-12 px-4 sm:px-8 md:px-12 lg:px-16">
+    <main
+      class="flex-grow max-w-screen-lg mx-auto w-full py-12 px-4 sm:px-8 md:px-12 lg:px-16 animate-in fade-in duration-500"
+    >
       <slot />
     </main>
 
     <footer
-      class="bg-secondary py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
+      class="border-t border-white/10 bg-background/50 backdrop-blur-md py-8 px-4 sm:px-8 md:px-12 lg:px-16 text-center mt-auto"
     >
       <div class="max-w-screen-lg mx-auto">
         <div class="flex justify-center space-x-6 mb-4">
