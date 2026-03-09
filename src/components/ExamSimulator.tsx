@@ -80,6 +80,26 @@ import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
 import { questionsSaaC03 } from "@/data/questions-saa-c03";
 import { questionCLFC02CC01 } from "@/data/CLF-C02-CC-01";
 
+// Terms configuration
+const termsConfig: TermsConfig = {
+  currentVersion: "1.0.0",
+  requireAcceptance: true,
+  showChangesHighlight: true,
+  gracePeriodDays: 7,
+  enableVersionHistory: true,
+  maxStoredVersions: 5,
+};
+
+const simulados = {
+  "CLF-C02": questions,
+  "CLF-C02-01": questionsClfC0201,
+  "CLF-C02-02": questionsClfC0202,
+  "CLF-C02-GPT": GPTquestions,
+  "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
+  "CLF-C02-CC-01": questionCLFC02CC01,
+  "SAA-C03": questionsSaaC03,
+};
+
 const ExamSimulator = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -258,26 +278,6 @@ const ExamSimulator = () => {
       document.removeEventListener("focusout", handleFocusOut);
     };
   }, []);
-
-  // Terms configuration
-  const termsConfig: TermsConfig = {
-    currentVersion: "1.0.0",
-    requireAcceptance: true,
-    showChangesHighlight: true,
-    gracePeriodDays: 7,
-    enableVersionHistory: true,
-    maxStoredVersions: 5,
-  };
-
-  const simulados = {
-    "CLF-C02": questions,
-    "CLF-C02-01": questionsClfC0201,
-    "CLF-C02-02": questionsClfC0202,
-    "CLF-C02-GPT": GPTquestions,
-    "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
-    "CLF-C02-CC-01": questionCLFC02CC01,
-    "SAA-C03": questionsSaaC03,
-  };
 
   // Check terms acceptance on component mount
   useEffect(() => {
@@ -825,12 +825,12 @@ const ExamSimulator = () => {
   };
 
   // Terms acceptance handlers
-  const handleTermsAcceptanceRequired = (version: string) => {
+  const handleTermsAcceptanceRequired = React.useCallback((version: string) => {
     console.log("Terms acceptance required for version:", version);
     setTermsAccepted(false);
-  };
+  }, []);
 
-  const handleTermsAcceptanceComplete = async () => {
+  const handleTermsAcceptanceComplete = React.useCallback(async () => {
     try {
       // Add a small delay to ensure the consent is properly stored
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -860,9 +860,9 @@ const ExamSimulator = () => {
       // Don't block the user if there's an error checking consent
       setTermsAccepted(true);
     }
-  };
+  }, []);
 
-  const handleTermsError = (error: string) => {
+  const handleTermsError = React.useCallback((error: string) => {
     console.error("Terms error:", error);
     // If terms are required but user declined, redirect to home page
     if (error.includes("Terms acceptance is required")) {
@@ -874,7 +874,7 @@ const ExamSimulator = () => {
       return;
     }
     // For other errors, just log them
-  };
+  }, []);
 
   if (!isMounted) {
     return null;
