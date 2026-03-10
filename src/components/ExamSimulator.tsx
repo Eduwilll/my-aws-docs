@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Timer,
   Check,
+  Target,
   ChevronRight,
   ChevronLeft,
   RotateCcw,
@@ -92,15 +93,50 @@ const termsConfig: TermsConfig = {
   maxStoredVersions: 5,
 };
 
-const simulados = {
-  "CLF-C02": questions,
+const simulados: Record<string, Question[]> = {
+  "CLF-C02-FULL": [
+    ...questions,
+    ...questionsClfC0201,
+    ...questionsClfC0202,
+    ...GPTquestions,
+    ...questionCLFC02CC01,
+  ],
   "CLF-C02-01": questionsClfC0201,
   "CLF-C02-02": questionsClfC0202,
-  "CLF-C02-GPT": GPTquestions,
-  "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
   "CLF-C02-CC-01": questionCLFC02CC01,
-  "SAA-C03": questionsSaaC03,
+  "CLF-C02-GPT": GPTquestions,
+  "SAA-C03-FULL": questionsSaaC03,
 };
+
+const certificationBanks: Record<string, string[]> = {
+  "CLF-C02": [
+    "CLF-C02-FULL",
+    "CLF-C02-01",
+    "CLF-C02-02",
+    "CLF-C02-CC-01",
+    "CLF-C02-GPT",
+  ],
+  "SAA-C03": ["SAA-C03-FULL"],
+  "DVA-C02": [],
+};
+
+const certifications = [
+  {
+    id: "CLF-C02",
+    title: "AWS Certified Cloud Practitioner",
+    img: "/images/badges/AWS-Cloud-Practitioner_badge.png",
+  },
+  {
+    id: "SAA-C03",
+    title: "AWS Certified Solutions Architect – Associate",
+    img: "/images/badges/AWS-Solutions-Architect-Associate_badge.png",
+  },
+  {
+    id: "DVA-C02",
+    title: "AWS Certified Developer – Associate",
+    img: "/images/badges/AWS-Certified-Developer-Associate_badge.png",
+  },
+];
 
 const ExamSimulator = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -117,6 +153,8 @@ const ExamSimulator = () => {
   >(null);
   const [endMessage, setEndMessage] = useState<string | null>(null);
   const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  const [selectedCertification, setSelectedCertification] =
+    useState<string>("");
   const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [studyMode, setStudyMode] = useState<StudyMode>("practice");
   const [selectedDomains, setSelectedDomains] = useState<ExamDomainKey[]>([]);
@@ -624,8 +662,18 @@ const ExamSimulator = () => {
   );
 
   const startExam = async () => {
-    if (!selectedExamId) {
-      alert("Por favor, selecione um simulado antes de começar.");
+    if (!selectedCertification) {
+      alert("Por favor, selecione uma certificação.");
+      return;
+    }
+
+    const examBankId =
+      studyMode === "domain_focus"
+        ? `${selectedCertification}-FULL`
+        : selectedExamId;
+
+    if (!examBankId) {
+      alert("Por favor, selecione um banco de questões.");
       return;
     }
 
@@ -648,7 +696,7 @@ const ExamSimulator = () => {
     }
 
     const filteredQuestions = filterQuestionsByStudyMode(
-      simulados[selectedExamId as keyof typeof simulados],
+      simulados[examBankId as keyof typeof simulados],
     );
 
     if (filteredQuestions.length === 0) {
@@ -1169,220 +1217,385 @@ const ExamSimulator = () => {
                           </p>
                         </div>
 
-                        <div className="max-w-2xl mx-auto space-y-6">
-                          {/* Study Mode Selection */}
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium">
-                              Modo de Estudo
+                        <div className="max-w-4xl mx-auto space-y-10">
+                          {/* 1. Certification Selection */}
+                          <div className="space-y-4">
+                            <label className="text-xl font-semibold flex items-center gap-2">
+                              <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                                1
+                              </span>
+                              Selecione a Certificação
                             </label>
-                            <Select
-                              onValueChange={(value: StudyMode) =>
-                                setStudyMode(value)
-                              }
-                              value={studyMode}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Selecione o modo de estudo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="practice">
-                                  Modo de Prática - Feedback imediato após cada
-                                  questão
-                                </SelectItem>
-                                <SelectItem value="exam">
-                                  Modo de Exame Simulado - Cronometrado, sem
-                                  feedback até o final
-                                </SelectItem>
-                                <SelectItem value="domain_focus">
-                                  Foco por Domínio/Categoria - Estudo
-                                  direcionado
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              {certifications.map((cert) => {
+                                const availableBanks =
+                                  certificationBanks[cert.id] || [];
+                                const totalQuestions =
+                                  simulados[`${cert.id}-FULL`]?.length ||
+                                  (availableBanks.length > 0
+                                    ? simulados[availableBanks[0]]?.length
+                                    : 0);
+                                const isAvailable = availableBanks.length > 0;
+                                const isSelected =
+                                  selectedCertification === cert.id;
+
+                                return (
+                                  <div
+                                    key={cert.id}
+                                    onClick={() => {
+                                      if (isAvailable) {
+                                        setSelectedCertification(cert.id);
+                                        setSelectedExamId(""); // Reset specific bank selection
+                                        setSelectedDomains([]);
+                                        setSelectedCategories([]);
+                                      }
+                                    }}
+                                    className={`relative p-6 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-4 ${
+                                      !isAvailable
+                                        ? "opacity-60 cursor-not-allowed bg-muted border-border grayscale-[0.5]"
+                                        : isSelected
+                                          ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-xl shadow-primary/10 scale-105"
+                                          : "border-border hover:border-primary/40 hover:shadow-lg cursor-pointer bg-card"
+                                    }`}
+                                  >
+                                    {!isAvailable && (
+                                      <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                                        Em Breve
+                                      </span>
+                                    )}
+                                    {isSelected && (
+                                      <div className="absolute top-3 right-3 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                                        <Check className="w-4 h-4" />
+                                      </div>
+                                    )}
+                                    <div className="h-32 flex items-center justify-center">
+                                      <img
+                                        src={cert.img}
+                                        alt={cert.title}
+                                        className="max-w-full max-h-full object-contain drop-shadow-md"
+                                      />
+                                    </div>
+                                    <div>
+                                      <h3 className="font-bold text-foreground text-sm leading-tight">
+                                        {cert.title}
+                                      </h3>
+                                      <p className="text-xs text-muted-foreground mt-2 font-medium">
+                                        {isAvailable
+                                          ? `${totalQuestions} questões disponíveis`
+                                          : "Sem questões ainda"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
 
-                          {/* Domain/Category Filters - Only show for domain_focus mode */}
-                          {studyMode === "domain_focus" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-3">
-                                <label className="text-sm font-medium">
-                                  Domínios
-                                </label>
-                                <Select
-                                  onValueChange={(value: ExamDomainKey) => {
-                                    if (
-                                      value &&
-                                      !selectedDomains.includes(value)
-                                    ) {
-                                      setSelectedDomains([
-                                        ...selectedDomains,
-                                        value,
-                                      ]);
-                                    }
-                                  }}
+                          {/* 2. Study Mode Selection */}
+                          {selectedCertification && (
+                            <div className="space-y-4 animate-in fade-in duration-500">
+                              <label className="text-xl font-semibold flex items-center gap-2">
+                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                                  2
+                                </span>
+                                Modo de Estudo
+                              </label>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div
+                                  onClick={() => setStudyMode("practice")}
+                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                                    studyMode === "practice"
+                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
+                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
+                                  }`}
                                 >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Adicionar domínio" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="DOMAIN_1">
-                                      Conceitos de Nuvem
-                                    </SelectItem>
-                                    <SelectItem value="DOMAIN_2">
-                                      Segurança e Conformidade
-                                    </SelectItem>
-                                    <SelectItem value="DOMAIN_3">
-                                      Tecnologia
-                                    </SelectItem>
-                                    <SelectItem value="DOMAIN_4">
-                                      Faturamento e Preços
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {selectedDomains.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {selectedDomains.map((domain) => (
-                                      <Badge
-                                        key={domain}
-                                        variant="secondary"
-                                        className="cursor-pointer"
-                                        onClick={() =>
-                                          setSelectedDomains(
-                                            selectedDomains.filter(
-                                              (d) => d !== domain,
-                                            ),
-                                          )
-                                        }
-                                      >
-                                        {getDomainName(
-                                          selectedExamId || "CLF-C02",
-                                          domain,
-                                        )}{" "}
-                                        ×
-                                      </Badge>
-                                    ))}
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <div
+                                      className={`p-2 rounded-lg ${studyMode === "practice" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                                    >
+                                      <BookOpen className="w-5 h-5" />
+                                    </div>
+                                    <h4 className="font-bold text-foreground">
+                                      Prática
+                                    </h4>
                                   </div>
-                                )}
-                              </div>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Feedback detalhado, explicações e respostas
+                                    logo após cada questão.
+                                  </p>
+                                </div>
 
-                              <div className="space-y-3">
-                                <label className="text-sm font-medium">
-                                  Categorias
-                                </label>
-                                <Select
-                                  onValueChange={(value: ExamCategory) => {
-                                    if (
-                                      value &&
-                                      !selectedCategories.includes(value)
-                                    ) {
-                                      setSelectedCategories([
-                                        ...selectedCategories,
-                                        value,
-                                      ]);
-                                    }
-                                  }}
+                                <div
+                                  onClick={() => setStudyMode("exam")}
+                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                                    studyMode === "exam"
+                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
+                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
+                                  }`}
                                 >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Adicionar categoria" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="cloud_concepts">
-                                      Conceitos de Nuvem
-                                    </SelectItem>
-                                    <SelectItem value="security">
-                                      Segurança
-                                    </SelectItem>
-                                    <SelectItem value="technology">
-                                      Tecnologia
-                                    </SelectItem>
-                                    <SelectItem value="billing">
-                                      Faturamento
-                                    </SelectItem>
-                                    <SelectItem value="compute">
-                                      Computação
-                                    </SelectItem>
-                                    <SelectItem value="storage">
-                                      Armazenamento
-                                    </SelectItem>
-                                    <SelectItem value="networking">
-                                      Redes
-                                    </SelectItem>
-                                    <SelectItem value="database">
-                                      Banco de Dados
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {selectedCategories.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {selectedCategories.map((category) => (
-                                      <Badge
-                                        key={category}
-                                        variant="secondary"
-                                        className="cursor-pointer"
-                                        onClick={() =>
-                                          setSelectedCategories(
-                                            selectedCategories.filter(
-                                              (c) => c !== category,
-                                            ),
-                                          )
-                                        }
-                                      >
-                                        {category} ×
-                                      </Badge>
-                                    ))}
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <div
+                                      className={`p-2 rounded-lg ${studyMode === "exam" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                                    >
+                                      <Timer className="w-5 h-5" />
+                                    </div>
+                                    <h4 className="font-bold text-foreground">
+                                      Exame Simulado
+                                    </h4>
                                   </div>
-                                )}
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Ambiente realista. Tempo cronometrado e nota
+                                    final apenas no encerramento do teste.
+                                  </p>
+                                </div>
+
+                                <div
+                                  onClick={() => setStudyMode("domain_focus")}
+                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                                    studyMode === "domain_focus"
+                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
+                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <div
+                                      className={`p-2 rounded-lg ${studyMode === "domain_focus" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                                    >
+                                      <Target className="w-5 h-5" />
+                                    </div>
+                                    <h4 className="font-bold text-foreground">
+                                      Foco Direcionado
+                                    </h4>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Foque nos seus pontos fracos escolhendo
+                                    domínios ou categorias específicas para
+                                    treinar.
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           )}
 
-                          {/* Exam Selection */}
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium">Exame</label>
-                            <Select
-                              onValueChange={handleExamSelection}
-                              value={selectedExamId}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Selecione seu exame" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.keys(simulados).map((examId) => {
-                                  const sourceInfo = getExamSourceInfo(examId);
-                                  return (
-                                    <SelectItem key={examId} value={examId}>
-                                      <div className="flex items-center justify-between w-full">
-                                        <div className="flex flex-col">
-                                          <span className="font-medium">
-                                            {sourceInfo.name} (
-                                            {sourceInfo.questionCount} questões)
-                                          </span>
-                                          <span className="text-xs text-gray-500">
+                          {/* 3. Bank Selection */}
+                          {studyMode &&
+                            studyMode !== "domain_focus" &&
+                            selectedCertification && (
+                              <div className="space-y-4 animate-in fade-in duration-500 delay-150">
+                                <label className="text-xl font-semibold flex items-center gap-2">
+                                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                                    3
+                                  </span>
+                                  Escolha o Banco de Questões
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {certificationBanks[selectedCertification]
+                                    .filter((bankId) => {
+                                      // For exam mode, hide banks with more than 100 questions (e.g., Infinite banks) to enforce realistic simulation
+                                      if (studyMode === "exam") {
+                                        return (
+                                          (simulados[bankId]?.length || 0) <=
+                                          100
+                                        );
+                                      }
+                                      return true;
+                                    })
+                                    .map((bankId) => {
+                                      const sourceInfo =
+                                        getExamSourceInfo(bankId);
+                                      const isSelected =
+                                        selectedExamId === bankId;
+                                      return (
+                                        <div
+                                          key={bankId}
+                                          onClick={() =>
+                                            handleExamSelection(bankId)
+                                          }
+                                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                            isSelected
+                                              ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.01]"
+                                              : "border-border hover:border-primary/40 bg-card hover:-translate-y-0.5"
+                                          }`}
+                                        >
+                                          <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-bold text-foreground text-sm pr-4">
+                                              {sourceInfo.name}
+                                            </h4>
+                                            {isSelected && (
+                                              <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                                            )}
+                                          </div>
+                                          <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
                                             {sourceInfo.description}
-                                          </span>
+                                          </p>
+                                          <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-[10px]"
+                                            >
+                                              {simulados[bankId]?.length || 0}{" "}
+                                              questões
+                                            </Badge>
+                                            <Badge
+                                              variant="outline"
+                                              className={`text-[10px] ${getSourceColor(sourceInfo.primarySource)}`}
+                                            >
+                                              {getSourceLabel(
+                                                sourceInfo.primarySource,
+                                              )}
+                                            </Badge>
+                                          </div>
                                         </div>
-                                        <div className="flex items-center gap-1 ml-2">
-                                          {/* <span className="text-xs">
-                                            {getSourceIcon(
-                                              sourceInfo.primarySource,
-                                            )}
-                                          </span> */}
+                                      );
+                                    })}
+                                </div>
+                              </div>
+                            )}
+
+                          {/* 4. Domain/Category Filters - Only show for domain_focus mode */}
+                          {studyMode === "domain_focus" &&
+                            selectedCertification && (
+                              <div className="space-y-4 animate-in fade-in duration-500">
+                                <label className="text-xl font-semibold flex items-center gap-2">
+                                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                                    3
+                                  </span>
+                                  Filtros Específicos
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-3">
+                                    <label className="text-sm font-medium">
+                                      Domínios
+                                    </label>
+                                    <Select
+                                      onValueChange={(value: ExamDomainKey) => {
+                                        if (
+                                          value &&
+                                          !selectedDomains.includes(value)
+                                        ) {
+                                          setSelectedDomains([
+                                            ...selectedDomains,
+                                            value,
+                                          ]);
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Adicionar domínio" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="DOMAIN_1">
+                                          Conceitos de Nuvem
+                                        </SelectItem>
+                                        <SelectItem value="DOMAIN_2">
+                                          Segurança e Conformidade
+                                        </SelectItem>
+                                        <SelectItem value="DOMAIN_3">
+                                          Tecnologia
+                                        </SelectItem>
+                                        <SelectItem value="DOMAIN_4">
+                                          Faturamento e Preços
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {selectedDomains.length > 0 && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {selectedDomains.map((domain) => (
                                           <Badge
-                                            variant="outline"
-                                            className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
+                                            key={domain}
+                                            variant="secondary"
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                              setSelectedDomains(
+                                                selectedDomains.filter(
+                                                  (d) => d !== domain,
+                                                ),
+                                              )
+                                            }
                                           >
-                                            {getSourceLabel(
-                                              sourceInfo.primarySource,
-                                            )}
+                                            {getDomainName(
+                                              selectedCertification ||
+                                                "CLF-C02",
+                                              domain,
+                                            )}{" "}
+                                            ×
                                           </Badge>
-                                        </div>
+                                        ))}
                                       </div>
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <label className="text-sm font-medium">
+                                      Categorias
+                                    </label>
+                                    <Select
+                                      onValueChange={(value: ExamCategory) => {
+                                        if (
+                                          value &&
+                                          !selectedCategories.includes(value)
+                                        ) {
+                                          setSelectedCategories([
+                                            ...selectedCategories,
+                                            value,
+                                          ]);
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Adicionar categoria" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="cloud_concepts">
+                                          Conceitos de Nuvem
+                                        </SelectItem>
+                                        <SelectItem value="security">
+                                          Segurança
+                                        </SelectItem>
+                                        <SelectItem value="technology">
+                                          Tecnologia
+                                        </SelectItem>
+                                        <SelectItem value="billing">
+                                          Faturamento
+                                        </SelectItem>
+                                        <SelectItem value="compute">
+                                          Computação
+                                        </SelectItem>
+                                        <SelectItem value="storage">
+                                          Armazenamento
+                                        </SelectItem>
+                                        <SelectItem value="networking">
+                                          Redes
+                                        </SelectItem>
+                                        <SelectItem value="database">
+                                          Banco de Dados
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {selectedCategories.length > 0 && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {selectedCategories.map((category) => (
+                                          <Badge
+                                            key={category}
+                                            variant="secondary"
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                              setSelectedCategories(
+                                                selectedCategories.filter(
+                                                  (c) => c !== category,
+                                                ),
+                                              )
+                                            }
+                                          >
+                                            {category} ×
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
                           {!checkingTerms && !termsAccepted && (
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -1448,7 +1661,10 @@ const ExamSimulator = () => {
                           <Button
                             onClick={startExam}
                             disabled={
-                              !selectedExamId || checkingTerms || !termsAccepted
+                              !selectedCertification ||
+                              checkingTerms ||
+                              !termsAccepted ||
+                              (studyMode !== "domain_focus" && !selectedExamId)
                             }
                             className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
                           >
