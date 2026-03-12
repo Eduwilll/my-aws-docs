@@ -31,6 +31,8 @@ import {
   List,
   PanelLeftClose,
   PanelLeftOpen,
+  Maximize,
+  Minimize,
 } from "lucide-react";
 
 import type {
@@ -144,6 +146,7 @@ const ExamSimulator = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(90 * 60);
   const [isActive, setIsActive] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
@@ -204,6 +207,30 @@ const ExamSimulator = () => {
       setIsSidebarOpen(window.innerWidth >= 1366);
     }
   }, []);
+
+  // Listen for native browser fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   // Initialize user progress hook
   const {
@@ -1036,9 +1063,17 @@ const ExamSimulator = () => {
 
               {/* Main Content */}
               <div
-                className={`${isActive ? "w-full max-w-4xl flex-shrink relative order-1 lg:order-2 transition-all duration-300" : "w-full animate-in slide-in-from-bottom-8 duration-700"}`}
+                className={`${
+                  isActive
+                    ? isFullscreen
+                      ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto w-full p-4 sm:p-6 md:p-12 flex items-start justify-center animate-in fade-in zoom-in-95 duration-200"
+                      : "w-full max-w-4xl flex-shrink relative order-1 lg:order-2 transition-all duration-300"
+                    : "w-full animate-in slide-in-from-bottom-8 duration-700"
+                }`}
               >
-                <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                <Card
+                  className={`glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden ${isFullscreen ? "w-full max-w-5xl mx-auto" : ""}`}
+                >
                   <CardHeader className="space-y-2 pb-6 pt-8 px-8">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
@@ -1744,6 +1779,23 @@ const ExamSimulator = () => {
                                   <Star
                                     className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
                                   />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={toggleFullscreen}
+                                  className="text-gray-400 hover:text-gray-600"
+                                  title={
+                                    isFullscreen
+                                      ? "Minimizar (Sair do Modo Foco)"
+                                      : "Tela Cheia (Modo Foco)"
+                                  }
+                                >
+                                  {isFullscreen ? (
+                                    <Minimize className="h-4 w-4" />
+                                  ) : (
+                                    <Maximize className="h-4 w-4" />
+                                  )}
                                 </Button>
                                 <Button
                                   variant="ghost"
