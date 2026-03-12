@@ -6,14 +6,14 @@ import vercel from "@astrojs/vercel";
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
+  site: 'https://my-aws-docs.vercel.app',
   integrations: [
     react(),
     tailwind({
       applyBaseStyles: false,
     }),
     sitemap({
-      hostname: 'https://my-aws-docs.vercel.app',
-      exclude: ['/404'],
+      filter: (page) => !page.includes('/404'),
     }),
   ],
   markdown: {
