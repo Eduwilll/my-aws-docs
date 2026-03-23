@@ -60,6 +60,7 @@ import { loadQuestionBank } from "@/lib/utils/questionLoader";
 import { ExamSelectionScreen } from "@/components/exam/ExamSelectionScreen";
 import { ActiveExamView } from "@/components/exam/ActiveExamView";
 import { ExamScoreScreen } from "@/components/exam/ExamScoreScreen";
+import { ExamSidebar } from "@/components/exam/ExamSidebar";
 
 // Lazy-loaded secondary views
 const ProgressReport = React.lazy(() =>
@@ -140,12 +141,14 @@ const ExamSimulator = () => {
   // ── UI state
   const [isMounted, setIsMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentView, setCurrentView] = useState<
     "exam" | "progress" | "favorites" | "exam-details"
   >("exam");
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [savedExamData, setSavedExamData] = useState<any>(null);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
 
   // ── Exam selection state
   const [selectedCertification, setSelectedCertification] =
@@ -313,6 +316,58 @@ const ExamSimulator = () => {
       clearExamState();
     }
   }, []);
+
+  // Background loading for favorites and recent exams
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const loadMissingData = async () => {
+      const bankIdsToLoad = new Set<string>();
+
+      // Check favorites
+      userProgress.favoriteQuestions.forEach((fav) => {
+        if (!cachedQuestions.find((q) => q.id === fav.questionId)) {
+          bankIdsToLoad.add(fav.examId);
+        }
+      });
+
+      // Check recent exams (to show details)
+      userProgress.recentExams.forEach((result) => {
+        if (
+          result.questionAttempts.some(
+            (att) => !cachedQuestions.find((q) => q.id === att.questionId),
+          )
+        ) {
+          bankIdsToLoad.add(result.exam.id);
+        }
+      });
+
+      if (bankIdsToLoad.size > 0) {
+        setIsLoadingFavorites(true);
+        try {
+          const loadedQuestions = (
+            await Promise.all(
+              Array.from(bankIdsToLoad).map((id) => loadQuestionBank(id)),
+            )
+          ).flat();
+
+          setCachedQuestions((prev) => {
+            const existingIds = new Set(prev.map((q) => q.id));
+            const newOnes = loadedQuestions.filter(
+              (q) => !existingIds.has(q.id),
+            );
+            return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+          });
+        } catch (e) {
+          console.error("Error background loading question banks:", e);
+        } finally {
+          setIsLoadingFavorites(false);
+        }
+      }
+    };
+
+    loadMissingData();
+  }, [isMounted, userProgress.favoriteQuestions, userProgress.recentExams]);
 
   useEffect(() => {
     saveExamState();
@@ -796,120 +851,215 @@ const ExamSimulator = () => {
         onAcceptanceComplete={handleTermsAcceptanceComplete}
         onError={handleTermsError}
       >
-        <div className="min-h-screen p-4">
-          {/* Resume dialog */}
-          {showResumeDialog && savedExamData && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <Card className="w-full max-w-md mx-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Timer className="h-5 w-5" /> Exame em Andamento
-                  </CardTitle>
-                  <CardDescription>
-                    Encontramos um exame que você estava fazendo. Deseja
-                    continuar de onde parou?
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <strong>Exame:</strong> {savedExamData.selectedExamId}
-                    </p>
-                    <p>
-                      <strong>Modo:</strong>{" "}
-                      {savedExamData.studyMode === "practice"
-                        ? "Prática"
-                        : savedExamData.studyMode === "exam"
-                          ? "Exame Simulado"
-                          : "Estudo Focado"}
-                    </p>
-                    <p>
-                      <strong>Progresso:</strong>{" "}
-                      {savedExamData.currentQuestionIndex + 1} de{" "}
-                      {savedExamData.selectedSimulado?.length || 0} questões
-                    </p>
-                    <p>
-                      <strong>Pontuação atual:</strong> {savedExamData.score}{" "}
-                      pontos
-                    </p>
-                    {savedExamData.studyMode === "exam" && (
-                      <p>
-                        <strong>Tempo restante:</strong>{" "}
-                        {Math.floor(savedExamData.timeLeft / 60)}m{" "}
-                        {savedExamData.timeLeft % 60}s
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-3">
-                    <Button onClick={resumeSavedExam} className="flex-1">
-                      Continuar Exame
-                    </Button>
-                    <Button
-                      onClick={discardSavedExam}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      Começar Novo
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          <div className="w-full">
-            <div
-              className={
-                isActive
-                  ? "flex flex-col lg:flex-row justify-center items-start gap-6"
-                  : "space-y-4 max-w-7xl mx-auto w-full"
-              }
-            >
-              {/* Sidebar */}
-              {isActive && isSidebarOpen && (
-                <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 transition-all duration-300">
-                  <div className="sticky top-4">
-                    <QuestionNavigationPanel
-                      currentQuestionIndex={currentQuestionIndex}
-                      totalQuestions={selectedSimulado.length}
-                      questionStatuses={questionStatuses}
-                      onQuestionSelect={handleQuestionSelect}
-                      onPreviousQuestion={handleKeyboardPreviousQuestion}
-                      onNextQuestion={handleKeyboardNextQuestion}
-                      canNavigatePrevious={currentQuestionIndex > 0}
-                      canNavigateNext={
-                        currentQuestionIndex < selectedSimulado.length - 1
+        <div className="min-h-screen bg-transparent text-foreground transition-colors duration-500">
+          <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto transition-all duration-500">
+            {/* 1. SELECTION / PROGRESS / FAVORITES VIEW (Not active exam) */}
+            {!isActive && (
+              <div className="w-full space-y-8 animate-in fade-in duration-700">
+                {/* Header Title - Now outside the flex row for perfect alignment */}
+                <div className="mb-10 text-center">
+                  <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-gradient">
+                    Simulador de Exame
+                  </h1>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Prepare-se para sua certificação AWS com perguntas baseadas
+                    em cenários reais. Boa sorte!
+                  </p>
+                </div>
+                <div className="flex flex-col lg:flex-row items-start justify-center gap-8 max-w-[1650px] mx-auto px-4 lg:px-0 transition-all duration-300">
+                  {/* Sidebar - Aligned with the top of the Card */}
+                  <div
+                    className={`hidden lg:block transition-all duration-300 ${
+                      isSidebarCollapsed
+                        ? "w-20 min-w-[5rem]"
+                        : "w-80 min-w-[20rem]"
+                    } flex-shrink-0`}
+                  >
+                    <ExamSidebar
+                      currentView={
+                        currentView === "exam-details"
+                          ? "progress"
+                          : currentView
                       }
-                      studyMode={studyMode}
-                      isCompact={false}
+                      onViewChange={(v) => setCurrentView(v)}
+                      isCollapsed={isSidebarCollapsed}
+                      onToggleCollapse={() =>
+                        setIsSidebarCollapsed(!isSidebarCollapsed)
+                      }
+                      favoriteCount={userProgress.favoriteQuestions.length}
                     />
                   </div>
-                </div>
-              )}
 
-              {/* Main card */}
+                  {/* Main Content Area for Selection/Progress */}
+                  <div className="flex-1 w-full space-y-6">
+                    <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                      <CardHeader className="space-y-4 pb-2 pt-8 px-8">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
+                              AWS Cloud Practitioner
+                            </CardTitle>
+                            <CardDescription className="text-base">
+                              Exame Simulado para o certificado AWS Cloud
+                              Practitioner
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowShortcutsModal(true)}
+                              className="rounded-xl shadow-sm hover:shadow-md transition-all"
+                            >
+                              <Keyboard className="w-4 h-4 mr-2" /> Atalhos
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="p-6 md:p-8">
+                        <Suspense
+                          fallback={
+                            <div className="text-center py-12 text-muted-foreground">
+                              Carregando conteúdo...
+                            </div>
+                          }
+                        >
+                          {currentView === "progress" && (
+                            <ProgressReport
+                              userProgress={userProgress}
+                              onViewExamDetails={handleViewExamDetails}
+                            />
+                          )}
+                          {currentView === "favorites" && (
+                            <FavoriteQuestions
+                              favoriteQuestions={userProgress.favoriteQuestions}
+                              questions={getAllQuestions()}
+                              onRemoveFavorite={removeFavoriteQuestion}
+                              onUpdateFavorite={updateFavoriteQuestion}
+                              onViewQuestion={handleViewQuestion}
+                            />
+                          )}
+                          {currentView === "exam-details" &&
+                            selectedExamDetails && (
+                              <ExamDetails
+                                examResult={selectedExamDetails}
+                                questions={getAllQuestions()}
+                                onBack={() => setCurrentView("progress")}
+                                onToggleFavorite={handleToggleFavorite}
+                                isFavoriteQuestion={isFavoriteQuestion}
+                              />
+                            )}
+                          {currentView === "exam" &&
+                            !isActive &&
+                            !showScore && (
+                              <ExamSelectionScreen
+                                certifications={certifications}
+                                certificationBanks={certificationBanks}
+                                selectedCertification={selectedCertification}
+                                selectedExamId={selectedExamId}
+                                studyMode={studyMode}
+                                selectedDomains={selectedDomains}
+                                selectedCategories={selectedCategories}
+                                checkingTerms={checkingTerms}
+                                termsAccepted={termsAccepted}
+                                isLoadingQuestions={isLoadingQuestions}
+                                onSelectCertification={(id) => {
+                                  setSelectedCertification(id);
+                                  setSelectedExamId("");
+                                  setSelectedDomains([]);
+                                  setSelectedCategories([]);
+                                }}
+                                onSelectStudyMode={setStudyMode}
+                                onSelectBank={(bankId) => {
+                                  setSelectedExamId(bankId);
+                                  setSelectedSimulado([]);
+                                }}
+                                onAddDomain={(d) =>
+                                  setSelectedDomains((prev) => [...prev, d])
+                                }
+                                onRemoveDomain={(d) =>
+                                  setSelectedDomains((prev) =>
+                                    prev.filter((x) => x !== d),
+                                  )
+                                }
+                                onAddCategory={(c) =>
+                                  setSelectedCategories((prev) => [...prev, c])
+                                }
+                                onRemoveCategory={(c) =>
+                                  setSelectedCategories((prev) =>
+                                    prev.filter((x) => x !== c),
+                                  )
+                                }
+                                onStartExam={startExam}
+                                onRecheckTerms={handleRecheckTerms}
+                                getDomainName={getDomainName}
+                              />
+                            )}
+                        </Suspense>
+
+                        {showScore && currentView === "exam" && (
+                          <ExamScoreScreen
+                            score={score}
+                            totalQuestions={selectedSimulado.length}
+                            studyMode={studyMode}
+                            endMessage={endMessage}
+                            simulatedExam={simulatedExam}
+                            currentExamResult={currentExamResult}
+                            allAnswers={allAnswers}
+                            selectedSimulado={selectedSimulado}
+                            onResetExam={resetExam}
+                            onRetryExam={startExam}
+                            onViewExamDetails={handleViewExamDetails}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. ACTIVE EXAM VIEW (Focus Mode) - FULLY CENTERED */}
+            {isActive && !showScore && (
               <div
-                className={`${
-                  isActive
-                    ? isFullscreen
-                      ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto w-full p-4 sm:p-6 md:p-12 flex items-start justify-center animate-in fade-in zoom-in-95 duration-200"
-                      : "w-full max-w-4xl flex-shrink relative order-1 lg:order-2 transition-all duration-300"
-                    : "w-full animate-in slide-in-from-bottom-8 duration-700"
-                }`}
+                className={`flex flex-col lg:flex-row gap-6 w-full justify-center items-start animate-in fade-in duration-500 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
               >
-                <Card
-                  className={`glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden ${isFullscreen ? "w-full max-w-5xl mx-auto" : ""}`}
+                {/* Exam Navigation Panel */}
+                {isSidebarOpen && (
+                  <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 sm:order-2">
+                    <div className={isFullscreen ? "" : "sticky top-4"}>
+                      <QuestionNavigationPanel
+                        currentQuestionIndex={currentQuestionIndex}
+                        totalQuestions={selectedSimulado.length}
+                        questionStatuses={questionStatuses}
+                        onQuestionSelect={handleQuestionSelect}
+                        onPreviousQuestion={handleKeyboardPreviousQuestion}
+                        onNextQuestion={handleKeyboardNextQuestion}
+                        canNavigatePrevious={currentQuestionIndex > 0}
+                        canNavigateNext={
+                          currentQuestionIndex < selectedSimulado.length - 1
+                        }
+                        studyMode={studyMode}
+                        isCompact={false}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Question Area */}
+                <div
+                  className={`flex-1 order-1 lg:order-2 sm:order-1 ${isFullscreen ? "max-w-7xl mx-auto" : "w-full"}`}
                 >
-                  <CardHeader className="space-y-2 pb-6 pt-8 px-8">
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                      {/* Left: title + sidebar toggle */}
-                      <div className="flex items-start gap-4">
-                        {isActive && (
+                  <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                    <CardHeader className="space-y-4 pb-4 pt-8 px-8 border-b border-border/10 bg-muted/5">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
                           <Button
                             variant="outline"
                             size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="hidden lg:flex mt-1 flex-shrink-0"
+                            className="hidden lg:flex flex-shrink-0 shadow-sm"
                             title={
                               isSidebarOpen
                                 ? "Ocultar Navegação"
@@ -917,265 +1067,152 @@ const ExamSimulator = () => {
                             }
                           >
                             {isSidebarOpen ? (
-                              <PanelLeftClose className="w-5 h-5" />
+                              <PanelLeftClose className="w-4 h-4" />
                             ) : (
-                              <PanelLeftOpen className="w-5 h-5" />
+                              <PanelLeftOpen className="w-4 h-4" />
                             )}
-                            <span className="sr-only">Alternar Navegação</span>
                           </Button>
-                        )}
-                        <div className="space-y-1">
-                          <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
-                            AWS Cloud Practitioner
-                          </CardTitle>
-                          <CardDescription>
-                            Exame Simulado para o certificado AWS Cloud
-                            Practitioner
-                          </CardDescription>
+                          <div className="space-y-1">
+                            <CardTitle className="text-2xl md:text-3xl font-extrabold text-gradient">
+                              AWS Cloud Practitioner
+                            </CardTitle>
+                            {studyMode === "exam" && (
+                              <div className="flex items-center gap-2 text-blue-600 font-mono text-lg font-bold">
+                                <Timer className="w-4 h-4" />
+                                {formatTime(timeLeft)}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Right: timer / nav buttons */}
-                      <div className="flex items-center gap-2">
-                        {isActive && studyMode === "exam" && (
-                          <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
-                            <Timer className="w-4 h-4" />
-                            <span className="font-mono font-medium">
-                              {formatTime(timeLeft)}
-                            </span>
-                          </div>
-                        )}
-                        {!isActive && (
-                          <div className="flex gap-2">
-                            <Button
-                              variant={
-                                currentView === "exam" ? "default" : "outline"
-                              }
-                              size="sm"
-                              onClick={() => setCurrentView("exam")}
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-sm px-3 py-1 font-semibold border-border/20"
+                          >
+                            Questão {currentQuestionIndex + 1} de{" "}
+                            {selectedSimulado.length}
+                          </Badge>
+                          {currentQuestion && (
+                            <Badge
+                              variant="secondary"
+                              className="text-sm px-3 py-1 font-semibold"
                             >
-                              <BookOpen className="w-4 h-4 mr-2" /> Exame
-                            </Button>
-                            <Button
-                              variant={
-                                currentView === "progress"
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() => setCurrentView("progress")}
-                            >
-                              <BarChart3 className="w-4 h-4 mr-2" /> Progresso
-                            </Button>
-                            <Button
-                              variant={
-                                currentView === "favorites"
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() => setCurrentView("favorites")}
-                            >
-                              <Star className="w-4 h-4 mr-2" /> Favoritas (
-                              {userProgress.favoriteQuestions.length})
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowShortcutsModal(true)}
-                              title="Atalhos do Teclado (Pressione ? para abrir)"
-                            >
-                              <Keyboard className="w-4 h-4 mr-2" /> Atalhos
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    {isActive && (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline" className="text-sm">
-                              Questão {currentQuestionIndex + 1} de{" "}
-                              {selectedSimulado.length}
+                              {currentQuestion.category}
                             </Badge>
-                            <div className="flex gap-2">
-                              <Badge variant="secondary" className="text-sm">
-                                {currentQuestion.category}
-                              </Badge>
-                              <Badge variant="secondary" className="text-sm">
-                                {getDomainName(
-                                  selectedExamId,
-                                  currentQuestion.dominio,
-                                )}
-                              </Badge>
-                              {selectedExamId && (
-                                <Badge
-                                  variant="outline"
-                                  className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
-                                >
-                                  {getSourceLabel(
-                                    getExamSourceInfo(selectedExamId)
-                                      .primarySource,
-                                  )}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <Progress value={progress} className="h-2" />
+                          )}
                         </div>
                       </div>
-                    )}
-                  </CardHeader>
 
-                  <CardContent className="p-6">
-                    {/* Secondary views */}
-                    <Suspense
-                      fallback={
-                        <div className="text-center py-8 text-muted-foreground">
-                          Carregando...
-                        </div>
-                      }
-                    >
-                      {currentView === "progress" && (
-                        <ProgressReport
-                          userProgress={userProgress}
-                          onViewExamDetails={handleViewExamDetails}
-                        />
-                      )}
-                      {currentView === "favorites" && (
-                        <FavoriteQuestions
-                          favoriteQuestions={userProgress.favoriteQuestions}
-                          questions={getAllQuestions()}
-                          onRemoveFavorite={removeFavoriteQuestion}
-                          onUpdateFavorite={updateFavoriteQuestion}
-                          onViewQuestion={handleViewQuestion}
-                        />
-                      )}
-                      {currentView === "exam-details" &&
-                        selectedExamDetails && (
-                          <ExamDetails
-                            examResult={selectedExamDetails}
-                            questions={getAllQuestions()}
-                            onBack={() => setCurrentView("progress")}
-                            onToggleFavorite={handleToggleFavorite}
-                            isFavoriteQuestion={isFavoriteQuestion}
+                      <Progress value={progress} className="h-1.5" />
+                    </CardHeader>
+
+                    <CardContent className="p-6 md:p-8">
+                      {currentView === "exam" &&
+                        isActive &&
+                        currentQuestion && (
+                          <ActiveExamView
+                            currentQuestion={currentQuestion}
+                            currentOptions={currentOptions}
+                            correctOptions={correctOptions}
+                            incorrectOptions={incorrectOptions}
+                            currentQuestionIndex={currentQuestionIndex}
+                            totalQuestions={selectedSimulado.length}
+                            selectedAnswers={selectedAnswers}
+                            showExplanation={showExplanation}
+                            answerStatus={answerStatus}
+                            studyMode={studyMode}
+                            isFullscreen={isFullscreen}
+                            isFavorite={isFavoriteQuestion(currentQuestion.id)}
+                            onAnswerToggle={handleAnswerToggle}
+                            onSelectSingleAnswer={(id) =>
+                              setSelectedAnswers([id])
+                            }
+                            onSubmitAnswers={handleSubmitAnswers}
+                            onNextQuestion={handleNextQuestion}
+                            onPreviousQuestion={handleKeyboardPreviousQuestion}
+                            onSkipQuestion={handleSkipQuestion}
+                            onToggleFavorite={() =>
+                              handleToggleFavorite(currentQuestion.id)
+                            }
+                            onToggleFullscreen={toggleFullscreen}
+                            onOpenShortcuts={() => setShowShortcutsModal(true)}
+                            getButtonVariant={getButtonVariant}
                           />
                         )}
-                    </Suspense>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
 
-                    {/* Selection screen */}
-                    {currentView === "exam" && !isActive && !showScore && (
-                      <ExamSelectionScreen
-                        certifications={certifications}
-                        certificationBanks={certificationBanks}
-                        selectedCertification={selectedCertification}
-                        selectedExamId={selectedExamId}
-                        studyMode={studyMode}
-                        selectedDomains={selectedDomains}
-                        selectedCategories={selectedCategories}
-                        checkingTerms={checkingTerms}
-                        termsAccepted={termsAccepted}
-                        isLoadingQuestions={isLoadingQuestions}
-                        onSelectCertification={(id) => {
-                          setSelectedCertification(id);
-                          setSelectedExamId("");
-                          setSelectedDomains([]);
-                          setSelectedCategories([]);
-                        }}
-                        onSelectStudyMode={setStudyMode}
-                        onSelectBank={(bankId) => {
-                          setSelectedExamId(bankId);
-                          setSelectedSimulado([]);
-                        }}
-                        onAddDomain={(d) =>
-                          setSelectedDomains((prev) => [...prev, d])
-                        }
-                        onRemoveDomain={(d) =>
-                          setSelectedDomains((prev) =>
-                            prev.filter((x) => x !== d),
-                          )
-                        }
-                        onAddCategory={(c) =>
-                          setSelectedCategories((prev) => [...prev, c])
-                        }
-                        onRemoveCategory={(c) =>
-                          setSelectedCategories((prev) =>
-                            prev.filter((x) => x !== c),
-                          )
-                        }
-                        onStartExam={startExam}
-                        onRecheckTerms={handleRecheckTerms}
-                        getDomainName={getDomainName}
-                      />
-                    )}
-
-                    {/* Active exam question view */}
-                    {currentView === "exam" &&
-                      isActive &&
-                      !showScore &&
-                      currentQuestion && (
-                        <ActiveExamView
-                          currentQuestion={currentQuestion}
-                          currentOptions={currentOptions}
-                          correctOptions={correctOptions}
-                          incorrectOptions={incorrectOptions}
-                          currentQuestionIndex={currentQuestionIndex}
-                          totalQuestions={selectedSimulado.length}
-                          selectedAnswers={selectedAnswers}
-                          showExplanation={showExplanation}
-                          answerStatus={answerStatus}
-                          studyMode={studyMode}
-                          isFullscreen={isFullscreen}
-                          isFavorite={isFavoriteQuestion(currentQuestion.id)}
-                          onAnswerToggle={handleAnswerToggle}
-                          onSelectSingleAnswer={(id) =>
-                            setSelectedAnswers([id])
-                          }
-                          onSubmitAnswers={handleSubmitAnswers}
-                          onNextQuestion={handleNextQuestion}
-                          onPreviousQuestion={handleKeyboardPreviousQuestion}
-                          onSkipQuestion={handleSkipQuestion}
-                          onToggleFavorite={() =>
-                            handleToggleFavorite(currentQuestion.id)
-                          }
-                          onToggleFullscreen={toggleFullscreen}
-                          onOpenShortcuts={() => setShowShortcutsModal(true)}
-                          getButtonVariant={getButtonVariant}
-                        />
+            {/* Resume Dialog Logic (Matched to user screenshot) */}
+            {/* Resume dialog */}
+            {showResumeDialog && savedExamData && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <Card className="w-full max-w-md mx-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Timer className="h-5 w-5" /> Exame em Andamento
+                    </CardTitle>
+                    <CardDescription>
+                      Encontramos um exame que você estava fazendo. Deseja
+                      continuar de onde parou?
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Exame:</strong> {savedExamData.selectedExamId}
+                      </p>
+                      <p>
+                        <strong>Modo:</strong>{" "}
+                        {savedExamData.studyMode === "practice"
+                          ? "Prática"
+                          : savedExamData.studyMode === "exam"
+                            ? "Exame Simulado"
+                            : "Estudo Focado"}
+                      </p>
+                      <p>
+                        <strong>Progresso:</strong>{" "}
+                        {savedExamData.currentQuestionIndex + 1} de{" "}
+                        {savedExamData.selectedSimulado?.length || 0} questões
+                      </p>
+                      <p>
+                        <strong>Pontuação atual:</strong> {savedExamData.score}{" "}
+                        pontos
+                      </p>
+                      {savedExamData.studyMode === "exam" && (
+                        <p>
+                          <strong>Tempo restante:</strong>{" "}
+                          {Math.floor(savedExamData.timeLeft / 60)}m{" "}
+                          {savedExamData.timeLeft % 60}s
+                        </p>
                       )}
-
-                    {/* Score screen */}
-                    {currentView === "exam" && showScore && (
-                      <ExamScoreScreen
-                        score={score}
-                        totalQuestions={selectedSimulado.length}
-                        studyMode={studyMode}
-                        endMessage={endMessage}
-                        simulatedExam={simulatedExam}
-                        currentExamResult={currentExamResult}
-                        allAnswers={allAnswers}
-                        selectedSimulado={selectedSimulado}
-                        onResetExam={resetExam}
-                        onRetryExam={startExam}
-                        onViewExamDetails={handleViewExamDetails}
-                      />
-                    )}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={resumeSavedExam} className="flex-1">
+                        Continuar Exame
+                      </Button>
+                      <Button
+                        onClick={discardSavedExam}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Começar Novo
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
-            </div>
+            )}
 
-            {/* Footer terms links */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Ao usar este simulador, você concorda com nossos
-                </p>
-                <TermsNavigationLinks variant="inline" className="text-xs" />
-              </div>
+            {/* Footer Terms */}
+            <div className="mt-12 pt-8 border-t border-border/10 text-center">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">
+                Ao usar este simulador, você concorda com nossos
+              </p>
+              <TermsNavigationLinks variant="inline" className="text-xs" />
             </div>
           </div>
         </div>

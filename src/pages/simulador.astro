@@ -4,20 +4,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import ExamSimulator from "../components/ExamSimulator";
 ---
 
+<style is:global>
+  /* Local override for the simulator page to bypass BaseLayout constraints */
+  main {
+    max-width: 1750px !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    width: 100% !important;
+  }
+</style>
+
 <BaseLayout title="Simulador AWS">
   <section
     class="animate-in fade-in duration-700 max-w-[1600px] w-full mx-auto py-8 px-4 sm:px-6 lg:px-8"
   >
-    <div class="mb-10 text-center">
-      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-gradient">
-        Simulador de Exame
-      </h1>
-      <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-        Prepare-se para sua certificação AWS com perguntas baseadas em cenários
-        reais. Boa sorte!
-      </p>
-    </div>
-
     <div class="relative w-full h-full">
       <div
         class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10"
