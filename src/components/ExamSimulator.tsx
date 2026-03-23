@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -6,33 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Timer,
-  Check,
-  Target,
-  ChevronRight,
-  ChevronLeft,
-  RotateCcw,
-  Award,
   Star,
   BarChart3,
   BookOpen,
   Keyboard,
-  Languages,
-  List,
   PanelLeftClose,
   PanelLeftOpen,
-  Maximize,
-  Minimize,
 } from "lucide-react";
 
 import type {
@@ -46,11 +29,8 @@ import type {
 import type { ExamDomainKey } from "@/lib/types/exam-domains";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { ProgressReport } from "@/components/ProgressReport";
-import { ExamDetails } from "@/components/ExamDetails";
-import { FavoriteQuestions } from "@/components/FavoriteQuestions";
+import { useExamTimer } from "@/hooks/useExamTimer";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
-import { KeyboardShortcutsDisplay } from "@/components/KeyboardShortcutsDisplay";
 import { QuestionNavigationPanel } from "@/components/QuestionNavigationPanel";
 import TermsNavigationLinks from "@/components/TermsNavigationLinks";
 import TermsVersionManager from "@/components/TermsVersionManager";
@@ -62,7 +42,6 @@ import {
 } from "@/lib/types/exam-domains";
 import { hasValidConsent } from "@/lib/terms";
 import type { TermsConfig } from "@/lib/types/terms";
-import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -74,18 +53,31 @@ import {
   getExamSourceInfo,
   getSourceLabel,
   getSourceColor,
-  // getSourceIcon,
 } from "@/lib/utils/examSources";
+import { loadQuestionBank } from "@/lib/utils/questionLoader";
 
-//Questions
-import { questions } from "@/data/questions-clf-c02";
-import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
-import { GPTquestions } from "@/data/questions";
-import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
-import { questionsSaaC03 } from "@/data/questions-saa-c03";
-import { questionCLFC02CC01 } from "@/data/CLF-C02-CC-01";
+// Extracted sub-components
+import { ExamSelectionScreen } from "@/components/exam/ExamSelectionScreen";
+import { ActiveExamView } from "@/components/exam/ActiveExamView";
+import { ExamScoreScreen } from "@/components/exam/ExamScoreScreen";
 
-// Terms configuration
+// Lazy-loaded secondary views
+const ProgressReport = React.lazy(() =>
+  import("@/components/ProgressReport").then((m) => ({
+    default: m.ProgressReport,
+  })),
+);
+const ExamDetails = React.lazy(() =>
+  import("@/components/ExamDetails").then((m) => ({ default: m.ExamDetails })),
+);
+const FavoriteQuestions = React.lazy(() =>
+  import("@/components/FavoriteQuestions").then((m) => ({
+    default: m.FavoriteQuestions,
+  })),
+);
+
+// ─── Static config ────────────────────────────────────────────────────────────
+
 const termsConfig: TermsConfig = {
   currentVersion: "1.0.0",
   requireAcceptance: true,
@@ -93,21 +85,6 @@ const termsConfig: TermsConfig = {
   gracePeriodDays: 7,
   enableVersionHistory: true,
   maxStoredVersions: 5,
-};
-
-const simulados: Record<string, Question[]> = {
-  "CLF-C02-FULL": [
-    ...questions,
-    ...questionsClfC0201,
-    ...questionsClfC0202,
-    ...GPTquestions,
-    ...questionCLFC02CC01,
-  ],
-  "CLF-C02-01": questionsClfC0201,
-  "CLF-C02-02": questionsClfC0202,
-  "CLF-C02-CC-01": questionCLFC02CC01,
-  "CLF-C02-GPT": GPTquestions,
-  "SAA-C03-FULL": questionsSaaC03,
 };
 
 const certificationBanks: Record<string, string[]> = {
@@ -140,22 +117,37 @@ const certifications = [
   },
 ];
 
+// ─── Domain helpers ───────────────────────────────────────────────────────────
+
+function getDomainMap(examId: string) {
+  return examId.startsWith("SAA-C03") ? SAA_C03_DomainMap : CLF_C02_DomainMap;
+}
+
+function getDomainName(examId: string, domain: string) {
+  const map = getDomainMap(examId);
+  return map[domain as keyof typeof map] || "Unknown Domain";
+}
+
+function getDomainDetails(examId: string) {
+  return examId.startsWith("SAA-C03")
+    ? SAA_C03_DomainDetails
+    : CLF_C02_DomainDetails;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const ExamSimulator = () => {
+  // ── UI state
   const [isMounted, setIsMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [showScore, setShowScore] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(90 * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [answerStatus, setAnswerStatus] = useState<
-    "correct" | "incorrect" | "partial" | null
-  >(null);
-  const [endMessage, setEndMessage] = useState<string | null>(null);
-  const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  const [currentView, setCurrentView] = useState<
+    "exam" | "progress" | "favorites" | "exam-details"
+  >("exam");
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedExamData, setSavedExamData] = useState<any>(null);
+
+  // ── Exam selection state
   const [selectedCertification, setSelectedCertification] =
     useState<string>("");
   const [selectedExamId, setSelectedExamId] = useState<string>("");
@@ -164,75 +156,65 @@ const ExamSimulator = () => {
   const [selectedCategories, setSelectedCategories] = useState<ExamCategory[]>(
     [],
   );
+
+  // ── Exam active state
+  const [isActive, setIsActive] = useState(false);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  const [cachedQuestions, setCachedQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showScore, setShowScore] = useState(false);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [answerStatus, setAnswerStatus] = useState<
+    "correct" | "incorrect" | "partial" | null
+  >(null);
+  const [endMessage, setEndMessage] = useState<string | null>(null);
   const [allAnswers, setAllAnswers] = useState<{
-    [questionId: string]: {
+    [qId: string]: {
       answers: string[];
       status: "correct" | "incorrect" | "partial" | null;
     };
   }>({});
-  const [currentView, setCurrentView] = useState<
-    "exam" | "progress" | "favorites" | "exam-details"
-  >("exam");
-  const [selectedExamDetails, setSelectedExamDetails] =
-    useState<DetailedExamResult | null>(null);
-  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
-  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [savedExamData, setSavedExamData] = useState<any>(null);
-  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-  const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
-  const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
-  const [currentExamResult, setCurrentExamResult] =
-    useState<DetailedExamResult | null>(null);
   const [questionStatuses, setQuestionStatuses] = useState<{
-    [questionIndex: number]: {
+    [idx: number]: {
       answered: boolean;
       skipped: boolean;
       correct?: boolean | null;
     };
   }>({});
+  const [simulatedExam, setSimulatedExam] = useState<SimulatedExam | null>(
+    null,
+  );
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
+  const [currentExamResult, setCurrentExamResult] =
+    useState<DetailedExamResult | null>(null);
+  const [selectedExamDetails, setSelectedExamDetails] =
+    useState<DetailedExamResult | null>(null);
+
+  // ── Terms state
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
+  const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
+
+  // ── Stable userId
   const [userId] = useState(() =>
     typeof window !== "undefined" && window.crypto
       ? "user-" + crypto.randomUUID()
       : "user-fallback",
   );
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // ── Derived question data
+  const currentQuestion =
+    selectedSimulado[currentQuestionIndex] || selectedSimulado[0];
+  const currentOptions = currentQuestion?.options || [];
+  const correctOptions = currentOptions.filter((o) => o.isCorrect);
+  const incorrectOptions = currentOptions.filter((o) => !o.isCorrect);
+  const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
-  // Set initial sidebar state based on screen size (1366px laptop threshold)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsSidebarOpen(window.innerWidth >= 1366);
-    }
-  }, []);
-
-  // Listen for native browser fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  // Initialize user progress hook
+  // ── Hooks
   const {
     userProgress,
     addExamResult,
@@ -244,167 +226,94 @@ const ExamSimulator = () => {
     clearAllProgress,
   } = useUserProgress(userId);
 
-  // Keyboard shortcuts configuration
-  const handleKeyboardNextQuestion = () => {
-    if (
-      isActive &&
-      !showExplanation &&
-      currentQuestionIndex < selectedSimulado.length - 1
-    ) {
-      handleNextQuestion();
-    }
-  };
-
-  const handleKeyboardPreviousQuestion = () => {
-    if (isActive && !showExplanation && currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswers([]);
-      setShowExplanation(false);
-      setAnswerStatus(null);
-      setQuestionStartTime(new Date());
-    }
-  };
-
-  const handleSelectAnswerByIndex = (index: number) => {
-    if (isActive && !showExplanation && currentQuestion?.options?.[index]) {
-      const optionId = currentQuestion.options[index].id;
-      handleAnswerToggle(optionId);
-    }
-  };
-
-  const handleSubmitAnswerShortcut = () => {
-    if (isActive && !showExplanation && selectedAnswers.length > 0) {
-      handleSubmitAnswers();
-    }
-  };
-
-  const handleSkipQuestion = () => {
-    if (isActive && !showExplanation) {
-      // Mark question as skipped
-      setQuestionStatuses((prev) => ({
-        ...prev,
-        [currentQuestionIndex]: {
-          answered: false,
-          skipped: true,
-          correct: null,
-        },
-      }));
-
-      // Clear current answers and move to next question
-      setSelectedAnswers([]);
-      handleKeyboardNextQuestion();
-    }
-  };
-
-  const handleQuestionSelect = (questionIndex: number) => {
-    if (!isActive || showExplanation) return;
-
-    setCurrentQuestionIndex(questionIndex);
-    setSelectedAnswers([]);
-    setShowExplanation(false);
-    setAnswerStatus(null);
-    setQuestionStartTime(new Date());
-  };
-
-  // Initialize keyboard shortcuts hook
-  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts({
-    onNextQuestion: handleKeyboardNextQuestion,
-    onPreviousQuestion: handleKeyboardPreviousQuestion,
-    onSelectAnswer: handleSelectAnswerByIndex,
-    onSubmitAnswer: handleSubmitAnswerShortcut,
-    onSkipQuestion: handleSkipQuestion,
-    isModalOpen: showResumeDialog,
-    isInputFocused: isInputFocused,
-    currentQuestionIndex,
-    totalQuestions: selectedSimulado.length,
+  const { timeLeft, setTimeLeft, formatTime } = useExamTimer({
+    isActive,
+    studyMode,
+    initialTime: studyMode === "exam" ? 90 * 60 : 999999,
+    onTimeExpired: () => {
+      setShowScore(true);
+      setIsActive(false);
+      setEndMessage(
+        "O tempo acabou! Sua prova foi finalizada automaticamente.",
+      );
+    },
   });
 
-  // Input focus detection for keyboard shortcuts
+  // ── Effects
   useEffect(() => {
-    const handleFocusIn = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.contentEditable === "true" ||
-        target.getAttribute("role") === "textbox";
-      setIsInputFocused(isInput);
-    };
+    setIsMounted(true);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined")
+      setIsSidebarOpen(window.innerWidth >= 1366);
+  }, []);
 
-    const handleFocusOut = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.contentEditable === "true" ||
-        target.getAttribute("role") === "textbox";
-      if (isInput) {
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  useEffect(() => {
+    const onIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      setIsInputFocused(
+        ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) ||
+          t.contentEditable === "true" ||
+          t.getAttribute("role") === "textbox",
+      );
+    };
+    const onOut = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      if (
+        ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) ||
+        t.contentEditable === "true" ||
+        t.getAttribute("role") === "textbox"
+      )
         setIsInputFocused(false);
-      }
     };
-
-    document.addEventListener("focusin", handleFocusIn);
-    document.addEventListener("focusout", handleFocusOut);
-
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
     return () => {
-      document.removeEventListener("focusin", handleFocusIn);
-      document.removeEventListener("focusout", handleFocusOut);
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
     };
   }, []);
 
-  // Check terms acceptance on component mount
   useEffect(() => {
-    const checkTermsAcceptance = async () => {
+    (async () => {
       try {
         setCheckingTerms(true);
-        const hasConsent = await hasValidConsent(
+        const ok = await hasValidConsent(
           termsConfig.currentVersion,
           termsConfig.gracePeriodDays,
         );
-        setTermsAccepted(hasConsent);
-      } catch (error) {
-        console.error("Error checking terms acceptance:", error);
-        // Default to false if there's an error
+        setTermsAccepted(ok);
+      } catch {
         setTermsAccepted(false);
       } finally {
         setCheckingTerms(false);
       }
-    };
-
-    checkTermsAcceptance();
+    })();
   }, []);
-  // Check for saved exam state on component mount
+
   useEffect(() => {
-    // Only access localStorage if we're in the browser
     if (typeof window === "undefined") return;
-
-    const savedState = localStorage.getItem("examState");
-    if (savedState) {
-      try {
-        const examState = JSON.parse(savedState);
-        // Check if the saved state is recent (within 24 hours)
-        const savedTime = new Date(examState.timestamp);
-        const now = new Date();
-        const hoursDiff =
-          (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
-
-        if (hoursDiff < 24 && examState.isActive) {
-          setSavedExamData(examState);
-          setShowResumeDialog(true);
-        } else {
-          // Clear old saved state
-          clearExamState();
-        }
-      } catch (error) {
-        console.error("Error parsing saved exam state:", error);
-        clearExamState();
-      }
+    const saved = localStorage.getItem("examState");
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      const hours =
+        (Date.now() - new Date(state.timestamp).getTime()) / 3600000;
+      if (hours < 24 && state.isActive) {
+        setSavedExamData(state);
+        setShowResumeDialog(true);
+      } else clearExamState();
+    } catch {
+      clearExamState();
     }
   }, []);
 
-  // Save exam state automatically
   useEffect(() => {
     saveExamState();
   }, [
@@ -423,78 +332,139 @@ const ExamSimulator = () => {
     questionStatuses,
   ]);
 
-  // Get current question data
-  const currentQuestion =
-    selectedSimulado[currentQuestionIndex] || selectedSimulado[0];
-  const currentOptions = currentQuestion?.options || [];
-  const correctOptions = currentOptions.filter((option) => option.isCorrect);
-  const incorrectOptions = currentOptions.filter((option) => !option.isCorrect);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isActive && studyMode === "exam" && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((timeLeft) => timeLeft - 1);
-      }, 1000);
-    } else if (studyMode === "exam" && timeLeft === 0) {
-      clearInterval(interval!);
-      setShowScore(true);
-      setIsActive(false);
-      setEndMessage(
-        "O tempo acabou! Sua prova foi finalizada automaticamente.",
-      );
-    }
-    return () => clearInterval(interval!);
-  }, [isActive, timeLeft, studyMode]);
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  // ── Helpers
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement)
+      document.documentElement.requestFullscreen().catch(console.error);
+    else document.exitFullscreen?.();
   };
 
-  const handleAnswerToggle = (answerId: string) => {
-    setSelectedAnswers((prev) => {
-      if (prev.includes(answerId)) {
-        return prev.filter((id) => id !== answerId);
-      } else {
-        return [...prev, answerId];
-      }
+  const saveExamState = () => {
+    if (typeof window === "undefined" || !isActive) return;
+    localStorage.setItem(
+      "examState",
+      JSON.stringify({
+        isActive,
+        selectedExamId,
+        selectedSimulado,
+        currentQuestionIndex,
+        score,
+        timeLeft,
+        selectedAnswers,
+        studyMode,
+        selectedDomains,
+        selectedCategories,
+        allAnswers,
+        questionStatuses,
+        examStartTime: examStartTime?.toISOString(),
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  };
+
+  const clearExamState = () => {
+    if (typeof window !== "undefined") localStorage.removeItem("examState");
+  };
+
+  const filterQuestionsByStudyMode = (questions: Question[]): Question[] => {
+    if (studyMode !== "domain_focus") return questions;
+    return questions.filter((q) => {
+      const domainOk =
+        selectedDomains.length === 0 || selectedDomains.includes(q.dominio);
+      const categoryOk =
+        selectedCategories.length === 0 ||
+        selectedCategories.includes(q.category);
+      return domainOk && categoryOk;
     });
   };
 
+  // ── Keyboard navigation
+  const handleKeyboardNextQuestion = () => {
+    if (
+      isActive &&
+      !showExplanation &&
+      currentQuestionIndex < selectedSimulado.length - 1
+    )
+      handleNextQuestion();
+  };
+  const handleKeyboardPreviousQuestion = () => {
+    if (isActive && !showExplanation && currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((i) => i - 1);
+      setSelectedAnswers([]);
+      setShowExplanation(false);
+      setAnswerStatus(null);
+      setQuestionStartTime(new Date());
+    }
+  };
+  const handleSelectAnswerByIndex = (index: number) => {
+    if (isActive && !showExplanation && currentQuestion?.options?.[index])
+      handleAnswerToggle(currentQuestion.options[index].id);
+  };
+  const handleSubmitAnswerShortcut = () => {
+    if (isActive && !showExplanation && selectedAnswers.length > 0)
+      handleSubmitAnswers();
+  };
+  const handleSkipQuestion = () => {
+    if (!isActive || showExplanation) return;
+    setQuestionStatuses((p) => ({
+      ...p,
+      [currentQuestionIndex]: { answered: false, skipped: true, correct: null },
+    }));
+    setSelectedAnswers([]);
+    handleKeyboardNextQuestion();
+  };
+  const handleQuestionSelect = (idx: number) => {
+    if (!isActive || showExplanation) return;
+    setCurrentQuestionIndex(idx);
+    setSelectedAnswers([]);
+    setShowExplanation(false);
+    setAnswerStatus(null);
+    setQuestionStartTime(new Date());
+  };
+
+  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts({
+    onNextQuestion: handleKeyboardNextQuestion,
+    onPreviousQuestion: handleKeyboardPreviousQuestion,
+    onSelectAnswer: handleSelectAnswerByIndex,
+    onSubmitAnswer: handleSubmitAnswerShortcut,
+    onSkipQuestion: handleSkipQuestion,
+    isModalOpen: showResumeDialog,
+    isInputFocused,
+    currentQuestionIndex,
+    totalQuestions: selectedSimulado.length,
+  });
+
+  // ── Answer handling
+  const handleAnswerToggle = (answerId: string) => {
+    setSelectedAnswers((prev) =>
+      prev.includes(answerId)
+        ? prev.filter((id) => id !== answerId)
+        : [...prev, answerId],
+    );
+  };
+
   const handleSubmitAnswers = () => {
-    const correctAnswerIds = currentOptions
-      .filter((option) => option.isCorrect)
-      .map((option) => option.id);
-
+    const correctIds = currentOptions
+      .filter((o) => o.isCorrect)
+      .map((o) => o.id);
     const isFullyCorrect =
-      selectedAnswers.length === correctAnswerIds.length &&
-      selectedAnswers.every((id) => correctAnswerIds.includes(id));
-
-    const hasPartialCorrect =
-      selectedAnswers.some((id) => correctAnswerIds.includes(id)) &&
-      !isFullyCorrect;
-
-    let currentStatus: "correct" | "incorrect" | "partial" = "incorrect";
+      selectedAnswers.length === correctIds.length &&
+      selectedAnswers.every((id) => correctIds.includes(id));
+    const hasPartial =
+      selectedAnswers.some((id) => correctIds.includes(id)) && !isFullyCorrect;
+    let status: "correct" | "incorrect" | "partial" = "incorrect";
     if (isFullyCorrect) {
-      setScore(score + 1);
-      currentStatus = "correct";
-    } else if (hasPartialCorrect) {
-      setScore(score + 0.5);
-      currentStatus = "partial";
+      setScore((s) => s + 1);
+      status = "correct";
+    } else if (hasPartial) {
+      setScore((s) => s + 0.5);
+      status = "partial";
     }
 
-    // Store answer for all modes
     setAllAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: {
-        answers: selectedAnswers,
-        status: currentStatus,
-      },
+      [currentQuestion.id]: { answers: selectedAnswers, status },
     }));
-
-    // Update question status
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentQuestionIndex]: {
@@ -504,260 +474,195 @@ const ExamSimulator = () => {
       },
     }));
 
-    // Update the SimulatedExam object with the user's answer
-    if (simulatedExam) {
-      const updatedAnswers = {
-        ...simulatedExam.answers,
-        [currentQuestion.id]: selectedAnswers.join(","),
-      };
-
+    if (simulatedExam)
       setSimulatedExam({
         ...simulatedExam,
-        answers: updatedAnswers,
+        answers: {
+          ...simulatedExam.answers,
+          [currentQuestion.id]: selectedAnswers.join(","),
+        },
       });
-    }
 
-    // Show explanation immediately only in practice mode
     if (studyMode === "practice") {
-      setAnswerStatus(currentStatus);
+      setAnswerStatus(status);
       setShowExplanation(true);
-    } else {
-      // In exam mode, just move to next question
-      handleNextQuestion();
-    }
+    } else handleNextQuestion();
   };
 
   const handleNextQuestion = () => {
     setShowExplanation(false);
     setAnswerStatus(null);
     setSelectedAnswers([]);
-
     if (currentQuestionIndex + 1 < selectedSimulado.length) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex((i) => i + 1);
       setQuestionStartTime(new Date());
     } else {
-      // Finalize the exam
-      if (simulatedExam && examStartTime) {
-        const endTime = new Date();
-        const timeSpentInSeconds = Math.floor(
-          (endTime.getTime() - examStartTime.getTime()) / 1000,
-        );
+      finalizeExam();
+    }
+  };
 
-        const updatedExam: SimulatedExam = {
-          ...simulatedExam,
-          endTime: endTime,
-          score: score,
-          timeSpent: timeSpentInSeconds,
-        };
-
-        // Create detailed exam result
-        const questionAttempts: QuestionAttempt[] = selectedSimulado.map(
-          (question) => {
-            const userAnswer = allAnswers[question.id];
-            const correctAnswers = question.options
-              .filter((opt) => opt.isCorrect)
-              .map((opt) => opt.id);
-
-            return {
-              questionId: question.id,
-              selectedAnswers: userAnswer?.answers || [],
-              correctAnswers,
-              isCorrect: userAnswer?.status === "correct",
-              isPartial: userAnswer?.status === "partial",
-              timestamp: new Date(),
-            };
-          },
-        );
-
-        // Calculate category and domain breakdowns
-        const categoryBreakdown: any = {};
-        const domainBreakdown: any = {};
-
-        selectedSimulado.forEach((question) => {
-          const attempt = questionAttempts.find(
-            (a) => a.questionId === question.id,
-          );
-          if (!attempt) return;
-
-          // Category breakdown
-          if (!categoryBreakdown[question.category]) {
-            categoryBreakdown[question.category] = {
-              correct: 0,
-              total: 0,
-              percentage: 0,
-            };
-          }
-          categoryBreakdown[question.category].total++;
-          if (attempt.isCorrect) {
-            categoryBreakdown[question.category].correct++;
-          }
-
-          // Domain breakdown
-          const domainName = getDomainName(selectedExamId, question.dominio);
-          if (!domainBreakdown[domainName]) {
-            domainBreakdown[domainName] = {
-              correct: 0,
-              total: 0,
-              percentage: 0,
-            };
-          }
-          domainBreakdown[domainName].total++;
-          if (attempt.isCorrect) {
-            domainBreakdown[domainName].correct++;
-          }
-        });
-
-        // Calculate percentages
-        Object.keys(categoryBreakdown).forEach((category) => {
-          const stats = categoryBreakdown[category];
-          stats.percentage = (stats.correct / stats.total) * 100;
-        });
-
-        Object.keys(domainBreakdown).forEach((domain) => {
-          const stats = domainBreakdown[domain];
-          stats.percentage = (stats.correct / stats.total) * 100;
-        });
-
-        const detailedResult: DetailedExamResult = {
-          exam: updatedExam,
-          questionAttempts,
-          categoryBreakdown,
-          domainBreakdown,
-        };
-
-        // Add to user progress
-        addExamResult(detailedResult);
-
-        // Store current exam result for immediate access
-        setCurrentExamResult(detailedResult);
-
-        setSimulatedExam(updatedExam);
-        console.log("Exam Completed:", updatedExam); // Log or save the exam data
-      }
+  const finalizeExam = () => {
+    if (!simulatedExam || !examStartTime) {
       setShowScore(true);
       setIsActive(false);
       setEndMessage("Parabéns! Você finalizou a prova.");
-      // Clear saved state when exam is completed
       clearExamState();
+      return;
     }
-  };
+    const endTime = new Date();
+    const timeSpent = Math.floor(
+      (endTime.getTime() - examStartTime.getTime()) / 1000,
+    );
+    const updatedExam: SimulatedExam = {
+      ...simulatedExam,
+      endTime,
+      score,
+      timeSpent,
+    };
 
-  const getButtonVariant = (optionId: string) => {
-    const isSelected = selectedAnswers.includes(optionId);
-    const isCorrect = currentOptions.find(
-      (option) => option.id === optionId,
-    )?.isCorrect;
-
-    if (!showExplanation) {
-      return isSelected ? "default" : "outline";
-    } else {
-      if (isCorrect) {
-        return "success";
-      } else if (isSelected && !isCorrect) {
-        return "destructive";
-      } else {
-        return "outline";
-      }
-    }
-  };
-
-  const handleExamSelection = (examId: string) => {
-    console.log("examId:" + examId);
-    setSelectedExamId(examId);
-    const allQuestions = simulados[examId as keyof typeof simulados];
-    setSelectedSimulado(filterQuestionsByStudyMode(allQuestions));
-  };
-
-  const filterQuestionsByStudyMode = (questions: Question[]): Question[] => {
-    if (studyMode !== "domain_focus") {
-      return questions;
-    }
-
-    return questions.filter((question) => {
-      const domainMatch =
-        selectedDomains.length === 0 ||
-        selectedDomains.includes(question.dominio);
-      const categoryMatch =
-        selectedCategories.length === 0 ||
-        selectedCategories.includes(question.category);
-      return domainMatch && categoryMatch;
+    const attempts: QuestionAttempt[] = selectedSimulado.map((q) => {
+      const ua = allAnswers[q.id];
+      const correctAnswers = q.options
+        .filter((o) => o.isCorrect)
+        .map((o) => o.id);
+      return {
+        questionId: q.id,
+        selectedAnswers: ua?.answers || [],
+        correctAnswers,
+        isCorrect: ua?.status === "correct",
+        isPartial: ua?.status === "partial",
+        timestamp: new Date(),
+      };
     });
+
+    const categoryBreakdown: any = {};
+    const domainBreakdown: any = {};
+    selectedSimulado.forEach((q) => {
+      const att = attempts.find((a) => a.questionId === q.id);
+      if (!att) return;
+      categoryBreakdown[q.category] = categoryBreakdown[q.category] || {
+        correct: 0,
+        total: 0,
+        percentage: 0,
+      };
+      categoryBreakdown[q.category].total++;
+      if (att.isCorrect) categoryBreakdown[q.category].correct++;
+      const dn = getDomainName(selectedExamId, q.dominio);
+      domainBreakdown[dn] = domainBreakdown[dn] || {
+        correct: 0,
+        total: 0,
+        percentage: 0,
+      };
+      domainBreakdown[dn].total++;
+      if (att.isCorrect) domainBreakdown[dn].correct++;
+    });
+    Object.values(categoryBreakdown).forEach(
+      (s: any) => (s.percentage = (s.correct / s.total) * 100),
+    );
+    Object.values(domainBreakdown).forEach(
+      (s: any) => (s.percentage = (s.correct / s.total) * 100),
+    );
+
+    const result: DetailedExamResult = {
+      exam: updatedExam,
+      questionAttempts: attempts,
+      categoryBreakdown,
+      domainBreakdown,
+    };
+    addExamResult(result);
+    setCurrentExamResult(result);
+    setSimulatedExam(updatedExam);
+    setShowScore(true);
+    setIsActive(false);
+    setEndMessage("Parabéns! Você finalizou a prova.");
+    clearExamState();
   };
 
-  const [simulatedExam, setSimulatedExam] = useState<SimulatedExam | null>(
-    null,
-  );
+  const getButtonVariant = (optionId: string): any => {
+    const isSelected = selectedAnswers.includes(optionId);
+    const isCorrect = currentOptions.find((o) => o.id === optionId)?.isCorrect;
+    if (!showExplanation) return isSelected ? "default" : "outline";
+    if (isCorrect) return "success";
+    if (isSelected && !isCorrect) return "destructive";
+    return "outline";
+  };
 
+  // ── Start / Reset / Resume
   const startExam = async () => {
     if (!selectedCertification) {
       alert("Por favor, selecione uma certificação.");
       return;
     }
-
-    const examBankId =
+    const bankId =
       studyMode === "domain_focus"
         ? `${selectedCertification}-FULL`
         : selectedExamId;
-
-    if (!examBankId) {
+    if (!bankId) {
       alert("Por favor, selecione um banco de questões.");
       return;
     }
 
-    // Check terms acceptance before starting exam
     try {
-      const hasConsent = await hasValidConsent(
+      const ok = await hasValidConsent(
         termsConfig.currentVersion,
         termsConfig.gracePeriodDays,
       );
-      if (!hasConsent) {
+      if (!ok) {
         alert(
           "Você deve aceitar os Termos de Serviço antes de iniciar o exame.",
         );
         return;
       }
-    } catch (error) {
-      console.error("Error checking terms acceptance:", error);
+    } catch {
       alert("Erro ao verificar aceitação dos termos. Tente novamente.");
       return;
     }
 
-    const filteredQuestions = filterQuestionsByStudyMode(
-      simulados[examBankId as keyof typeof simulados],
-    );
+    setIsLoadingQuestions(true);
+    let rawQuestions: Question[];
+    try {
+      rawQuestions = await loadQuestionBank(bankId);
+    } catch (e) {
+      alert("Erro ao carregar questões. Tente novamente.");
+      setIsLoadingQuestions(false);
+      return;
+    } finally {
+      setIsLoadingQuestions(false);
+    }
 
-    if (filteredQuestions.length === 0) {
+    const filtered = filterQuestionsByStudyMode(rawQuestions);
+    if (filtered.length === 0) {
       alert("Nenhuma questão encontrada com os filtros selecionados.");
       return;
     }
 
-    setSelectedSimulado(filteredQuestions);
-
-    // Initialize the SimulatedExam object
-    const studySettings = {
-      mode: studyMode,
-      selectedDomains: selectedDomains,
-      selectedCategories: selectedCategories,
-      timeLimit: studyMode === "exam" ? 90 : undefined,
-      showImmediateFeedback: studyMode === "practice",
-    };
-
     const examStart = new Date();
-    const newExam: SimulatedExam = {
-      id: selectedExamId,
+    setSelectedSimulado(filtered);
+    // Cache questions so they remain available after exam ends (for ExamDetails, FavoriteQuestions, etc.)
+    setCachedQuestions((prev) => {
+      const existingIds = new Set(prev.map((q) => q.id));
+      const newOnes = filtered.filter((q) => !existingIds.has(q.id));
+      return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+    });
+    setSimulatedExam({
+      id: bankId,
       userId: "user-" + crypto.randomUUID(),
-      questions: filteredQuestions.map((q) => q.id),
+      questions: filtered.map((q) => q.id),
       answers: {},
       startTime: examStart,
-      studySettings,
-    };
-
-    setSimulatedExam(newExam);
+      studySettings: {
+        mode: studyMode,
+        selectedDomains,
+        selectedCategories,
+        timeLimit: studyMode === "exam" ? 90 : undefined,
+        showImmediateFeedback: studyMode === "practice",
+      },
+    });
     setIsActive(true);
     setCurrentQuestionIndex(0);
     setScore(0);
     setShowScore(false);
-    setTimeLeft(studyMode === "exam" ? 90 * 60 : 999999); // No time limit for practice mode
+    setTimeLeft(studyMode === "exam" ? 90 * 60 : 999999);
     setSelectedAnswers([]);
     setShowExplanation(false);
     setEndMessage(null);
@@ -766,88 +671,6 @@ const ExamSimulator = () => {
     setQuestionStartTime(new Date());
     setCurrentExamResult(null);
     setQuestionStatuses({});
-    // Clear any previous saved state when starting a new exam
-    clearExamState();
-  };
-
-  const handleToggleFavorite = (questionId: string) => {
-    if (isFavoriteQuestion(questionId)) {
-      removeFavoriteQuestion(questionId);
-    } else {
-      addFavoriteQuestion(questionId, selectedExamId);
-    }
-  };
-
-  const handleViewExamDetails = (examResult: DetailedExamResult) => {
-    setSelectedExamDetails(examResult);
-    setCurrentView("exam-details");
-  };
-
-  const handleViewQuestion = (question: Question) => {
-    // This could open a modal or navigate to a detailed question view
-    console.log("View question:", question);
-  };
-
-  const getAllQuestions = (): Question[] => {
-    return Object.values(simulados).flat();
-  };
-
-  const saveExamState = () => {
-    if (typeof window === "undefined" || !isActive) return;
-
-    const examState = {
-      isActive,
-      selectedExamId,
-      selectedSimulado,
-      currentQuestionIndex,
-      score,
-      timeLeft,
-      selectedAnswers,
-      studyMode,
-      selectedDomains,
-      selectedCategories,
-      allAnswers,
-      questionStatuses,
-      examStartTime: examStartTime?.toISOString(),
-      timestamp: new Date().toISOString(),
-    };
-
-    localStorage.setItem("examState", JSON.stringify(examState));
-  };
-
-  const clearExamState = () => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("examState");
-  };
-
-  const resumeSavedExam = () => {
-    if (!savedExamData) return;
-
-    setIsActive(savedExamData.isActive);
-    setSelectedExamId(savedExamData.selectedExamId);
-    setSelectedSimulado(savedExamData.selectedSimulado);
-    setCurrentQuestionIndex(savedExamData.currentQuestionIndex);
-    setScore(savedExamData.score);
-    setTimeLeft(savedExamData.timeLeft);
-    setSelectedAnswers(savedExamData.selectedAnswers);
-    setStudyMode(savedExamData.studyMode);
-    setSelectedDomains(savedExamData.selectedDomains || []);
-    setSelectedCategories(savedExamData.selectedCategories || []);
-    setAllAnswers(savedExamData.allAnswers || {});
-    setQuestionStatuses(savedExamData.questionStatuses || {});
-    setExamStartTime(
-      savedExamData.examStartTime
-        ? new Date(savedExamData.examStartTime)
-        : null,
-    );
-
-    setShowResumeDialog(false);
-    setSavedExamData(null);
-  };
-
-  const discardSavedExam = () => {
-    setShowResumeDialog(false);
-    setSavedExamData(null);
     clearExamState();
   };
 
@@ -870,100 +693,100 @@ const ExamSimulator = () => {
     setQuestionStatuses({});
     clearExamState();
   };
-  const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
-  const getDomainMap = (examId: string) => {
-    switch (examId) {
-      case "SAA-C03":
-        return SAA_C03_DomainMap;
-      case "CLF-C02":
-      case "CLF-C02-01":
-      case "CLF-C02-02":
-      case "CLF-C02-GPT":
-      case "CLF-C02-CC-01":
-      case "CLF-C02-FULL-NOGPT":
-        return CLF_C02_DomainMap;
-      default:
-        return CLF_C02_DomainMap;
-    }
+  const resumeSavedExam = () => {
+    if (!savedExamData) return;
+    setIsActive(savedExamData.isActive);
+    setSelectedExamId(savedExamData.selectedExamId);
+    setSelectedSimulado(savedExamData.selectedSimulado);
+    setCurrentQuestionIndex(savedExamData.currentQuestionIndex);
+    setScore(savedExamData.score);
+    setTimeLeft(savedExamData.timeLeft);
+    setSelectedAnswers(savedExamData.selectedAnswers);
+    setStudyMode(savedExamData.studyMode);
+    setSelectedDomains(savedExamData.selectedDomains || []);
+    setSelectedCategories(savedExamData.selectedCategories || []);
+    setAllAnswers(savedExamData.allAnswers || {});
+    setQuestionStatuses(savedExamData.questionStatuses || {});
+    setExamStartTime(
+      savedExamData.examStartTime
+        ? new Date(savedExamData.examStartTime)
+        : null,
+    );
+    setShowResumeDialog(false);
+    setSavedExamData(null);
   };
 
-  const getDomainName = (examId: string, domain: string) => {
-    const domainMap = getDomainMap(examId);
-    return domainMap[domain as keyof typeof domainMap] || "Unknown Domain";
+  const discardSavedExam = () => {
+    setShowResumeDialog(false);
+    setSavedExamData(null);
+    clearExamState();
   };
 
-  const getDomainDetails = (examId: string) => {
-    switch (examId) {
-      case "SAA-C03":
-        return SAA_C03_DomainDetails;
-      case "CLF-C02":
-      case "CLF-C02-01":
-      case "CLF-C02-02":
-      case "CLF-C02-CC-01":
-      case "CLF-C02-GPT":
-      case "CLF-C02-FULL-NOGPT":
-        return CLF_C02_DomainDetails;
-      default:
-        return CLF_C02_DomainDetails;
-    }
-  };
-
-  // Terms acceptance handlers
-  const handleTermsAcceptanceRequired = React.useCallback((version: string) => {
-    console.log("Terms acceptance required for version:", version);
-    setTermsAccepted(false);
-  }, []);
-
+  // ── Terms handlers
+  const handleTermsAcceptanceRequired = React.useCallback(
+    (v: string) => setTermsAccepted(false),
+    [],
+  );
   const handleTermsAcceptanceComplete = React.useCallback(async () => {
     try {
-      // Add a small delay to ensure the consent is properly stored
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const hasConsent = await hasValidConsent(
+      await new Promise((r) => setTimeout(r, 100));
+      const ok = await hasValidConsent(
         termsConfig.currentVersion,
         termsConfig.gracePeriodDays,
       );
-      setTermsAccepted(hasConsent);
-      console.log("Terms acceptance completed, consent status:", hasConsent);
-
-      // If consent is still not valid, force a recheck
-      if (!hasConsent) {
-        console.warn(
-          "Terms acceptance completed but consent still invalid, rechecking...",
+      setTermsAccepted(ok);
+      if (!ok)
+        setTimeout(
+          async () =>
+            setTermsAccepted(
+              await hasValidConsent(
+                termsConfig.currentVersion,
+                termsConfig.gracePeriodDays,
+              ),
+            ),
+          500,
         );
-        setTimeout(async () => {
-          const recheckConsent = await hasValidConsent(
-            termsConfig.currentVersion,
-            termsConfig.gracePeriodDays,
-          );
-          setTermsAccepted(recheckConsent);
-        }, 500);
-      }
-    } catch (error) {
-      console.error("Error updating terms acceptance status:", error);
-      // Don't block the user if there's an error checking consent
+    } catch {
       setTermsAccepted(true);
     }
   }, []);
-
-  const handleTermsError = React.useCallback((error: string) => {
-    console.error("Terms error:", error);
-    // If terms are required but user declined, redirect to home page
-    if (error.includes("Terms acceptance is required")) {
-      console.log("User declined terms, redirecting to home page");
-      // Show a brief message before redirecting
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 500);
-      return;
-    }
-    // For other errors, just log them
+  const handleTermsError = React.useCallback((err: string) => {
+    if (err.includes("Terms acceptance is required"))
+      setTimeout(() => (window.location.href = "/"), 500);
   }, []);
 
-  if (!isMounted) {
-    return null;
-  }
+  // ── Favorites & secondary views
+  const handleToggleFavorite = (questionId: string) =>
+    isFavoriteQuestion(questionId)
+      ? removeFavoriteQuestion(questionId)
+      : addFavoriteQuestion(questionId, selectedExamId);
+  const handleViewExamDetails = (r: DetailedExamResult) => {
+    setSelectedExamDetails(r);
+    setCurrentView("exam-details");
+  };
+  const handleViewQuestion = (q: Question) => console.log("View question:", q);
+  // Returns all questions seen so far (loaded dynamically). Falls back to selectedSimulado.
+  const getAllQuestions = (): Question[] =>
+    cachedQuestions.length > 0 ? cachedQuestions : selectedSimulado;
+
+  const handleRecheckTerms = async () => {
+    setCheckingTerms(true);
+    try {
+      setTermsAccepted(
+        await hasValidConsent(
+          termsConfig.currentVersion,
+          termsConfig.gracePeriodDays,
+        ),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCheckingTerms(false);
+    }
+  };
+
+  if (!isMounted) return null;
 
   return (
     <TooltipProvider>
@@ -974,14 +797,13 @@ const ExamSimulator = () => {
         onError={handleTermsError}
       >
         <div className="min-h-screen p-4">
-          {/* Resume Exam Dialog */}
+          {/* Resume dialog */}
           {showResumeDialog && savedExamData && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <Card className="w-full max-w-md mx-4">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Timer className="h-5 w-5" />
-                    Exame em Andamento
+                    <Timer className="h-5 w-5" /> Exame em Andamento
                   </CardTitle>
                   <CardDescription>
                     Encontramos um exame que você estava fazendo. Deseja
@@ -1037,9 +859,13 @@ const ExamSimulator = () => {
 
           <div className="w-full">
             <div
-              className={`${isActive ? "flex flex-col lg:flex-row justify-center items-start gap-6" : "space-y-4 max-w-7xl mx-auto w-full"}`}
+              className={
+                isActive
+                  ? "flex flex-col lg:flex-row justify-center items-start gap-6"
+                  : "space-y-4 max-w-7xl mx-auto w-full"
+              }
             >
-              {/* Sidebar - Question Navigation Panel */}
+              {/* Sidebar */}
               {isActive && isSidebarOpen && (
                 <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 transition-all duration-300">
                   <div className="sticky top-4">
@@ -1061,7 +887,7 @@ const ExamSimulator = () => {
                 </div>
               )}
 
-              {/* Main Content */}
+              {/* Main card */}
               <div
                 className={`${
                   isActive
@@ -1076,6 +902,7 @@ const ExamSimulator = () => {
                 >
                   <CardHeader className="space-y-2 pb-6 pt-8 px-8">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      {/* Left: title + sidebar toggle */}
                       <div className="flex items-start gap-4">
                         {isActive && (
                           <Button
@@ -1107,6 +934,8 @@ const ExamSimulator = () => {
                           </CardDescription>
                         </div>
                       </div>
+
+                      {/* Right: timer / nav buttons */}
                       <div className="flex items-center gap-2">
                         {isActive && studyMode === "exam" && (
                           <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
@@ -1125,8 +954,7 @@ const ExamSimulator = () => {
                               size="sm"
                               onClick={() => setCurrentView("exam")}
                             >
-                              <BookOpen className="w-4 h-4 mr-2" />
-                              Exame
+                              <BookOpen className="w-4 h-4 mr-2" /> Exame
                             </Button>
                             <Button
                               variant={
@@ -1137,8 +965,7 @@ const ExamSimulator = () => {
                               size="sm"
                               onClick={() => setCurrentView("progress")}
                             >
-                              <BarChart3 className="w-4 h-4 mr-2" />
-                              Progresso
+                              <BarChart3 className="w-4 h-4 mr-2" /> Progresso
                             </Button>
                             <Button
                               variant={
@@ -1149,9 +976,8 @@ const ExamSimulator = () => {
                               size="sm"
                               onClick={() => setCurrentView("favorites")}
                             >
-                              <Star className="w-4 h-4 mr-2" />
-                              Favoritas ({userProgress.favoriteQuestions.length}
-                              )
+                              <Star className="w-4 h-4 mr-2" /> Favoritas (
+                              {userProgress.favoriteQuestions.length})
                             </Button>
                             <Button
                               variant="outline"
@@ -1159,14 +985,14 @@ const ExamSimulator = () => {
                               onClick={() => setShowShortcutsModal(true)}
                               title="Atalhos do Teclado (Pressione ? para abrir)"
                             >
-                              <Keyboard className="w-4 h-4 mr-2" />
-                              Atalhos
+                              <Keyboard className="w-4 h-4 mr-2" /> Atalhos
                             </Button>
                           </div>
                         )}
                       </div>
                     </div>
 
+                    {/* Progress bar */}
                     {isActive && (
                       <div className="space-y-4">
                         <div className="space-y-2">
@@ -1190,10 +1016,6 @@ const ExamSimulator = () => {
                                   variant="outline"
                                   className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
                                 >
-                                  {/* {getSourceIcon(
-                                    getExamSourceInfo(selectedExamId)
-                                      .primarySource,
-                                  )}{" "} */}
                                   {getSourceLabel(
                                     getExamSourceInfo(selectedExamId)
                                       .primarySource,
@@ -1204,1080 +1026,149 @@ const ExamSimulator = () => {
                           </div>
                           <Progress value={progress} className="h-2" />
                         </div>
-
-                        {/* Keyboard shortcuts display */}
-                        {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <KeyboardShortcutsDisplay isCompact={true} />
-                      </div> */}
                       </div>
                     )}
                   </CardHeader>
 
                   <CardContent className="p-6">
-                    {currentView === "progress" && (
-                      <ProgressReport
-                        userProgress={userProgress}
-                        onViewExamDetails={handleViewExamDetails}
-                      />
-                    )}
+                    {/* Secondary views */}
+                    <Suspense
+                      fallback={
+                        <div className="text-center py-8 text-muted-foreground">
+                          Carregando...
+                        </div>
+                      }
+                    >
+                      {currentView === "progress" && (
+                        <ProgressReport
+                          userProgress={userProgress}
+                          onViewExamDetails={handleViewExamDetails}
+                        />
+                      )}
+                      {currentView === "favorites" && (
+                        <FavoriteQuestions
+                          favoriteQuestions={userProgress.favoriteQuestions}
+                          questions={getAllQuestions()}
+                          onRemoveFavorite={removeFavoriteQuestion}
+                          onUpdateFavorite={updateFavoriteQuestion}
+                          onViewQuestion={handleViewQuestion}
+                        />
+                      )}
+                      {currentView === "exam-details" &&
+                        selectedExamDetails && (
+                          <ExamDetails
+                            examResult={selectedExamDetails}
+                            questions={getAllQuestions()}
+                            onBack={() => setCurrentView("progress")}
+                            onToggleFavorite={handleToggleFavorite}
+                            isFavoriteQuestion={isFavoriteQuestion}
+                          />
+                        )}
+                    </Suspense>
 
-                    {currentView === "favorites" && (
-                      <FavoriteQuestions
-                        favoriteQuestions={userProgress.favoriteQuestions}
-                        questions={getAllQuestions()}
-                        onRemoveFavorite={removeFavoriteQuestion}
-                        onUpdateFavorite={updateFavoriteQuestion}
-                        onViewQuestion={handleViewQuestion}
-                      />
-                    )}
-
-                    {currentView === "exam-details" && selectedExamDetails && (
-                      <ExamDetails
-                        examResult={selectedExamDetails}
-                        questions={getAllQuestions()}
-                        onBack={() => setCurrentView("progress")}
-                        onToggleFavorite={handleToggleFavorite}
-                        isFavoriteQuestion={isFavoriteQuestion}
-                      />
-                    )}
-
+                    {/* Selection screen */}
                     {currentView === "exam" && !isActive && !showScore && (
-                      <div className="space-y-8 py-8">
-                        <div className="text-center space-y-2">
-                          <h2 className="text-2xl font-bold">
-                            Bem-vindo ao Simulador de Exame da AWS
-                          </h2>
-                          <p className="text-gray-500">
-                            Escolha seu modo de estudo e comece a praticar
-                          </p>
-                        </div>
-
-                        <div className="max-w-4xl mx-auto space-y-10">
-                          {/* 1. Certification Selection */}
-                          <div className="space-y-4">
-                            <label className="text-xl font-semibold flex items-center gap-2">
-                              <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                1
-                              </span>
-                              Selecione a Certificação
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              {certifications.map((cert) => {
-                                const availableBanks =
-                                  certificationBanks[cert.id] || [];
-                                const totalQuestions =
-                                  simulados[`${cert.id}-FULL`]?.length ||
-                                  (availableBanks.length > 0
-                                    ? simulados[availableBanks[0]]?.length
-                                    : 0);
-                                const isAvailable = availableBanks.length > 0;
-                                const isSelected =
-                                  selectedCertification === cert.id;
-
-                                return (
-                                  <div
-                                    key={cert.id}
-                                    onClick={() => {
-                                      if (isAvailable) {
-                                        setSelectedCertification(cert.id);
-                                        setSelectedExamId(""); // Reset specific bank selection
-                                        setSelectedDomains([]);
-                                        setSelectedCategories([]);
-                                      }
-                                    }}
-                                    className={`relative p-6 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-4 ${
-                                      !isAvailable
-                                        ? "opacity-60 cursor-not-allowed bg-muted border-border grayscale-[0.5]"
-                                        : isSelected
-                                          ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-xl shadow-primary/10 scale-105"
-                                          : "border-border hover:border-primary/40 hover:shadow-lg cursor-pointer bg-card"
-                                    }`}
-                                  >
-                                    {!isAvailable && (
-                                      <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded-full">
-                                        Em Breve
-                                      </span>
-                                    )}
-                                    {isSelected && (
-                                      <div className="absolute top-3 right-3 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                                        <Check className="w-4 h-4" />
-                                      </div>
-                                    )}
-                                    <div className="h-32 flex items-center justify-center">
-                                      <img
-                                        src={cert.img}
-                                        alt={cert.title}
-                                        className="max-w-full max-h-full object-contain drop-shadow-md"
-                                      />
-                                    </div>
-                                    <div>
-                                      <h3 className="font-bold text-foreground text-sm leading-tight">
-                                        {cert.title}
-                                      </h3>
-                                      <p className="text-xs text-muted-foreground mt-2 font-medium">
-                                        {isAvailable
-                                          ? `${totalQuestions} questões disponíveis`
-                                          : "Sem questões ainda"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* 2. Study Mode Selection */}
-                          {selectedCertification && (
-                            <div className="space-y-4 animate-in fade-in duration-500">
-                              <label className="text-xl font-semibold flex items-center gap-2">
-                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                  2
-                                </span>
-                                Modo de Estudo
-                              </label>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div
-                                  onClick={() => setStudyMode("practice")}
-                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                                    studyMode === "practice"
-                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
-                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div
-                                      className={`p-2 rounded-lg ${studyMode === "practice" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                                    >
-                                      <BookOpen className="w-5 h-5" />
-                                    </div>
-                                    <h4 className="font-bold text-foreground">
-                                      Prática
-                                    </h4>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Feedback detalhado, explicações e respostas
-                                    logo após cada questão.
-                                  </p>
-                                </div>
-
-                                <div
-                                  onClick={() => setStudyMode("exam")}
-                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                                    studyMode === "exam"
-                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
-                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div
-                                      className={`p-2 rounded-lg ${studyMode === "exam" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                                    >
-                                      <Timer className="w-5 h-5" />
-                                    </div>
-                                    <h4 className="font-bold text-foreground">
-                                      Exame Simulado
-                                    </h4>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Ambiente realista. Tempo cronometrado e nota
-                                    final apenas no encerramento do teste.
-                                  </p>
-                                </div>
-
-                                <div
-                                  onClick={() => setStudyMode("domain_focus")}
-                                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                                    studyMode === "domain_focus"
-                                      ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.02]"
-                                      : "border-border hover:border-primary/40 bg-card hover:-translate-y-1"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div
-                                      className={`p-2 rounded-lg ${studyMode === "domain_focus" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                                    >
-                                      <Target className="w-5 h-5" />
-                                    </div>
-                                    <h4 className="font-bold text-foreground">
-                                      Foco Direcionado
-                                    </h4>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Foque nos seus pontos fracos escolhendo
-                                    domínios ou categorias específicas para
-                                    treinar.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 3. Bank Selection */}
-                          {studyMode &&
-                            studyMode !== "domain_focus" &&
-                            selectedCertification && (
-                              <div className="space-y-4 animate-in fade-in duration-500 delay-150">
-                                <label className="text-xl font-semibold flex items-center gap-2">
-                                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                    3
-                                  </span>
-                                  Escolha o Banco de Questões
-                                </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {certificationBanks[selectedCertification]
-                                    .filter((bankId) => {
-                                      // For exam mode, hide banks with more than 100 questions (e.g., Infinite banks) to enforce realistic simulation
-                                      if (studyMode === "exam") {
-                                        return (
-                                          (simulados[bankId]?.length || 0) <=
-                                          100
-                                        );
-                                      }
-                                      return true;
-                                    })
-                                    .map((bankId) => {
-                                      const sourceInfo =
-                                        getExamSourceInfo(bankId);
-                                      const isSelected =
-                                        selectedExamId === bankId;
-                                      return (
-                                        <div
-                                          key={bankId}
-                                          onClick={() =>
-                                            handleExamSelection(bankId)
-                                          }
-                                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                            isSelected
-                                              ? "border-primary bg-primary/5 dark:bg-primary/20 shadow-md scale-[1.01]"
-                                              : "border-border hover:border-primary/40 bg-card hover:-translate-y-0.5"
-                                          }`}
-                                        >
-                                          <div className="flex justify-between items-start mb-2">
-                                            <h4 className="font-bold text-foreground text-sm pr-4">
-                                              {sourceInfo.name}
-                                            </h4>
-                                            {isSelected && (
-                                              <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                                            )}
-                                          </div>
-                                          <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
-                                            {sourceInfo.description}
-                                          </p>
-                                          <div className="mt-3 flex items-center gap-2 flex-wrap">
-                                            <Badge
-                                              variant="secondary"
-                                              className="text-[10px]"
-                                            >
-                                              {simulados[bankId]?.length || 0}{" "}
-                                              questões
-                                            </Badge>
-                                            <Badge
-                                              variant="outline"
-                                              className={`text-[10px] ${getSourceColor(sourceInfo.primarySource)}`}
-                                            >
-                                              {getSourceLabel(
-                                                sourceInfo.primarySource,
-                                              )}
-                                            </Badge>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* 4. Domain/Category Filters - Only show for domain_focus mode */}
-                          {studyMode === "domain_focus" &&
-                            selectedCertification && (
-                              <div className="space-y-4 animate-in fade-in duration-500">
-                                <label className="text-xl font-semibold flex items-center gap-2">
-                                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                    3
-                                  </span>
-                                  Filtros Específicos
-                                </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="space-y-3">
-                                    <label className="text-sm font-medium">
-                                      Domínios
-                                    </label>
-                                    <Select
-                                      onValueChange={(value: ExamDomainKey) => {
-                                        if (
-                                          value &&
-                                          !selectedDomains.includes(value)
-                                        ) {
-                                          setSelectedDomains([
-                                            ...selectedDomains,
-                                            value,
-                                          ]);
-                                        }
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Adicionar domínio" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="DOMAIN_1">
-                                          Conceitos de Nuvem
-                                        </SelectItem>
-                                        <SelectItem value="DOMAIN_2">
-                                          Segurança e Conformidade
-                                        </SelectItem>
-                                        <SelectItem value="DOMAIN_3">
-                                          Tecnologia
-                                        </SelectItem>
-                                        <SelectItem value="DOMAIN_4">
-                                          Faturamento e Preços
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {selectedDomains.length > 0 && (
-                                      <div className="flex flex-wrap gap-2">
-                                        {selectedDomains.map((domain) => (
-                                          <Badge
-                                            key={domain}
-                                            variant="secondary"
-                                            className="cursor-pointer"
-                                            onClick={() =>
-                                              setSelectedDomains(
-                                                selectedDomains.filter(
-                                                  (d) => d !== domain,
-                                                ),
-                                              )
-                                            }
-                                          >
-                                            {getDomainName(
-                                              selectedCertification ||
-                                                "CLF-C02",
-                                              domain,
-                                            )}{" "}
-                                            ×
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="space-y-3">
-                                    <label className="text-sm font-medium">
-                                      Categorias
-                                    </label>
-                                    <Select
-                                      onValueChange={(value: ExamCategory) => {
-                                        if (
-                                          value &&
-                                          !selectedCategories.includes(value)
-                                        ) {
-                                          setSelectedCategories([
-                                            ...selectedCategories,
-                                            value,
-                                          ]);
-                                        }
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Adicionar categoria" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="cloud_concepts">
-                                          Conceitos de Nuvem
-                                        </SelectItem>
-                                        <SelectItem value="security">
-                                          Segurança
-                                        </SelectItem>
-                                        <SelectItem value="technology">
-                                          Tecnologia
-                                        </SelectItem>
-                                        <SelectItem value="billing">
-                                          Faturamento
-                                        </SelectItem>
-                                        <SelectItem value="compute">
-                                          Computação
-                                        </SelectItem>
-                                        <SelectItem value="storage">
-                                          Armazenamento
-                                        </SelectItem>
-                                        <SelectItem value="networking">
-                                          Redes
-                                        </SelectItem>
-                                        <SelectItem value="database">
-                                          Banco de Dados
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {selectedCategories.length > 0 && (
-                                      <div className="flex flex-wrap gap-2">
-                                        {selectedCategories.map((category) => (
-                                          <Badge
-                                            key={category}
-                                            variant="secondary"
-                                            className="cursor-pointer"
-                                            onClick={() =>
-                                              setSelectedCategories(
-                                                selectedCategories.filter(
-                                                  (c) => c !== category,
-                                                ),
-                                              )
-                                            }
-                                          >
-                                            {category} ×
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                          {!checkingTerms && !termsAccepted && (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                              <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0">
-                                  <svg
-                                    className="h-5 w-5 text-yellow-400"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                                <div className="flex-1">
-                                  <h3 className="text-sm font-medium text-yellow-800">
-                                    Termos de Serviço Requeridos
-                                  </h3>
-                                  <p className="text-sm text-yellow-700 mt-1">
-                                    Você deve aceitar nossos Termos de Serviço
-                                    antes de iniciar o exame.
-                                  </p>
-                                  <div className="mt-3 flex flex-col gap-2">
-                                    <TermsNavigationLinks
-                                      variant="inline"
-                                      className="text-sm text-yellow-800 hover:text-yellow-900"
-                                    />
-                                    <button
-                                      onClick={async () => {
-                                        setCheckingTerms(true);
-                                        try {
-                                          const hasConsent =
-                                            await hasValidConsent(
-                                              termsConfig.currentVersion,
-                                              termsConfig.gracePeriodDays,
-                                            );
-                                          setTermsAccepted(hasConsent);
-                                        } catch (error) {
-                                          console.error(
-                                            "Error rechecking terms:",
-                                            error,
-                                          );
-                                        } finally {
-                                          setCheckingTerms(false);
-                                        }
-                                      }}
-                                      className="text-xs text-yellow-800 hover:text-yellow-900 underline text-left"
-                                      disabled={checkingTerms}
-                                    >
-                                      {checkingTerms
-                                        ? "Verificando..."
-                                        : "Verificar novamente"}
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <Button
-                            onClick={startExam}
-                            disabled={
-                              !selectedCertification ||
-                              checkingTerms ||
-                              !termsAccepted ||
-                              (studyMode !== "domain_focus" && !selectedExamId)
-                            }
-                            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-                          >
-                            {checkingTerms && "Verificando Termos..."}
-                            {!checkingTerms &&
-                              !termsAccepted &&
-                              "Aceite os Termos para Continuar"}
-                            {!checkingTerms &&
-                              termsAccepted &&
-                              studyMode === "practice" &&
-                              "Iniciar Modo de Prática"}
-                            {!checkingTerms &&
-                              termsAccepted &&
-                              studyMode === "exam" &&
-                              "Iniciar Exame Simulado"}
-                            {!checkingTerms &&
-                              termsAccepted &&
-                              studyMode === "domain_focus" &&
-                              "Iniciar Estudo Focado"}
-                          </Button>
-                        </div>
-                      </div>
+                      <ExamSelectionScreen
+                        certifications={certifications}
+                        certificationBanks={certificationBanks}
+                        selectedCertification={selectedCertification}
+                        selectedExamId={selectedExamId}
+                        studyMode={studyMode}
+                        selectedDomains={selectedDomains}
+                        selectedCategories={selectedCategories}
+                        checkingTerms={checkingTerms}
+                        termsAccepted={termsAccepted}
+                        isLoadingQuestions={isLoadingQuestions}
+                        onSelectCertification={(id) => {
+                          setSelectedCertification(id);
+                          setSelectedExamId("");
+                          setSelectedDomains([]);
+                          setSelectedCategories([]);
+                        }}
+                        onSelectStudyMode={setStudyMode}
+                        onSelectBank={(bankId) => {
+                          setSelectedExamId(bankId);
+                          setSelectedSimulado([]);
+                        }}
+                        onAddDomain={(d) =>
+                          setSelectedDomains((prev) => [...prev, d])
+                        }
+                        onRemoveDomain={(d) =>
+                          setSelectedDomains((prev) =>
+                            prev.filter((x) => x !== d),
+                          )
+                        }
+                        onAddCategory={(c) =>
+                          setSelectedCategories((prev) => [...prev, c])
+                        }
+                        onRemoveCategory={(c) =>
+                          setSelectedCategories((prev) =>
+                            prev.filter((x) => x !== c),
+                          )
+                        }
+                        onStartExam={startExam}
+                        onRecheckTerms={handleRecheckTerms}
+                        getDomainName={getDomainName}
+                      />
                     )}
 
+                    {/* Active exam question view */}
                     {currentView === "exam" &&
                       isActive &&
                       !showScore &&
                       currentQuestion && (
-                        <div className="space-y-6">
-                          {/* background color: #bg-background text-foreground */}
-                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  {studyMode === "practice"
-                                    ? "Modo Prática"
-                                    : studyMode === "exam"
-                                      ? "Modo Exame"
-                                      : "Estudo Focado"}
-                                </Badge>
-                                {studyMode !== "exam" && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    {currentQuestion.difficulty}
-                                  </Badge>
-                                )}
-                                {/* {selectedExamId && (
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
-                            >
-                              {getSourceIcon(
-                                getExamSourceInfo(selectedExamId).primarySource,
-                              )}{" "}
-                              {getSourceLabel(
-                                getExamSourceInfo(selectedExamId).primarySource,
-                              )}
-                            </Badge>
-                          )} */}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleToggleFavorite(currentQuestion.id)
-                                  }
-                                  className={
-                                    isFavoriteQuestion(currentQuestion.id)
-                                      ? "text-yellow-500"
-                                      : "text-gray-400"
-                                  }
-                                  title="Adicionar aos Favoritos"
-                                >
-                                  <Star
-                                    className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
-                                  />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={toggleFullscreen}
-                                  className="text-gray-400 hover:text-gray-600"
-                                  title={
-                                    isFullscreen
-                                      ? "Minimizar (Sair do Modo Foco)"
-                                      : "Tela Cheia (Modo Foco)"
-                                  }
-                                >
-                                  {isFullscreen ? (
-                                    <Minimize className="h-4 w-4" />
-                                  ) : (
-                                    <Maximize className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setShowShortcutsModal(true)}
-                                  className="text-gray-400 hover:text-gray-600"
-                                  title="Atalhos do Teclado (Pressione ? para abrir)"
-                                >
-                                  <Keyboard className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <h3 className="text-lg font-medium text-gray-900 flex-1">
-                                {currentQuestion.text}
-                              </h3>
-                              {currentQuestion.text_en && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-                                    >
-                                      <Languages className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent
-                                    side="left"
-                                    className="max-w-md p-3 bg-white border shadow-lg"
-                                  >
-                                    <div className="space-y-2">
-                                      <p className="text-xs font-medium text-blue-600">
-                                        English:
-                                      </p>
-                                      <p className="text-lg">
-                                        {currentQuestion.text_en}
-                                      </p>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              )}
-                            </div>
-                            {currentQuestion.type === "multiple_choice" && (
-                              <p className="text-sm text-blue-600 mt-2 font-medium">
-                                Seleciona todas as opções corretas
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-3">
-                            {currentOptions.map((option, index) => (
-                              <div key={option.id} className="relative">
-                                <Button
-                                  variant={getButtonVariant(option.id)}
-                                  className="w-full justify-between text-left p-4 h-auto whitespace-normal"
-                                  onClick={() =>
-                                    !showExplanation &&
-                                    (currentQuestion.type === "multiple_choice"
-                                      ? handleAnswerToggle(option.id)
-                                      : setSelectedAnswers([option.id]))
-                                  }
-                                  disabled={showExplanation}
-                                >
-                                  <span className="flex-1 pr-3">
-                                    {option.text}
-                                  </span>
-                                  {!showExplanation && (
-                                    <kbd className="px-2 py-1 text-xs bg-white/80 border rounded font-mono flex-shrink-0">
-                                      {index + 1}
-                                    </kbd>
-                                  )}
-                                </Button>
-                                {/* Options in English */}
-                                {/* {option.text_en && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800 p-1 h-auto"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Languages className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="left"
-                                  className="max-w-sm p-3 bg-white border shadow-lg"
-                                >
-                                  <div className="space-y-2">
-                                    <p className="text-xs font-medium text-blue-600">English:</p>
-                                    <p className="text-sm">{option.text_en}</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            )} */}
-                              </div>
-                            ))}
-                          </div>
-
-                          {!showExplanation && (
-                            <div className="flex flex-col sm:flex-row gap-3">
-                              {/* Navigation buttons */}
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  onClick={handleKeyboardPreviousQuestion}
-                                  disabled={currentQuestionIndex === 0}
-                                  className="flex items-center gap-2"
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                  Anterior
-                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                                    ←
-                                  </kbd>
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  onClick={handleKeyboardNextQuestion}
-                                  disabled={
-                                    currentQuestionIndex ===
-                                    selectedSimulado.length - 1
-                                  }
-                                  className="flex items-center gap-2"
-                                >
-                                  Próxima
-                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                                    →
-                                  </kbd>
-                                  <ChevronRight className="w-4 h-4" />
-                                </Button>
-                              </div>
-
-                              {/* Action buttons */}
-                              <div className="flex gap-2">
-                                <Button
-                                  onClick={handleSubmitAnswers}
-                                  disabled={selectedAnswers.length === 0}
-                                  className="flex items-center gap-2"
-                                >
-                                  {studyMode === "practice"
-                                    ? "Verificar Resposta"
-                                    : currentQuestionIndex ===
-                                        selectedSimulado.length - 1
-                                      ? "Finalizar Exame"
-                                      : "Próxima Questão"}
-                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 border border-white/30 rounded">
-                                    Enter
-                                  </kbd>
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  onClick={handleSkipQuestion}
-                                  className="flex items-center gap-2"
-                                >
-                                  Pular Questão
-                                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                                    Space
-                                  </kbd>
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-
-                          {showExplanation && (
-                            <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
-                              <div className="flex items-center gap-2">
-                                {answerStatus === "correct" && (
-                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                                    Resposta Correta
-                                  </Badge>
-                                )}
-                                {answerStatus === "partial" && (
-                                  <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                                    Parcialmente Correta
-                                  </Badge>
-                                )}
-                                {answerStatus === "incorrect" && (
-                                  <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                                    Resposta Incorreta
-                                  </Badge>
-                                )}
-                              </div>
-
-                              <div className="space-y-4">
-                                <div className="space-y-3">
-                                  <h3 className="font-semibold text-green-700">
-                                    Respostas Corretas:
-                                  </h3>
-                                  <ul className="space-y-3">
-                                    {correctOptions.map((option) => (
-                                      <li
-                                        key={option.id}
-                                        className="flex gap-3"
-                                      >
-                                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                                        <div className="flex-1">
-                                          <div className="flex items-start gap-2">
-                                            <p className="font-medium flex-1">
-                                              {option.text}
-                                            </p>
-                                            {/* Explanation in English  */}
-                                            {/* {option.text_en && (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-                                              >
-                                                <Languages className="h-3 w-3" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent
-                                              side="left"
-                                              className="max-w-sm p-3 bg-white border shadow-lg"
-                                            >
-                                              <div className="space-y-2">
-                                                <p className="text-xs font-medium text-blue-600">English:</p>
-                                                <p className="text-sm">{option.text_en}</p>
-                                                {option.explanation_en && (
-                                                  <>
-                                                    <p className="text-xs font-medium text-blue-600">Explanation:</p>
-                                                    <p className="text-sm">{option.explanation_en}</p>
-                                                  </>
-                                                )}
-                                              </div>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        )} */}
-                                          </div>
-                                          <p className="text-sm text-gray-600 mt-1">
-                                            {option.explanation}
-                                          </p>
-                                        </div>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-
-                                <Separator />
-
-                                <div className="space-y-3">
-                                  <h3 className="font-semibold text-red-700">
-                                    Outras Opções Explicadas:
-                                  </h3>
-                                  <ul className="space-y-3">
-                                    {incorrectOptions.map((option) => (
-                                      <li key={option.id} className="space-y-1">
-                                        <div className="flex items-start gap-2">
-                                          <p className="font-medium flex-1">
-                                            {option.text}
-                                          </p>
-                                          {option.text_en && (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-                                                >
-                                                  <Languages className="h-3 w-3" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent
-                                                side="left"
-                                                className="max-w-sm p-3 bg-white border shadow-lg"
-                                              >
-                                                <div className="space-y-2">
-                                                  <p className="text-xs font-medium text-blue-600">
-                                                    English:
-                                                  </p>
-                                                  <p className="text-sm">
-                                                    {option.text_en}
-                                                  </p>
-                                                  {option.explanation_en && (
-                                                    <>
-                                                      <p className="text-xs font-medium text-blue-600">
-                                                        Explanation:
-                                                      </p>
-                                                      <p className="text-sm">
-                                                        {option.explanation_en}
-                                                      </p>
-                                                    </>
-                                                  )}
-                                                </div>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          )}
-                                        </div>
-                                        <p className="text-sm text-gray-600">
-                                          {option.explanation}
-                                        </p>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              </div>
-
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-gray-700">
-                                  References:
-                                </h4>
-                                <ul className="space-y-1">
-                                  {currentQuestion.references.map(
-                                    (reference, index) => (
-                                      <li key={index}>
-                                        <a
-                                          href={reference}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline text-sm"
-                                        >
-                                          {reference}
-                                        </a>
-                                      </li>
-                                    ),
-                                  )}
-                                </ul>
-                              </div>
-
-                              <Button
-                                onClick={handleNextQuestion}
-                                className="w-full sm:w-auto"
-                                // variant={
-                                //   answerStatus === "correct" ? "default" : "secondary"
-                                // }
-                              >
-                                {currentQuestionIndex ===
-                                selectedSimulado.length - 1 ? (
-                                  "Finalizar Exame"
-                                ) : (
-                                  <>
-                                    Proxima Questão
-                                    <ChevronRight className="w-4 h-4 ml-2" />
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                        <ActiveExamView
+                          currentQuestion={currentQuestion}
+                          currentOptions={currentOptions}
+                          correctOptions={correctOptions}
+                          incorrectOptions={incorrectOptions}
+                          currentQuestionIndex={currentQuestionIndex}
+                          totalQuestions={selectedSimulado.length}
+                          selectedAnswers={selectedAnswers}
+                          showExplanation={showExplanation}
+                          answerStatus={answerStatus}
+                          studyMode={studyMode}
+                          isFullscreen={isFullscreen}
+                          isFavorite={isFavoriteQuestion(currentQuestion.id)}
+                          onAnswerToggle={handleAnswerToggle}
+                          onSelectSingleAnswer={(id) =>
+                            setSelectedAnswers([id])
+                          }
+                          onSubmitAnswers={handleSubmitAnswers}
+                          onNextQuestion={handleNextQuestion}
+                          onPreviousQuestion={handleKeyboardPreviousQuestion}
+                          onSkipQuestion={handleSkipQuestion}
+                          onToggleFavorite={() =>
+                            handleToggleFavorite(currentQuestion.id)
+                          }
+                          onToggleFullscreen={toggleFullscreen}
+                          onOpenShortcuts={() => setShowShortcutsModal(true)}
+                          getButtonVariant={getButtonVariant}
+                        />
                       )}
 
+                    {/* Score screen */}
                     {currentView === "exam" && showScore && (
-                      <div className="text-center space-y-6 py-8">
-                        <div className="inline-flex p-4 bg-background text-foreground rounded-full">
-                          <Award className="w-12 h-12 text-blue-600" />
-                        </div>
-
-                        <div className="space-y-2">
-                          <h2 className="text-2xl font-bold">
-                            {studyMode === "practice"
-                              ? "Prática Concluída!"
-                              : studyMode === "exam"
-                                ? "Exame Concluído!"
-                                : "Estudo Focado Concluído!"}
-                          </h2>
-                          {endMessage && (
-                            <p className="text-gray-600">{endMessage}</p>
-                          )}
-                        </div>
-
-                        <div className="max-w-xs mx-auto p-6 bg-gray-50 rounded-lg">
-                          <div className="text-4xl font-bold text-blue-600">
-                            {Math.round(
-                              (score / selectedSimulado.length) * 100,
-                            )}
-                            %
-                          </div>
-                          <p className="text-gray-600 mt-2">
-                            {score} corretas de {selectedSimulado.length}{" "}
-                            questões
-                          </p>
-                          {simulatedExam?.timeSpent && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              Tempo gasto:{" "}
-                              {Math.floor(simulatedExam.timeSpent / 60)}m{" "}
-                              {simulatedExam.timeSpent % 60}s
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Show detailed results for exam mode */}
-                        {studyMode === "exam" && (
-                          <div className="max-w-2xl mx-auto space-y-4">
-                            <h3 className="text-lg font-semibold">
-                              Revisão das Respostas
-                            </h3>
-                            <div className="space-y-3 max-h-96 overflow-y-auto">
-                              {selectedSimulado.map((question, index) => {
-                                const userAnswer = allAnswers[question.id];
-                                const correctOptions = question.options.filter(
-                                  (opt) => opt.isCorrect,
-                                );
-
-                                return (
-                                  <div
-                                    key={question.id}
-                                    className="p-4 border rounded-lg text-left"
-                                  >
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <Badge
-                                        variant={
-                                          userAnswer?.status === "correct"
-                                            ? "default"
-                                            : "destructive"
-                                        }
-                                      >
-                                        Questão {index + 1}
-                                      </Badge>
-                                      <Badge variant="outline">
-                                        {question.category}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-sm mb-2">
-                                      {question.text}
-                                    </p>
-                                    <div className="space-y-1 text-xs">
-                                      <p>
-                                        <strong>Resposta correta:</strong>{" "}
-                                        {correctOptions
-                                          .map((opt) => opt.text)
-                                          .join(", ")}
-                                      </p>
-                                      {userAnswer && (
-                                        <p>
-                                          <strong>Sua resposta:</strong>{" "}
-                                          {userAnswer.answers
-                                            .map(
-                                              (id) =>
-                                                question.options.find(
-                                                  (opt) => opt.id === id,
-                                                )?.text,
-                                            )
-                                            .join(", ")}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex gap-4 justify-center flex-wrap">
-                          <Button
-                            onClick={resetExam}
-                            variant="outline"
-                            className="gap-2"
-                          >
-                            <BookOpen className="w-4 h-4" />
-                            Escolher Outro Exame
-                          </Button>
-                          <Button onClick={startExam} className="gap-2">
-                            <RotateCcw className="w-4 h-4" />
-                            Tentar Novamente
-                          </Button>
-                          {currentExamResult && (
-                            <Button
-                              onClick={() => {
-                                handleViewExamDetails(currentExamResult);
-                              }}
-                              variant="secondary"
-                              className="gap-2"
-                            >
-                              <BarChart3 className="w-4 h-4" />
-                              Ver Detalhes do Exame
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <ExamScoreScreen
+                        score={score}
+                        totalQuestions={selectedSimulado.length}
+                        studyMode={studyMode}
+                        endMessage={endMessage}
+                        simulatedExam={simulatedExam}
+                        currentExamResult={currentExamResult}
+                        allAnswers={allAnswers}
+                        selectedSimulado={selectedSimulado}
+                        onResetExam={resetExam}
+                        onRetryExam={startExam}
+                        onViewExamDetails={handleViewExamDetails}
+                      />
                     )}
                   </CardContent>
                 </Card>
               </div>
             </div>
 
-            {/* Contextual Terms Links */}
+            {/* Footer terms links */}
             <div className="mt-6 pt-4 border-t border-border">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-2">
@@ -2289,7 +1180,6 @@ const ExamSimulator = () => {
           </div>
         </div>
 
-        {/* Keyboard Shortcuts Modal */}
         <KeyboardShortcutsModal
           isOpen={showShortcutsModal}
           onClose={() => setShowShortcutsModal(false)}
