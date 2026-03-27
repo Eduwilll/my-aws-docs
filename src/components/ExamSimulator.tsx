@@ -866,7 +866,7 @@ const ExamSimulator = () => {
                     em cenários reais. Boa sorte!
                   </p>
                 </div> */}
-                <div className="flex flex-col lg:flex-row items-start justify-center gap-8 max-w-[1650px] mx-auto px-4 lg:px-0 transition-all duration-300">
+                <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 max-w-[1650px] mx-auto px-4 lg:px-0 transition-all duration-300">
                   {/* Sidebar - Aligned with the top of the Card */}
                   <div
                     className={`hidden lg:block transition-all duration-300 ${

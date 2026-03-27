@@ -51,7 +51,7 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
     <div
       className={`flex flex-col border-r bg-card transition-all duration-300 ${
         isCollapsed ? "w-20" : "w-80"
-      } h-[calc(100vh-2rem)] rounded-[2rem] shadow-xl overflow-hidden glass-card border-none`}
+      } h-full rounded-[2rem] shadow-xl overflow-hidden glass-card border-none`}
     >
       <div className="p-6 flex items-center justify-between">
         {!isCollapsed && (
