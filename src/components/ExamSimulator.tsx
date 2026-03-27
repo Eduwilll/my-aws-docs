@@ -852,7 +852,7 @@ const ExamSimulator = () => {
         onError={handleTermsError}
       >
         <div className="min-h-screen bg-transparent text-foreground transition-colors duration-500">
-          <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto transition-all duration-500">
+          <div className="p-4 md:p-6 lg:p-8 max-w-[1700px] mx-auto transition-all duration-500">
             {/* 1. SELECTION / PROGRESS / FAVORITES VIEW (Not active exam) */}
             {!isActive && (
               <div className="w-full space-y-8 animate-in fade-in duration-700">
@@ -866,7 +866,7 @@ const ExamSimulator = () => {
                     em cenários reais. Boa sorte!
                   </p>
                 </div> */}
-                <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 max-w-[1650px] mx-auto px-4 lg:px-0 transition-all duration-300">
+                <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 max-w-full mx-auto px-4 lg:px-0 transition-all duration-300">
                   {/* Sidebar - Aligned with the top of the Card */}
                   <div
                     className={`hidden lg:block transition-all duration-300 ${
@@ -1023,7 +1023,7 @@ const ExamSimulator = () => {
             {/* 2. ACTIVE EXAM VIEW (Focus Mode) - FULLY CENTERED */}
             {isActive && !showScore && (
               <div
-                className={`flex flex-col lg:flex-row gap-6 w-full justify-center items-start animate-in fade-in duration-500 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
+                className={`flex flex-col lg:flex-row gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
               >
                 {/* Exam Navigation Panel */}
                 {isSidebarOpen && (
@@ -1049,7 +1049,7 @@ const ExamSimulator = () => {
 
                 {/* Question Area */}
                 <div
-                  className={`flex-1 order-1 lg:order-2 sm:order-1 ${isFullscreen ? "max-w-7xl mx-auto" : "w-full"}`}
+                  className={`flex-1 min-w-0 order-1 lg:order-2 sm:order-1 w-full`}
                 >
                   <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
                     <CardHeader className="space-y-4 pb-4 pt-8 px-8 border-b border-border/10 bg-muted/5">
