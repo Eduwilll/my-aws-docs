@@ -856,16 +856,16 @@ const ExamSimulator = () => {
             {/* 1. SELECTION / PROGRESS / FAVORITES VIEW (Not active exam) */}
             {!isActive && (
               <div className="w-full space-y-8 animate-in fade-in duration-700">
-                {/* Header Title - Now outside the flex row for perfect alignment */}
-                <div className="mb-10 text-center">
-                  <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-gradient">
+                {/* Header Title  */}
+                {/* <div className="mb-10 text-center">
+                  <h1 className="text-4xl md:text-5xl font-extrabold text-gradient tracking-tight">
                     Simulador de Exame
                   </h1>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                     Prepare-se para sua certificação AWS com perguntas baseadas
                     em cenários reais. Boa sorte!
                   </p>
-                </div>
+                </div> */}
                 <div className="flex flex-col lg:flex-row items-start justify-center gap-8 max-w-[1650px] mx-auto px-4 lg:px-0 transition-all duration-300">
                   {/* Sidebar - Aligned with the top of the Card */}
                   <div
@@ -893,8 +893,8 @@ const ExamSimulator = () => {
                   {/* Main Content Area for Selection/Progress */}
                   <div className="flex-1 w-full space-y-6">
                     <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
-                      <CardHeader className="space-y-4 pb-2 pt-8 px-8">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      {/* <CardHeader className="space-y-4 pb-2 pt-8 px-8"> */}
+                      {/* <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                           <div className="space-y-1">
                             <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
                               AWS Cloud Practitioner
@@ -914,8 +914,8 @@ const ExamSimulator = () => {
                               <Keyboard className="w-4 h-4 mr-2" /> Atalhos
                             </Button>
                           </div>
-                        </div>
-                      </CardHeader>
+                        </div> */}
+                      {/* </CardHeader> */}
 
                       <CardContent className="p-6 md:p-8">
                         <Suspense
@@ -1073,11 +1073,12 @@ const ExamSimulator = () => {
                             )}
                           </Button>
                           <div className="space-y-1">
-                            <CardTitle className="text-2xl md:text-3xl font-extrabold text-gradient">
+                            {/* TODO: Colocar o nome do exame aqui  */}
+                            {/* <CardTitle className="text-2xl md:text-3xl font-extrabold text-gradient">
                               AWS Cloud Practitioner
-                            </CardTitle>
+                            </CardTitle> */}
                             {studyMode === "exam" && (
-                              <div className="flex items-center gap-2 text-blue-600 font-mono text-lg font-bold">
+                              <div className="flex items-center gap-2 text-gray-600 font-mono text-lg font-bold">
                                 <Timer className="w-4 h-4" />
                                 {formatTime(timeLeft)}
                               </div>

@@ -74,12 +74,13 @@ export function ExamSelectionScreen({
 }: ExamSelectionScreenProps) {
   return (
     <div className="space-y-8 py-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">
-          Bem-vindo ao Simulador de Exame da AWS
-        </h2>
-        <p className="text-gray-500">
-          Escolha seu modo de estudo e comece a praticar
+      <div className="mb-10 text-center">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gradient tracking-tight">
+          Simulador de Exame
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Prepare-se para sua certificação AWS com perguntas baseadas em
+          cenários reais. Boa sorte!
         </p>
       </div>
 
