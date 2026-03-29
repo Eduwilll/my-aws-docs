@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -201,6 +201,27 @@ const ExamSimulator = () => {
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
+  const activeExamRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to active exam when it starts
+  useEffect(() => {
+    if (isActive && activeExamRef.current) {
+      activeExamRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [isActive]);
+
+  // Scroll to top of question area when question index changes
+  useEffect(() => {
+    if (isActive && activeExamRef.current) {
+      activeExamRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [currentQuestionIndex]);
 
   // ── Stable userId
   const [userId] = useState(() =>
@@ -1023,7 +1044,8 @@ const ExamSimulator = () => {
             {/* 2. ACTIVE EXAM VIEW (Focus Mode) - FULLY CENTERED */}
             {isActive && !showScore && (
               <div
-                className={`flex flex-col lg:flex-row gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
+                ref={activeExamRef}
+                className={`flex flex-col lg:flex-row gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 scroll-mt-24 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
               >
                 {/* Exam Navigation Panel */}
                 {isSidebarOpen && (

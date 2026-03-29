@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,6 +72,31 @@ export function ExamSelectionScreen({
   onRecheckTerms,
   getDomainName,
 }: ExamSelectionScreenProps) {
+  const step2Ref = useRef<HTMLDivElement>(null);
+  const step3Ref = useRef<HTMLDivElement>(null);
+  const step4Ref = useRef<HTMLDivElement>(null);
+
+  // Scroll to Step 2 when certification is selected
+  useEffect(() => {
+    if (selectedCertification && step2Ref.current) {
+      step2Ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedCertification]);
+
+  // Scroll to Step 3 when study mode is selected
+  useEffect(() => {
+    if (studyMode && step3Ref.current) {
+      step3Ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [studyMode]);
+
+  // Scroll to Step 4 when bank questions is selected
+  useEffect(() => {
+    if (selectedExamId && step4Ref.current) {
+      step4Ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedExamId]);
+
   return (
     <div className="space-y-8 py-8">
       <div className="mb-10 text-center">
@@ -148,7 +173,10 @@ export function ExamSelectionScreen({
 
         {/* Step 2: Study Mode */}
         {selectedCertification && (
-          <div className="space-y-4 animate-in fade-in duration-500">
+          <div
+            ref={step2Ref}
+            className="space-y-4 animate-in fade-in duration-500 scroll-mt-24"
+          >
             <label className="text-xl font-semibold flex items-center gap-2">
               <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                 2
@@ -204,7 +232,10 @@ export function ExamSelectionScreen({
 
         {/* Step 3: Bank Selection (practice/exam modes only) */}
         {studyMode && studyMode !== "domain_focus" && selectedCertification && (
-          <div className="space-y-4 animate-in fade-in duration-500 delay-150">
+          <div
+            ref={step3Ref}
+            className="space-y-4 animate-in fade-in duration-500 delay-150 scroll-mt-24"
+          >
             <label className="text-xl font-semibold flex items-center gap-2">
               <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                 3
@@ -263,7 +294,10 @@ export function ExamSelectionScreen({
 
         {/* Step 3 (domain_focus): Domain/Category filters */}
         {studyMode === "domain_focus" && selectedCertification && (
-          <div className="space-y-4 animate-in fade-in duration-500">
+          <div
+            ref={step3Ref}
+            className="space-y-4 animate-in fade-in duration-500 scroll-mt-24"
+          >
             <label className="text-xl font-semibold flex items-center gap-2">
               <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                 3
@@ -398,39 +432,41 @@ export function ExamSelectionScreen({
         )}
 
         {/* Start button */}
-        <Button
-          onClick={onStartExam}
-          disabled={
-            !selectedCertification ||
-            checkingTerms ||
-            !termsAccepted ||
-            (studyMode !== "domain_focus" && !selectedExamId) ||
-            isLoadingQuestions
-          }
-          className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-        >
-          {isLoadingQuestions && "Carregando questões..."}
-          {!isLoadingQuestions && checkingTerms && "Verificando Termos..."}
-          {!isLoadingQuestions &&
-            !checkingTerms &&
-            !termsAccepted &&
-            "Aceite os Termos para Continuar"}
-          {!isLoadingQuestions &&
-            !checkingTerms &&
-            termsAccepted &&
-            studyMode === "practice" &&
-            "Iniciar Modo de Prática"}
-          {!isLoadingQuestions &&
-            !checkingTerms &&
-            termsAccepted &&
-            studyMode === "exam" &&
-            "Iniciar Exame Simulado"}
-          {!isLoadingQuestions &&
-            !checkingTerms &&
-            termsAccepted &&
-            studyMode === "domain_focus" &&
-            "Iniciar Estudo Focado"}
-        </Button>
+        <div ref={step4Ref}>
+          <Button
+            onClick={onStartExam}
+            disabled={
+              !selectedCertification ||
+              checkingTerms ||
+              !termsAccepted ||
+              (studyMode !== "domain_focus" && !selectedExamId) ||
+              isLoadingQuestions
+            }
+            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+          >
+            {isLoadingQuestions && "Carregando questões..."}
+            {!isLoadingQuestions && checkingTerms && "Verificando Termos..."}
+            {!isLoadingQuestions &&
+              !checkingTerms &&
+              !termsAccepted &&
+              "Aceite os Termos para Continuar"}
+            {!isLoadingQuestions &&
+              !checkingTerms &&
+              termsAccepted &&
+              studyMode === "practice" &&
+              "Iniciar Modo de Prática"}
+            {!isLoadingQuestions &&
+              !checkingTerms &&
+              termsAccepted &&
+              studyMode === "exam" &&
+              "Iniciar Exame Simulado"}
+            {!isLoadingQuestions &&
+              !checkingTerms &&
+              termsAccepted &&
+              studyMode === "domain_focus" &&
+              "Iniciar Estudo Focado"}
+          </Button>
+        </div>
       </div>
     </div>
   );

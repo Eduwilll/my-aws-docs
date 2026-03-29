@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -70,6 +70,17 @@ export function ActiveExamView({
   onOpenShortcuts,
   getButtonVariant,
 }: ActiveExamViewProps) {
+  const explanationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showExplanation && explanationRef.current) {
+      explanationRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [showExplanation]);
+
   return (
     <div className="space-y-6">
       {/* Question header */}
@@ -252,7 +263,10 @@ export function ActiveExamView({
 
       {/* Explanation panel (after answer is submitted in practice mode) */}
       {showExplanation && (
-        <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
+        <div
+          ref={explanationRef}
+          className="space-y-6 bg-background text-foreground p-6 rounded-lg border scroll-mt-24"
+        >
           <div className="flex items-center gap-2">
             {answerStatus === "correct" && (
               <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
