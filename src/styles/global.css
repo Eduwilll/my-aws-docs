@@ -29,6 +29,21 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Custom Exam & Documentation Variables */
+    --exam-header-bg: 210 100% 98%;
+    --exam-header-border: 210 100% 94%;
+    --feedback-correct: 142 76% 36%;
+    --feedback-incorrect: 0 84% 60%;
+    
+    --sidebar-bg: var(--background);
+    --sidebar-border: var(--border);
+    --nav-active-bg: 210 100% 97%;
+    --nav-active-text: 221 83% 53%;
+    --nav-hover-bg: 210 40% 96%;
+    
+    --note-tag-bg: 210 100% 96%;
+    --note-tag-text: 210 100% 30%;
   }
 
   .dark {
@@ -56,6 +71,21 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Custom Dark Mode Adjustments */
+    --exam-header-bg: 217 33% 17% / 0.3;
+    --exam-header-border: 217 33% 25% / 0.1;
+    --feedback-correct: 142 70% 50%;
+    --feedback-incorrect: 0 84% 65%;
+    
+    --sidebar-bg: 224 71% 4%;
+    --sidebar-border: 216 34% 17%;
+    --nav-active-bg: 217 33% 17%;
+    --nav-active-text: 213 100% 70%;
+    --nav-hover-bg: 217 33% 15%;
+    
+    --note-tag-bg: 210 100% 20% / 0.3;
+    --note-tag-text: 210 100% 80%;
   }
 }
 
@@ -92,5 +122,61 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-500 to-pink-500;
+  }
+}
+
+@layer components {
+  /* Keyboard shortcuts & Numerals */
+  .kbd-shortcut {
+    @apply px-2 py-1 text-xs bg-muted text-muted-foreground border border-border rounded font-mono flex-shrink-0 shadow-sm transition-colors;
+  }
+
+  /* Exam Question Area Header */
+  .exam-header-area {
+    @apply p-4 rounded-lg border transition-all duration-300;
+    background-color: hsl(var(--exam-header-bg));
+    border-color: hsl(var(--exam-header-border));
+  }
+
+  /* Feedback & Explanation text */
+  .feedback-explanation {
+    @apply text-sm text-muted-foreground leading-relaxed;
+  }
+
+  /* Feedback Headings */
+  .feedback-heading-correct {
+    @apply font-semibold;
+    color: hsl(var(--feedback-correct));
+  }
+
+  .feedback-heading-incorrect {
+    @apply font-semibold;
+    color: hsl(var(--feedback-incorrect));
+  }
+
+  /* Documentation Note Cards */
+  .note-card {
+    @apply bg-card p-6 rounded-lg shadow-sm border border-border/50 transition-all duration-300;
+  }
+
+  .note-link {
+    @apply block p-4 border border-gray-100 dark:border-slate-800 rounded-md hover:bg-muted/50 transition-all duration-200;
+  }
+
+  .note-tag {
+    @apply px-2 py-1 rounded-md text-sm font-medium transition-colors;
+    background-color: hsl(var(--note-tag-bg));
+    color: hsl(var(--note-tag-text));
+  }
+
+  /* Sidebar Navigation Items */
+  .nav-item-active {
+    @apply font-medium;
+    background-color: hsl(var(--nav-active-bg));
+    color: hsl(var(--nav-active-text));
+  }
+
+  .nav-item-hover {
+    @apply hover:bg-[hsl(var(--nav-hover-bg))] transition-colors;
   }
 }

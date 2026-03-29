@@ -31,7 +31,7 @@ const organizedNotes = allNotes.reduce((acc, note) => {
     {
       Object.entries(organizedNotes).map(([category, notes]) => (
         <div class="mb-6">
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             {category}
           </h3>
           <ul class="space-y-2">
@@ -39,10 +39,8 @@ const organizedNotes = allNotes.reduce((acc, note) => {
               <li>
                 <a
                   href={`/docs/${note.slug}`}
-                  class={`block px-2 py-1 rounded-md text-gray-600 hover:bg-gray-100 ${
-                    entry.slug === note.slug
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : ""
+                  class={`block px-2 py-1 rounded-md text-muted-foreground nav-item-hover ${
+                    entry.slug === note.slug ? "nav-item-active" : ""
                   }`}
                 >
                   {note.data.title}

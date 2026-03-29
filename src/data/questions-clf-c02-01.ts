@@ -368,7 +368,10 @@ export const questionsClfC0201: Question[] = [
     category: "management",
     dominio: "DOMAIN_4",
     difficulty: "medium",
-    references: ["https://aws.amazon.com/compute-optimizer/"],
+    references: [
+      "https://aws.amazon.com/compute-optimizer/",
+      "https://aws.amazon.com/pt/aws-cost-management/aws-cost-explorer/",
+    ],
   },
   {
     id: "CLF-C02-01-10",

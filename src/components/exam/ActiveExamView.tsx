@@ -84,7 +84,7 @@ export function ActiveExamView({
   return (
     <div className="space-y-6">
       {/* Question header */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+      <div className="exam-header-area">
         <div className="flex items-center justify-between mb-2">
           {/* Left: Mode and difficulty badges */}
           <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function ActiveExamView({
 
         {/* Question text */}
         <div className="flex items-start gap-2">
-          <h3 className="text-lg font-medium text-gray-900 flex-1">
+          <h3 className="text-lg font-medium text-foreground flex-1">
             {currentQuestion.text}
           </h3>
           {currentQuestion.text_en && (
@@ -172,7 +172,7 @@ export function ActiveExamView({
         </div>
         {currentQuestion.type === "multiple_choice" && (
           <p className="text-sm text-blue-600 mt-2 font-medium">
-            Seleciona todas as opções corretas
+            Questão de múltipla escolha: Seleciona todas as opções corretas
           </p>
         )}
       </div>
@@ -194,9 +194,7 @@ export function ActiveExamView({
             >
               <span className="flex-1 pr-3">{option.text}</span>
               {!showExplanation && (
-                <kbd className="px-2 py-1 text-xs bg-white/80 border rounded font-mono flex-shrink-0">
-                  {index + 1}
-                </kbd>
+                <kbd className="kbd-shortcut font-mono">{index + 1}</kbd>
               )}
             </Button>
           </div>
@@ -215,9 +213,7 @@ export function ActiveExamView({
             >
               <ChevronLeft className="w-4 h-4" />
               Anterior
-              <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                ←
-              </kbd>
+              <kbd className="kbd-shortcut ml-1">←</kbd>
             </Button>
             <Button
               variant="outline"
@@ -226,9 +222,7 @@ export function ActiveExamView({
               className="flex items-center gap-2"
             >
               Próxima
-              <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                →
-              </kbd>
+              <kbd className="kbd-shortcut ml-1">→</kbd>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -253,9 +247,7 @@ export function ActiveExamView({
               className="flex items-center gap-2"
             >
               Pular Questão
-              <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 border rounded">
-                Space
-              </kbd>
+              <kbd className="kbd-shortcut ml-1">Space</kbd>
             </Button>
           </div>
         </div>
@@ -269,17 +261,17 @@ export function ActiveExamView({
         >
           <div className="flex items-center gap-2">
             {answerStatus === "correct" && (
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40">
                 Resposta Correta
               </Badge>
             )}
             {answerStatus === "partial" && (
-              <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+              <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40">
                 Parcialmente Correta
               </Badge>
             )}
             {answerStatus === "incorrect" && (
-              <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+              <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40">
                 Resposta Incorreta
               </Badge>
             )}
@@ -288,16 +280,16 @@ export function ActiveExamView({
           <div className="space-y-4">
             {/* Correct options */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-green-700">
-                Respostas Corretas:
-              </h3>
+              <h3 className="feedback-heading-correct">Respostas Corretas:</h3>
               <ul className="space-y-3">
                 {correctOptions.map((option) => (
                   <li key={option.id} className="flex gap-3">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
                     <div className="flex-1">
-                      <p className="font-medium">{option.text}</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="font-medium text-foreground">
+                        {option.text}
+                      </p>
+                      <p className="feedback-explanation mt-1">
                         {option.explanation}
                       </p>
                     </div>
@@ -310,31 +302,33 @@ export function ActiveExamView({
 
             {/* Incorrect options */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-red-700">
+              <h3 className="feedback-heading-incorrect">
                 Outras Opções Explicadas:
               </h3>
               <ul className="space-y-3">
                 {incorrectOptions.map((option) => (
                   <li key={option.id} className="space-y-1">
                     <div className="flex items-start gap-2">
-                      <p className="font-medium flex-1">{option.text}</p>
+                      <p className="font-medium flex-1 text-foreground">
+                        {option.text}
+                      </p>
                       {option.text_en && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 p-1 h-auto"
                             >
                               <Languages className="h-3 w-3" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent
                             side="left"
-                            className="max-w-sm p-3 bg-white border shadow-lg"
+                            className="max-w-sm p-3 bg-card border shadow-lg"
                           >
                             <div className="space-y-2">
-                              <p className="text-xs font-medium text-blue-600">
+                              <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
                                 English:
                               </p>
                               <p className="text-sm">{option.text_en}</p>
@@ -343,9 +337,7 @@ export function ActiveExamView({
                         </Tooltip>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {option.explanation}
-                    </p>
+                    <p className="feedback-explanation">{option.explanation}</p>
                   </li>
                 ))}
               </ul>
@@ -355,7 +347,7 @@ export function ActiveExamView({
           {/* References */}
           {currentQuestion.references?.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-700">References:</h4>
+              <h4 className="font-medium text-muted-foreground">References:</h4>
               <ul className="space-y-1">
                 {currentQuestion.references.map((reference, index) => (
                   <li key={index}>
@@ -363,7 +355,7 @@ export function ActiveExamView({
                       href={reference}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm"
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
                     >
                       {reference}
                     </a>
