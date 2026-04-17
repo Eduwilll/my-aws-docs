@@ -147,14 +147,10 @@ export function TermsAcceptanceModal({
           if (!open) handleDecline();
         }}
       >
-        <DialogContent
-          className="max-w-2xl max-h-[80vh]"
-          aria-labelledby="loading-title"
-          aria-describedby="loading-description"
-        >
+        <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle id="loading-title">Carregando...</DialogTitle>
-            <DialogDescription id="loading-description">
+            <DialogTitle>Carregando...</DialogTitle>
+            <DialogDescription>
               Carregando os termos de serviço...
             </DialogDescription>
           </DialogHeader>
@@ -184,21 +180,21 @@ export function TermsAcceptanceModal({
         onOpenAutoFocus={(e) => {
           // Focus the modal title instead of the close button for better UX
           e.preventDefault();
-          const title = document.getElementById("terms-modal-title");
+          const title = document.querySelector(
+            "[data-terms-title]",
+          ) as HTMLElement;
           if (title) title.focus();
         }}
       >
         <DialogTitle
           className="text-lg sm:text-xl font-bold text-left"
-          id="terms-modal-title"
+          data-terms-title="true"
+          tabIndex={-1}
         >
           {modalTitle}
         </DialogTitle>
 
-        <DialogDescription
-          className="text-sm text-muted-foreground text-left"
-          id="terms-modal-description"
-        >
+        <DialogDescription className="text-sm text-muted-foreground text-left">
           {modalDescription}
         </DialogDescription>
 

@@ -48,6 +48,9 @@ export class ConsentTracker {
    */
   private checkStorageAvailability(): boolean {
     try {
+      if (typeof window === "undefined") {
+        return false;
+      }
       const testKey = "__terms_storage_test__";
       localStorage.setItem(testKey, "test");
       const retrieved = localStorage.getItem(testKey);

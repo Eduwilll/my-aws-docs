@@ -1,13 +1,18 @@
 ---
 // src/layouts/NoteLayout.astro
 import BaseLayout from "./BaseLayout.astro";
-const { frontmatter, slug } = Astro.props;
+const { frontmatter, slug, headings = [] } = Astro.props;
+
+// Filter headings for ToC (h2 and h3)
+const tocHeadings = headings.filter((h: any) => h.depth === 2 || h.depth === 3);
 ---
 
-<BaseLayout title={frontmatter.title}>
+<BaseLayout title={frontmatter.title} fullWidth={true}>
   <div class="flex min-h-screen">
     <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white shadow-md hidden md:block p-6 overflow-y-auto">
+    <aside
+      class="w-64 bg-[hsl(var(--sidebar-bg))] border-r border-border hidden md:block p-6 overflow-y-auto transition-colors duration-300"
+    >
       <div class="mb-6">
         <input
           type="search"
@@ -21,19 +26,17 @@ const { frontmatter, slug } = Astro.props;
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-8">
-      <article class="prose prose-slate max-w-none">
+    <main class="flex-1 p-8 bg-background w-full max-w-[800px] mx-auto">
+      <article class="prose prose-slate dark:prose-invert max-w-none">
         <div class="mb-8">
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          <h1 class="text-4xl font-bold text-foreground mb-4">
             {frontmatter.title}
           </h1>
           {
             frontmatter.tags && (
               <div class="flex gap-2">
                 {frontmatter.tags.map((tag: string) => (
-                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
-                    #{tag}
-                  </span>
+                  <span class="note-tag">#{tag}</span>
                 ))}
               </div>
             )
@@ -51,6 +54,29 @@ const { frontmatter, slug } = Astro.props;
         </div>
       </article>
     </main>
+
+    <!-- Right Sidebar (Table of Contents) -->
+    {
+      tocHeadings.length > 0 && (
+        <aside class="w-64 hidden lg:block p-6 sticky top-0 h-screen overflow-y-auto border-l border-border bg-[hsl(var(--sidebar-bg))] transition-colors duration-300">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+            Nesta página
+          </h3>
+          <ul class="space-y-2.5 text-sm">
+            {tocHeadings.map((heading: any) => (
+              <li class={heading.depth === 3 ? "pl-4" : ""}>
+                <a
+                  href={`#${heading.slug}`}
+                  class="block text-muted-foreground hover:text-foreground transition-colors line-clamp-2"
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
   </div>
 </BaseLayout>
 
@@ -58,6 +84,20 @@ const { frontmatter, slug } = Astro.props;
   .note-content :global(a) {
     color: #2563eb;
     text-decoration: underline;
+  }
+
+  .note-content :global(a.internal) {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.125rem 0.25rem;
+    background-color: hsl(var(--primary) / 0.1);
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+
+  .note-content :global(a.internal:hover) {
+    background-color: hsl(var(--primary) / 0.2);
   }
 
   .note-content :global(h2) {
@@ -79,10 +119,6 @@ const { frontmatter, slug } = Astro.props;
   }
 
   .note-content :global(pre) {
-    background-color: #f8fafc;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin-bottom: 1rem;
+    @apply bg-muted p-4 rounded-md overflow-x-auto mb-4 border border-border;
   }
 </style>

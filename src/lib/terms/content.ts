@@ -16,12 +16,12 @@ import { TermsStatus, TermsErrorCode } from "../types/terms";
 
 // Brazilian Portuguese Terms of Service Content
 export const TERMS_CONTENT_PT_BR: TermsContent = {
-  version: "1.0.0",
-  lastUpdated: new Date("2025-01-08"),
+  version: "1.0.1",
+  lastUpdated: new Date("2026-03-27"),
   metadata: {
     language: "pt-BR",
     jurisdiction: "Brasil",
-    effectiveDate: new Date("2025-01-08"),
+    effectiveDate: new Date("2026-03-27"),
   },
   sections: [
     {
@@ -147,14 +147,14 @@ Usuários serão notificados sobre mudanças significativas e precisarão aceita
       title: "9. Contato e Suporte",
       content: `Para questões sobre estes termos ou o serviço:
 
-• Email: suporte@simuladoraws.com.br
+• Email: [EMAIL_ADDRESS]
 • Formulário de contato no site
 • Tempo de resposta: até 48 horas úteis
 
 Para questões legais ou de privacidade, use o canal de contato específico indicado em nossa Política de Privacidade.`,
       order: 9,
       isRequired: true,
-      lastModified: new Date("2025-01-08"),
+      lastModified: new Date("2026-03-27"),
     },
     {
       id: "governing-law",

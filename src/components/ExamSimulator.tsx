@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -6,25 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Timer,
-  Check,
-  ChevronRight,
-  RotateCcw,
-  Award,
   Star,
   BarChart3,
   BookOpen,
   Keyboard,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 import type {
@@ -38,10 +29,9 @@ import type {
 import type { ExamDomainKey } from "@/lib/types/exam-domains";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { ProgressReport } from "@/components/ProgressReport";
-import { ExamDetails } from "@/components/ExamDetails";
-import { FavoriteQuestions } from "@/components/FavoriteQuestions";
+import { useExamTimer } from "@/hooks/useExamTimer";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { QuestionNavigationPanel } from "@/components/QuestionNavigationPanel";
 import TermsNavigationLinks from "@/components/TermsNavigationLinks";
 import TermsVersionManager from "@/components/TermsVersionManager";
 import {
@@ -52,64 +42,203 @@ import {
 } from "@/lib/types/exam-domains";
 import { hasValidConsent } from "@/lib/terms";
 import type { TermsConfig } from "@/lib/types/terms";
-import { Separator } from "@radix-ui/react-select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   getExamSourceInfo,
   getSourceLabel,
   getSourceColor,
-  getSourceIcon,
 } from "@/lib/utils/examSources";
+import { loadQuestionBank } from "@/lib/utils/questionLoader";
 
-//Questions
-import { questions } from "@/data/questions-clf-c02";
-import { questionsClfC0201 } from "@/data/questions-clf-c02-01";
-import { GPTquestions } from "@/data/questions";
-import { questionsClfC0202 } from "@/data/questions-clf-c02-02";
-import { questionsSaaC03 } from "@/data/questions-saa-c03";
-import { questionCLFC02CC01 } from "@/data/CLF-C02-CC-01";
+// Extracted sub-components
+import { ExamSelectionScreen } from "@/components/exam/ExamSelectionScreen";
+import { ActiveExamView } from "@/components/exam/ActiveExamView";
+import { ExamScoreScreen } from "@/components/exam/ExamScoreScreen";
+import { ExamSidebar } from "@/components/exam/ExamSidebar";
+
+// Lazy-loaded secondary views
+const ProgressReport = React.lazy(() =>
+  import("@/components/ProgressReport").then((m) => ({
+    default: m.ProgressReport,
+  })),
+);
+const ExamDetails = React.lazy(() =>
+  import("@/components/ExamDetails").then((m) => ({ default: m.ExamDetails })),
+);
+const FavoriteQuestions = React.lazy(() =>
+  import("@/components/FavoriteQuestions").then((m) => ({
+    default: m.FavoriteQuestions,
+  })),
+);
+
+// ─── Static config ────────────────────────────────────────────────────────────
+
+const termsConfig: TermsConfig = {
+  currentVersion: "1.0.0",
+  requireAcceptance: true,
+  showChangesHighlight: true,
+  gracePeriodDays: 7,
+  enableVersionHistory: true,
+  maxStoredVersions: 5,
+};
+
+const certificationBanks: Record<string, string[]> = {
+  "CLF-C02": [
+    "CLF-C02-FULL",
+    "CLF-C02-01",
+    "CLF-C02-02",
+    "CLF-C02-CC-01",
+    "CLF-C02-GPT",
+  ],
+  "SAA-C03": ["SAA-C03-FULL"],
+  "DVA-C02": [],
+};
+
+const certifications = [
+  {
+    id: "CLF-C02",
+    title: "AWS Certified Cloud Practitioner",
+    img: "/images/badges/AWS-Cloud-Practitioner_badge.png",
+  },
+  {
+    id: "SAA-C03",
+    title: "AWS Certified Solutions Architect – Associate",
+    img: "/images/badges/AWS-Solutions-Architect-Associate_badge.png",
+  },
+  {
+    id: "DVA-C02",
+    title: "AWS Certified Developer – Associate",
+    img: "/images/badges/AWS-Certified-Developer-Associate_badge.png",
+  },
+];
+
+// ─── Domain helpers ───────────────────────────────────────────────────────────
+
+function getDomainMap(examId: string) {
+  return examId.startsWith("SAA-C03") ? SAA_C03_DomainMap : CLF_C02_DomainMap;
+}
+
+function getDomainName(examId: string, domain: string) {
+  const map = getDomainMap(examId);
+  return map[domain as keyof typeof map] || "Unknown Domain";
+}
+
+function getDomainDetails(examId: string) {
+  return examId.startsWith("SAA-C03")
+    ? SAA_C03_DomainDetails
+    : CLF_C02_DomainDetails;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const ExamSimulator = () => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [showScore, setShowScore] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(90 * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [answerStatus, setAnswerStatus] = useState<
-    "correct" | "incorrect" | "partial" | null
-  >(null);
-  const [endMessage, setEndMessage] = useState<string | null>(null);
-  const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  // ── UI state
+  const [isMounted, setIsMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentView, setCurrentView] = useState<
+    "exam" | "progress" | "favorites" | "exam-details"
+  >("exam");
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedExamData, setSavedExamData] = useState<any>(null);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
+
+  // ── Exam selection state
+  const [selectedCertification, setSelectedCertification] =
+    useState<string>("");
   const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [studyMode, setStudyMode] = useState<StudyMode>("practice");
   const [selectedDomains, setSelectedDomains] = useState<ExamDomainKey[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<ExamCategory[]>(
     [],
   );
+
+  // ── Exam active state
+  const [isActive, setIsActive] = useState(false);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [selectedSimulado, setSelectedSimulado] = useState<Question[]>([]);
+  const [cachedQuestions, setCachedQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showScore, setShowScore] = useState(false);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [answerStatus, setAnswerStatus] = useState<
+    "correct" | "incorrect" | "partial" | null
+  >(null);
+  const [endMessage, setEndMessage] = useState<string | null>(null);
   const [allAnswers, setAllAnswers] = useState<{
-    [questionId: string]: {
+    [qId: string]: {
       answers: string[];
       status: "correct" | "incorrect" | "partial" | null;
     };
   }>({});
-  const [currentView, setCurrentView] = useState<
-    "exam" | "progress" | "favorites" | "exam-details"
-  >("exam");
+  const [questionStatuses, setQuestionStatuses] = useState<{
+    [idx: number]: {
+      answered: boolean;
+      skipped: boolean;
+      correct?: boolean | null;
+    };
+  }>({});
+  const [simulatedExam, setSimulatedExam] = useState<SimulatedExam | null>(
+    null,
+  );
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
+  const [currentExamResult, setCurrentExamResult] =
+    useState<DetailedExamResult | null>(null);
   const [selectedExamDetails, setSelectedExamDetails] =
     useState<DetailedExamResult | null>(null);
-  const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
-  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [savedExamData, setSavedExamData] = useState<any>(null);
+
+  // ── Terms state
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [checkingTerms, setCheckingTerms] = useState<boolean>(true);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
-  const [currentExamResult, setCurrentExamResult] =
-    useState<DetailedExamResult | null>(null);
+  const activeExamRef = useRef<HTMLDivElement>(null);
 
-  // Initialize user progress hook
+  // Scroll to active exam when it starts
+  useEffect(() => {
+    if (isActive && activeExamRef.current) {
+      activeExamRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [isActive]);
+
+  // Scroll to top of question area when question index changes
+  useEffect(() => {
+    if (isActive && activeExamRef.current) {
+      activeExamRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [currentQuestionIndex]);
+
+  // ── Stable userId
+  const [userId] = useState(() =>
+    typeof window !== "undefined" && window.crypto
+      ? "user-" + crypto.randomUUID()
+      : "user-fallback",
+  );
+
+  // ── Derived question data
+  const currentQuestion =
+    selectedSimulado[currentQuestionIndex] || selectedSimulado[0];
+  const currentOptions = currentQuestion?.options || [];
+  const correctOptions = currentOptions.filter((o) => o.isCorrect);
+  const incorrectOptions = currentOptions.filter((o) => !o.isCorrect);
+  const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
+
+  // ── Hooks
   const {
     userProgress,
     addExamResult,
@@ -119,169 +248,148 @@ const ExamSimulator = () => {
     isFavoriteQuestion,
     getFavoriteQuestion,
     clearAllProgress,
-  } = useUserProgress("user-" + crypto.randomUUID());
+  } = useUserProgress(userId);
 
-  // Keyboard shortcuts configuration
-  const handleKeyboardNextQuestion = () => {
-    if (
-      isActive &&
-      !showExplanation &&
-      currentQuestionIndex < selectedSimulado.length - 1
-    ) {
-      handleNextQuestion();
-    }
-  };
-
-  const handleKeyboardPreviousQuestion = () => {
-    if (isActive && !showExplanation && currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswers([]);
-      setShowExplanation(false);
-      setAnswerStatus(null);
-      setQuestionStartTime(new Date());
-    }
-  };
-
-  const handleSelectAnswerByIndex = (index: number) => {
-    if (isActive && !showExplanation && currentQuestion?.options?.[index]) {
-      const optionId = currentQuestion.options[index].id;
-      handleAnswerToggle(optionId);
-    }
-  };
-
-  const handleSubmitAnswerShortcut = () => {
-    if (isActive && !showExplanation && selectedAnswers.length > 0) {
-      handleSubmitAnswers();
-    }
-  };
-
-  const handleSkipQuestion = () => {
-    if (isActive && !showExplanation) {
-      // Clear current answers and move to next question
-      setSelectedAnswers([]);
-      handleKeyboardNextQuestion();
-    }
-  };
-
-  // Initialize keyboard shortcuts hook
-  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts({
-    onNextQuestion: handleKeyboardNextQuestion,
-    onPreviousQuestion: handleKeyboardPreviousQuestion,
-    onSelectAnswer: handleSelectAnswerByIndex,
-    onSubmitAnswer: handleSubmitAnswerShortcut,
-    onSkipQuestion: handleSkipQuestion,
-    isModalOpen: showResumeDialog,
-    isInputFocused: isInputFocused,
-    currentQuestionIndex,
-    totalQuestions: selectedSimulado.length,
+  const { timeLeft, setTimeLeft, formatTime } = useExamTimer({
+    isActive,
+    studyMode,
+    initialTime: studyMode === "exam" ? 90 * 60 : 999999,
+    onTimeExpired: () => {
+      setShowScore(true);
+      setIsActive(false);
+      setEndMessage(
+        "O tempo acabou! Sua prova foi finalizada automaticamente.",
+      );
+    },
   });
 
-  // Input focus detection for keyboard shortcuts
+  // ── Effects
   useEffect(() => {
-    const handleFocusIn = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.contentEditable === "true" ||
-        target.getAttribute("role") === "textbox";
-      setIsInputFocused(isInput);
-    };
+    setIsMounted(true);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined")
+      setIsSidebarOpen(window.innerWidth >= 1366);
+  }, []);
 
-    const handleFocusOut = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.contentEditable === "true" ||
-        target.getAttribute("role") === "textbox";
-      if (isInput) {
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  useEffect(() => {
+    const onIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      setIsInputFocused(
+        ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) ||
+          t.contentEditable === "true" ||
+          t.getAttribute("role") === "textbox",
+      );
+    };
+    const onOut = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      if (
+        ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) ||
+        t.contentEditable === "true" ||
+        t.getAttribute("role") === "textbox"
+      )
         setIsInputFocused(false);
-      }
     };
-
-    document.addEventListener("focusin", handleFocusIn);
-    document.addEventListener("focusout", handleFocusOut);
-
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
     return () => {
-      document.removeEventListener("focusin", handleFocusIn);
-      document.removeEventListener("focusout", handleFocusOut);
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
     };
   }, []);
 
-  // Terms configuration
-  const termsConfig: TermsConfig = {
-    currentVersion: "1.0.0",
-    requireAcceptance: true,
-    showChangesHighlight: true,
-    gracePeriodDays: 7,
-    enableVersionHistory: true,
-    maxStoredVersions: 5,
-  };
-
-  const simulados = {
-    "CLF-C02": questions,
-    "CLF-C02-01": questionsClfC0201,
-    "CLF-C02-02": questionsClfC0202,
-    "CLF-C02-GPT": GPTquestions,
-    "CLF-C02-FULL-NOGPT": [...questions, ...questionsClfC0201],
-    "CLF-C02-CC-01": questionCLFC02CC01,
-    "SAA-C03": questionsSaaC03,
-  };
-
-  // Check terms acceptance on component mount
   useEffect(() => {
-    const checkTermsAcceptance = async () => {
+    (async () => {
       try {
         setCheckingTerms(true);
-        const hasConsent = await hasValidConsent(
+        const ok = await hasValidConsent(
           termsConfig.currentVersion,
           termsConfig.gracePeriodDays,
         );
-        setTermsAccepted(hasConsent);
-      } catch (error) {
-        console.error("Error checking terms acceptance:", error);
-        // Default to false if there's an error
+        setTermsAccepted(ok);
+      } catch {
         setTermsAccepted(false);
       } finally {
         setCheckingTerms(false);
       }
-    };
-
-    checkTermsAcceptance();
+    })();
   }, []);
-  // Check for saved exam state on component mount
+
   useEffect(() => {
-    // Only access localStorage if we're in the browser
     if (typeof window === "undefined") return;
-
-    const savedState = localStorage.getItem("examState");
-    if (savedState) {
-      try {
-        const examState = JSON.parse(savedState);
-        // Check if the saved state is recent (within 24 hours)
-        const savedTime = new Date(examState.timestamp);
-        const now = new Date();
-        const hoursDiff =
-          (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
-
-        if (hoursDiff < 24 && examState.isActive) {
-          setSavedExamData(examState);
-          setShowResumeDialog(true);
-        } else {
-          // Clear old saved state
-          clearExamState();
-        }
-      } catch (error) {
-        console.error("Error parsing saved exam state:", error);
-        clearExamState();
-      }
+    const saved = localStorage.getItem("examState");
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      const hours =
+        (Date.now() - new Date(state.timestamp).getTime()) / 3600000;
+      if (hours < 24 && state.isActive) {
+        setSavedExamData(state);
+        setShowResumeDialog(true);
+      } else clearExamState();
+    } catch {
+      clearExamState();
     }
   }, []);
 
-  // Save exam state automatically
+  // Background loading for favorites and recent exams
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const loadMissingData = async () => {
+      const bankIdsToLoad = new Set<string>();
+
+      // Check favorites
+      userProgress.favoriteQuestions.forEach((fav) => {
+        if (!cachedQuestions.find((q) => q.id === fav.questionId)) {
+          bankIdsToLoad.add(fav.examId);
+        }
+      });
+
+      // Check recent exams (to show details)
+      userProgress.recentExams.forEach((result) => {
+        if (
+          result.questionAttempts.some(
+            (att) => !cachedQuestions.find((q) => q.id === att.questionId),
+          )
+        ) {
+          bankIdsToLoad.add(result.exam.id);
+        }
+      });
+
+      if (bankIdsToLoad.size > 0) {
+        setIsLoadingFavorites(true);
+        try {
+          const loadedQuestions = (
+            await Promise.all(
+              Array.from(bankIdsToLoad).map((id) => loadQuestionBank(id)),
+            )
+          ).flat();
+
+          setCachedQuestions((prev) => {
+            const existingIds = new Set(prev.map((q) => q.id));
+            const newOnes = loadedQuestions.filter(
+              (q) => !existingIds.has(q.id),
+            );
+            return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+          });
+        } catch (e) {
+          console.error("Error background loading question banks:", e);
+        } finally {
+          setIsLoadingFavorites(false);
+        }
+      }
+    };
+
+    loadMissingData();
+  }, [isMounted, userProgress.favoriteQuestions, userProgress.recentExams]);
+
   useEffect(() => {
     saveExamState();
   }, [
@@ -297,323 +405,340 @@ const ExamSimulator = () => {
     selectedCategories,
     allAnswers,
     examStartTime,
+    questionStatuses,
   ]);
 
-  // Get current question data
-  const currentQuestion =
-    selectedSimulado[currentQuestionIndex] || selectedSimulado[0];
-  const currentOptions = currentQuestion?.options || [];
-  const correctOptions = currentOptions.filter((option) => option.isCorrect);
-  const incorrectOptions = currentOptions.filter((option) => !option.isCorrect);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isActive && studyMode === "exam" && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((timeLeft) => timeLeft - 1);
-      }, 1000);
-    } else if (studyMode === "exam" && timeLeft === 0) {
-      clearInterval(interval!);
-      setShowScore(true);
-      setIsActive(false);
-      setEndMessage(
-        "O tempo acabou! Sua prova foi finalizada automaticamente.",
-      );
-    }
-    return () => clearInterval(interval!);
-  }, [isActive, timeLeft, studyMode]);
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  // ── Helpers
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement)
+      document.documentElement.requestFullscreen().catch(console.error);
+    else document.exitFullscreen?.();
   };
 
-  const handleAnswerToggle = (answerId: string) => {
-    setSelectedAnswers((prev) => {
-      if (prev.includes(answerId)) {
-        return prev.filter((id) => id !== answerId);
-      } else {
-        return [...prev, answerId];
-      }
+  const saveExamState = () => {
+    if (typeof window === "undefined" || !isActive) return;
+    localStorage.setItem(
+      "examState",
+      JSON.stringify({
+        isActive,
+        selectedExamId,
+        selectedSimulado,
+        currentQuestionIndex,
+        score,
+        timeLeft,
+        selectedAnswers,
+        studyMode,
+        selectedDomains,
+        selectedCategories,
+        allAnswers,
+        questionStatuses,
+        examStartTime: examStartTime?.toISOString(),
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  };
+
+  const clearExamState = () => {
+    if (typeof window !== "undefined") localStorage.removeItem("examState");
+  };
+
+  const filterQuestionsByStudyMode = (questions: Question[]): Question[] => {
+    if (studyMode !== "domain_focus") return questions;
+    return questions.filter((q) => {
+      const domainOk =
+        selectedDomains.length === 0 || selectedDomains.includes(q.dominio);
+      const categoryOk =
+        selectedCategories.length === 0 ||
+        selectedCategories.includes(q.category);
+      return domainOk && categoryOk;
     });
   };
 
+  // ── Keyboard navigation
+  const handleKeyboardNextQuestion = () => {
+    if (
+      isActive &&
+      !showExplanation &&
+      currentQuestionIndex < selectedSimulado.length - 1
+    )
+      handleNextQuestion();
+  };
+  const handleKeyboardPreviousQuestion = () => {
+    if (isActive && !showExplanation && currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((i) => i - 1);
+      setSelectedAnswers([]);
+      setShowExplanation(false);
+      setAnswerStatus(null);
+      setQuestionStartTime(new Date());
+    }
+  };
+  const handleSelectAnswerByIndex = (index: number) => {
+    if (isActive && !showExplanation && currentQuestion?.options?.[index])
+      handleAnswerToggle(currentQuestion.options[index].id);
+  };
+  const handleSubmitAnswerShortcut = () => {
+    if (isActive && !showExplanation && selectedAnswers.length > 0)
+      handleSubmitAnswers();
+  };
+  const handleSkipQuestion = () => {
+    if (!isActive || showExplanation) return;
+    setQuestionStatuses((p) => ({
+      ...p,
+      [currentQuestionIndex]: { answered: false, skipped: true, correct: null },
+    }));
+    setSelectedAnswers([]);
+    handleKeyboardNextQuestion();
+  };
+  const handleQuestionSelect = (idx: number) => {
+    if (!isActive || showExplanation) return;
+    setCurrentQuestionIndex(idx);
+    setSelectedAnswers([]);
+    setShowExplanation(false);
+    setAnswerStatus(null);
+    setQuestionStartTime(new Date());
+  };
+
+  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts({
+    onNextQuestion: handleKeyboardNextQuestion,
+    onPreviousQuestion: handleKeyboardPreviousQuestion,
+    onSelectAnswer: handleSelectAnswerByIndex,
+    onSubmitAnswer: handleSubmitAnswerShortcut,
+    onSkipQuestion: handleSkipQuestion,
+    isModalOpen: showResumeDialog,
+    isInputFocused,
+    currentQuestionIndex,
+    totalQuestions: selectedSimulado.length,
+  });
+
+  // ── Answer handling
+  const handleAnswerToggle = (answerId: string) => {
+    setSelectedAnswers((prev) =>
+      prev.includes(answerId)
+        ? prev.filter((id) => id !== answerId)
+        : [...prev, answerId],
+    );
+  };
+
   const handleSubmitAnswers = () => {
-    const correctAnswerIds = currentOptions
-      .filter((option) => option.isCorrect)
-      .map((option) => option.id);
-
+    const correctIds = currentOptions
+      .filter((o) => o.isCorrect)
+      .map((o) => o.id);
     const isFullyCorrect =
-      selectedAnswers.length === correctAnswerIds.length &&
-      selectedAnswers.every((id) => correctAnswerIds.includes(id));
-
-    const hasPartialCorrect =
-      selectedAnswers.some((id) => correctAnswerIds.includes(id)) &&
-      !isFullyCorrect;
-
-    let currentStatus: "correct" | "incorrect" | "partial" = "incorrect";
+      selectedAnswers.length === correctIds.length &&
+      selectedAnswers.every((id) => correctIds.includes(id));
+    const hasPartial =
+      selectedAnswers.some((id) => correctIds.includes(id)) && !isFullyCorrect;
+    let status: "correct" | "incorrect" | "partial" = "incorrect";
     if (isFullyCorrect) {
-      setScore(score + 1);
-      currentStatus = "correct";
-    } else if (hasPartialCorrect) {
-      setScore(score + 0.5);
-      currentStatus = "partial";
+      setScore((s) => s + 1);
+      status = "correct";
+    } else if (hasPartial) {
+      setScore((s) => s + 0.5);
+      status = "partial";
     }
 
-    // Store answer for all modes
     setAllAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: {
-        answers: selectedAnswers,
-        status: currentStatus,
+      [currentQuestion.id]: { answers: selectedAnswers, status },
+    }));
+    setQuestionStatuses((prev) => ({
+      ...prev,
+      [currentQuestionIndex]: {
+        answered: true,
+        skipped: false,
+        correct: studyMode === "practice" ? isFullyCorrect : null,
       },
     }));
 
-    // Update the SimulatedExam object with the user's answer
-    if (simulatedExam) {
-      const updatedAnswers = {
-        ...simulatedExam.answers,
-        [currentQuestion.id]: selectedAnswers.join(","),
-      };
-
+    if (simulatedExam)
       setSimulatedExam({
         ...simulatedExam,
-        answers: updatedAnswers,
+        answers: {
+          ...simulatedExam.answers,
+          [currentQuestion.id]: selectedAnswers.join(","),
+        },
       });
-    }
 
-    // Show explanation immediately only in practice mode
     if (studyMode === "practice") {
-      setAnswerStatus(currentStatus);
+      setAnswerStatus(status);
       setShowExplanation(true);
-    } else {
-      // In exam mode, just move to next question
-      handleNextQuestion();
-    }
+    } else handleNextQuestion();
   };
 
   const handleNextQuestion = () => {
     setShowExplanation(false);
     setAnswerStatus(null);
     setSelectedAnswers([]);
-
     if (currentQuestionIndex + 1 < selectedSimulado.length) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex((i) => i + 1);
       setQuestionStartTime(new Date());
     } else {
-      // Finalize the exam
-      if (simulatedExam && examStartTime) {
-        const endTime = new Date();
-        const timeSpentInSeconds = Math.floor(
-          (endTime.getTime() - examStartTime.getTime()) / 1000,
-        );
+      finalizeExam();
+    }
+  };
 
-        const updatedExam: SimulatedExam = {
-          ...simulatedExam,
-          endTime: endTime,
-          score: score,
-          timeSpent: timeSpentInSeconds,
-        };
-
-        // Create detailed exam result
-        const questionAttempts: QuestionAttempt[] = selectedSimulado.map(
-          (question) => {
-            const userAnswer = allAnswers[question.id];
-            const correctAnswers = question.options
-              .filter((opt) => opt.isCorrect)
-              .map((opt) => opt.id);
-
-            return {
-              questionId: question.id,
-              selectedAnswers: userAnswer?.answers || [],
-              correctAnswers,
-              isCorrect: userAnswer?.status === "correct",
-              isPartial: userAnswer?.status === "partial",
-              timestamp: new Date(),
-            };
-          },
-        );
-
-        // Calculate category and domain breakdowns
-        const categoryBreakdown: any = {};
-        const domainBreakdown: any = {};
-
-        selectedSimulado.forEach((question) => {
-          const attempt = questionAttempts.find(
-            (a) => a.questionId === question.id,
-          );
-          if (!attempt) return;
-
-          // Category breakdown
-          if (!categoryBreakdown[question.category]) {
-            categoryBreakdown[question.category] = {
-              correct: 0,
-              total: 0,
-              percentage: 0,
-            };
-          }
-          categoryBreakdown[question.category].total++;
-          if (attempt.isCorrect) {
-            categoryBreakdown[question.category].correct++;
-          }
-
-          // Domain breakdown
-          const domainName = getDomainName(selectedExamId, question.dominio);
-          if (!domainBreakdown[domainName]) {
-            domainBreakdown[domainName] = {
-              correct: 0,
-              total: 0,
-              percentage: 0,
-            };
-          }
-          domainBreakdown[domainName].total++;
-          if (attempt.isCorrect) {
-            domainBreakdown[domainName].correct++;
-          }
-        });
-
-        // Calculate percentages
-        Object.keys(categoryBreakdown).forEach((category) => {
-          const stats = categoryBreakdown[category];
-          stats.percentage = (stats.correct / stats.total) * 100;
-        });
-
-        Object.keys(domainBreakdown).forEach((domain) => {
-          const stats = domainBreakdown[domain];
-          stats.percentage = (stats.correct / stats.total) * 100;
-        });
-
-        const detailedResult: DetailedExamResult = {
-          exam: updatedExam,
-          questionAttempts,
-          categoryBreakdown,
-          domainBreakdown,
-        };
-
-        // Add to user progress
-        addExamResult(detailedResult);
-
-        // Store current exam result for immediate access
-        setCurrentExamResult(detailedResult);
-
-        setSimulatedExam(updatedExam);
-        console.log("Exam Completed:", updatedExam); // Log or save the exam data
-      }
+  const finalizeExam = () => {
+    if (!simulatedExam || !examStartTime) {
       setShowScore(true);
       setIsActive(false);
       setEndMessage("Parabéns! Você finalizou a prova.");
-      // Clear saved state when exam is completed
       clearExamState();
+      return;
     }
-  };
+    const endTime = new Date();
+    const timeSpent = Math.floor(
+      (endTime.getTime() - examStartTime.getTime()) / 1000,
+    );
+    const updatedExam: SimulatedExam = {
+      ...simulatedExam,
+      endTime,
+      score,
+      timeSpent,
+    };
 
-  const getButtonVariant = (optionId: string) => {
-    const isSelected = selectedAnswers.includes(optionId);
-    const isCorrect = currentOptions.find(
-      (option) => option.id === optionId,
-    )?.isCorrect;
-
-    if (!showExplanation) {
-      return isSelected ? "default" : "outline";
-    } else {
-      if (isCorrect) {
-        return "success";
-      } else if (isSelected && !isCorrect) {
-        return "destructive";
-      } else {
-        return "outline";
-      }
-    }
-  };
-
-  const handleExamSelection = (examId: string) => {
-    console.log("examId:" + examId);
-    setSelectedExamId(examId);
-    const allQuestions = simulados[examId as keyof typeof simulados];
-    setSelectedSimulado(filterQuestionsByStudyMode(allQuestions));
-  };
-
-  const filterQuestionsByStudyMode = (questions: Question[]): Question[] => {
-    if (studyMode !== "domain_focus") {
-      return questions;
-    }
-
-    return questions.filter((question) => {
-      const domainMatch =
-        selectedDomains.length === 0 ||
-        selectedDomains.includes(question.dominio);
-      const categoryMatch =
-        selectedCategories.length === 0 ||
-        selectedCategories.includes(question.category);
-      return domainMatch && categoryMatch;
+    const attempts: QuestionAttempt[] = selectedSimulado.map((q) => {
+      const ua = allAnswers[q.id];
+      const correctAnswers = q.options
+        .filter((o) => o.isCorrect)
+        .map((o) => o.id);
+      return {
+        questionId: q.id,
+        selectedAnswers: ua?.answers || [],
+        correctAnswers,
+        isCorrect: ua?.status === "correct",
+        isPartial: ua?.status === "partial",
+        timestamp: new Date(),
+      };
     });
+
+    const categoryBreakdown: any = {};
+    const domainBreakdown: any = {};
+    selectedSimulado.forEach((q) => {
+      const att = attempts.find((a) => a.questionId === q.id);
+      if (!att) return;
+      categoryBreakdown[q.category] = categoryBreakdown[q.category] || {
+        correct: 0,
+        total: 0,
+        percentage: 0,
+      };
+      categoryBreakdown[q.category].total++;
+      if (att.isCorrect) categoryBreakdown[q.category].correct++;
+      const dn = getDomainName(selectedExamId, q.dominio);
+      domainBreakdown[dn] = domainBreakdown[dn] || {
+        correct: 0,
+        total: 0,
+        percentage: 0,
+      };
+      domainBreakdown[dn].total++;
+      if (att.isCorrect) domainBreakdown[dn].correct++;
+    });
+    Object.values(categoryBreakdown).forEach(
+      (s: any) => (s.percentage = (s.correct / s.total) * 100),
+    );
+    Object.values(domainBreakdown).forEach(
+      (s: any) => (s.percentage = (s.correct / s.total) * 100),
+    );
+
+    const result: DetailedExamResult = {
+      exam: updatedExam,
+      questionAttempts: attempts,
+      categoryBreakdown,
+      domainBreakdown,
+    };
+    addExamResult(result);
+    setCurrentExamResult(result);
+    setSimulatedExam(updatedExam);
+    setShowScore(true);
+    setIsActive(false);
+    setEndMessage("Parabéns! Você finalizou a prova.");
+    clearExamState();
   };
 
-  const [simulatedExam, setSimulatedExam] = useState<SimulatedExam | null>(
-    null,
-  );
+  const getButtonVariant = (optionId: string): any => {
+    const isSelected = selectedAnswers.includes(optionId);
+    const isCorrect = currentOptions.find((o) => o.id === optionId)?.isCorrect;
+    if (!showExplanation) return isSelected ? "default" : "outline";
+    if (isCorrect) return "success";
+    if (isSelected && !isCorrect) return "destructive";
+    return "outline";
+  };
 
+  // ── Start / Reset / Resume
   const startExam = async () => {
-    if (!selectedExamId) {
-      alert("Por favor, selecione um simulado antes de começar.");
+    if (!selectedCertification) {
+      alert("Por favor, selecione uma certificação.");
+      return;
+    }
+    const bankId =
+      studyMode === "domain_focus"
+        ? `${selectedCertification}-FULL`
+        : selectedExamId;
+    if (!bankId) {
+      alert("Por favor, selecione um banco de questões.");
       return;
     }
 
-    // Check terms acceptance before starting exam
     try {
-      const hasConsent = await hasValidConsent(
+      const ok = await hasValidConsent(
         termsConfig.currentVersion,
         termsConfig.gracePeriodDays,
       );
-      if (!hasConsent) {
+      if (!ok) {
         alert(
           "Você deve aceitar os Termos de Serviço antes de iniciar o exame.",
         );
         return;
       }
-    } catch (error) {
-      console.error("Error checking terms acceptance:", error);
+    } catch {
       alert("Erro ao verificar aceitação dos termos. Tente novamente.");
       return;
     }
 
-    const filteredQuestions = filterQuestionsByStudyMode(
-      simulados[selectedExamId as keyof typeof simulados],
-    );
+    setIsLoadingQuestions(true);
+    let rawQuestions: Question[];
+    try {
+      rawQuestions = await loadQuestionBank(bankId);
+    } catch (e) {
+      alert("Erro ao carregar questões. Tente novamente.");
+      setIsLoadingQuestions(false);
+      return;
+    } finally {
+      setIsLoadingQuestions(false);
+    }
 
-    if (filteredQuestions.length === 0) {
+    const filtered = filterQuestionsByStudyMode(rawQuestions);
+    if (filtered.length === 0) {
       alert("Nenhuma questão encontrada com os filtros selecionados.");
       return;
     }
 
-    setSelectedSimulado(filteredQuestions);
-
-    // Initialize the SimulatedExam object
-    const studySettings = {
-      mode: studyMode,
-      selectedDomains: selectedDomains,
-      selectedCategories: selectedCategories,
-      timeLimit: studyMode === "exam" ? 90 : undefined,
-      showImmediateFeedback: studyMode === "practice",
-    };
-
     const examStart = new Date();
-    const newExam: SimulatedExam = {
-      id: selectedExamId,
+    setSelectedSimulado(filtered);
+    // Cache questions so they remain available after exam ends (for ExamDetails, FavoriteQuestions, etc.)
+    setCachedQuestions((prev) => {
+      const existingIds = new Set(prev.map((q) => q.id));
+      const newOnes = filtered.filter((q) => !existingIds.has(q.id));
+      return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+    });
+    setSimulatedExam({
+      id: bankId,
       userId: "user-" + crypto.randomUUID(),
-      questions: filteredQuestions.map((q) => q.id),
+      questions: filtered.map((q) => q.id),
       answers: {},
       startTime: examStart,
-      studySettings,
-    };
-
-    setSimulatedExam(newExam);
+      studySettings: {
+        mode: studyMode,
+        selectedDomains,
+        selectedCategories,
+        timeLimit: studyMode === "exam" ? 90 : undefined,
+        showImmediateFeedback: studyMode === "practice",
+      },
+    });
     setIsActive(true);
     setCurrentQuestionIndex(0);
     setScore(0);
     setShowScore(false);
-    setTimeLeft(studyMode === "exam" ? 90 * 60 : 999999); // No time limit for practice mode
+    setTimeLeft(studyMode === "exam" ? 90 * 60 : 999999);
     setSelectedAnswers([]);
     setShowExplanation(false);
     setEndMessage(null);
@@ -621,86 +746,7 @@ const ExamSimulator = () => {
     setAllAnswers({});
     setQuestionStartTime(new Date());
     setCurrentExamResult(null);
-    // Clear any previous saved state when starting a new exam
-    clearExamState();
-  };
-
-  const handleToggleFavorite = (questionId: string) => {
-    if (isFavoriteQuestion(questionId)) {
-      removeFavoriteQuestion(questionId);
-    } else {
-      addFavoriteQuestion(questionId, selectedExamId);
-    }
-  };
-
-  const handleViewExamDetails = (examResult: DetailedExamResult) => {
-    setSelectedExamDetails(examResult);
-    setCurrentView("exam-details");
-  };
-
-  const handleViewQuestion = (question: Question) => {
-    // This could open a modal or navigate to a detailed question view
-    console.log("View question:", question);
-  };
-
-  const getAllQuestions = (): Question[] => {
-    return Object.values(simulados).flat();
-  };
-
-  const saveExamState = () => {
-    if (typeof window === "undefined" || !isActive) return;
-
-    const examState = {
-      isActive,
-      selectedExamId,
-      selectedSimulado,
-      currentQuestionIndex,
-      score,
-      timeLeft,
-      selectedAnswers,
-      studyMode,
-      selectedDomains,
-      selectedCategories,
-      allAnswers,
-      examStartTime: examStartTime?.toISOString(),
-      timestamp: new Date().toISOString(),
-    };
-
-    localStorage.setItem("examState", JSON.stringify(examState));
-  };
-
-  const clearExamState = () => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("examState");
-  };
-
-  const resumeSavedExam = () => {
-    if (!savedExamData) return;
-
-    setIsActive(savedExamData.isActive);
-    setSelectedExamId(savedExamData.selectedExamId);
-    setSelectedSimulado(savedExamData.selectedSimulado);
-    setCurrentQuestionIndex(savedExamData.currentQuestionIndex);
-    setScore(savedExamData.score);
-    setTimeLeft(savedExamData.timeLeft);
-    setSelectedAnswers(savedExamData.selectedAnswers);
-    setStudyMode(savedExamData.studyMode);
-    setSelectedDomains(savedExamData.selectedDomains || []);
-    setSelectedCategories(savedExamData.selectedCategories || []);
-    setAllAnswers(savedExamData.allAnswers || {});
-    setExamStartTime(
-      savedExamData.examStartTime
-        ? new Date(savedExamData.examStartTime)
-        : null,
-    );
-
-    setShowResumeDialog(false);
-    setSavedExamData(null);
-  };
-
-  const discardSavedExam = () => {
-    setShowResumeDialog(false);
-    setSavedExamData(null);
+    setQuestionStatuses({});
     clearExamState();
   };
 
@@ -720,950 +766,486 @@ const ExamSimulator = () => {
     setShowResumeDialog(false);
     setSavedExamData(null);
     setCurrentExamResult(null);
+    setQuestionStatuses({});
     clearExamState();
   };
-  const progress = ((currentQuestionIndex + 1) / selectedSimulado.length) * 100;
 
-  const getDomainMap = (examId: string) => {
-    switch (examId) {
-      case "SAA-C03":
-        return SAA_C03_DomainMap;
-      case "CLF-C02":
-      case "CLF-C02-01":
-      case "CLF-C02-02":
-      case "CLF-C02-GPT":
-      case "CLF-C02-CC-01":
-      case "CLF-C02-FULL-NOGPT":
-        return CLF_C02_DomainMap;
-      default:
-        return CLF_C02_DomainMap;
-    }
+  const resumeSavedExam = () => {
+    if (!savedExamData) return;
+    setIsActive(savedExamData.isActive);
+    setSelectedExamId(savedExamData.selectedExamId);
+    setSelectedSimulado(savedExamData.selectedSimulado);
+    setCurrentQuestionIndex(savedExamData.currentQuestionIndex);
+    setScore(savedExamData.score);
+    setTimeLeft(savedExamData.timeLeft);
+    setSelectedAnswers(savedExamData.selectedAnswers);
+    setStudyMode(savedExamData.studyMode);
+    setSelectedDomains(savedExamData.selectedDomains || []);
+    setSelectedCategories(savedExamData.selectedCategories || []);
+    setAllAnswers(savedExamData.allAnswers || {});
+    setQuestionStatuses(savedExamData.questionStatuses || {});
+    setExamStartTime(
+      savedExamData.examStartTime
+        ? new Date(savedExamData.examStartTime)
+        : null,
+    );
+    setShowResumeDialog(false);
+    setSavedExamData(null);
   };
 
-  const getDomainName = (examId: string, domain: string) => {
-    const domainMap = getDomainMap(examId);
-    return domainMap[domain as keyof typeof domainMap] || "Unknown Domain";
+  const discardSavedExam = () => {
+    setShowResumeDialog(false);
+    setSavedExamData(null);
+    clearExamState();
   };
 
-  const getDomainDetails = (examId: string) => {
-    switch (examId) {
-      case "SAA-C03":
-        return SAA_C03_DomainDetails;
-      case "CLF-C02":
-      case "CLF-C02-01":
-      case "CLF-C02-02":
-      case "CLF-C02-CC-01":
-      case "CLF-C02-GPT":
-      case "CLF-C02-FULL-NOGPT":
-        return CLF_C02_DomainDetails;
-      default:
-        return CLF_C02_DomainDetails;
-    }
-  };
-
-  // Terms acceptance handlers
-  const handleTermsAcceptanceRequired = (version: string) => {
-    console.log("Terms acceptance required for version:", version);
-    setTermsAccepted(false);
-  };
-
-  const handleTermsAcceptanceComplete = async () => {
+  // ── Terms handlers
+  const handleTermsAcceptanceRequired = React.useCallback(
+    (v: string) => setTermsAccepted(false),
+    [],
+  );
+  const handleTermsAcceptanceComplete = React.useCallback(async () => {
     try {
-      // Add a small delay to ensure the consent is properly stored
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const hasConsent = await hasValidConsent(
+      await new Promise((r) => setTimeout(r, 100));
+      const ok = await hasValidConsent(
         termsConfig.currentVersion,
         termsConfig.gracePeriodDays,
       );
-      setTermsAccepted(hasConsent);
-      console.log("Terms acceptance completed, consent status:", hasConsent);
-
-      // If consent is still not valid, force a recheck
-      if (!hasConsent) {
-        console.warn(
-          "Terms acceptance completed but consent still invalid, rechecking...",
+      setTermsAccepted(ok);
+      if (!ok)
+        setTimeout(
+          async () =>
+            setTermsAccepted(
+              await hasValidConsent(
+                termsConfig.currentVersion,
+                termsConfig.gracePeriodDays,
+              ),
+            ),
+          500,
         );
-        setTimeout(async () => {
-          const recheckConsent = await hasValidConsent(
-            termsConfig.currentVersion,
-            termsConfig.gracePeriodDays,
-          );
-          setTermsAccepted(recheckConsent);
-        }, 500);
-      }
-    } catch (error) {
-      console.error("Error updating terms acceptance status:", error);
-      // Don't block the user if there's an error checking consent
+    } catch {
       setTermsAccepted(true);
     }
+  }, []);
+  const handleTermsError = React.useCallback((err: string) => {
+    if (err.includes("Terms acceptance is required"))
+      setTimeout(() => (window.location.href = "/"), 500);
+  }, []);
+
+  // ── Favorites & secondary views
+  const handleToggleFavorite = (questionId: string) =>
+    isFavoriteQuestion(questionId)
+      ? removeFavoriteQuestion(questionId)
+      : addFavoriteQuestion(questionId, selectedExamId);
+  const handleViewExamDetails = (r: DetailedExamResult) => {
+    setSelectedExamDetails(r);
+    setCurrentView("exam-details");
+  };
+  const handleViewQuestion = (q: Question) => console.log("View question:", q);
+  // Returns all questions seen so far (loaded dynamically). Falls back to selectedSimulado.
+  const getAllQuestions = (): Question[] =>
+    cachedQuestions.length > 0 ? cachedQuestions : selectedSimulado;
+
+  const handleRecheckTerms = async () => {
+    setCheckingTerms(true);
+    try {
+      setTermsAccepted(
+        await hasValidConsent(
+          termsConfig.currentVersion,
+          termsConfig.gracePeriodDays,
+        ),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCheckingTerms(false);
+    }
   };
 
-  const handleTermsError = (error: string) => {
-    console.error("Terms error:", error);
-    // If terms are required but user declined, redirect to home page
-    if (error.includes("Terms acceptance is required")) {
-      console.log("User declined terms, redirecting to home page");
-      // Show a brief message before redirecting
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 500);
-      return;
-    }
-    // For other errors, just log them
-  };
+  if (!isMounted) return null;
 
   return (
-    <TermsVersionManager
-      config={termsConfig}
-      onAcceptanceRequired={handleTermsAcceptanceRequired}
-      onAcceptanceComplete={handleTermsAcceptanceComplete}
-      onError={handleTermsError}
-    >
-      <div className="min-h-screen p-4">
-        {/* Resume Exam Dialog */}
-        {showResumeDialog && savedExamData && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Timer className="h-5 w-5" />
-                  Exame em Andamento
-                </CardTitle>
-                <CardDescription>
-                  Encontramos um exame que você estava fazendo. Deseja continuar
-                  de onde parou?
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  <p>
-                    <strong>Exame:</strong> {savedExamData.selectedExamId}
+    <TooltipProvider>
+      <TermsVersionManager
+        config={termsConfig}
+        onAcceptanceRequired={handleTermsAcceptanceRequired}
+        onAcceptanceComplete={handleTermsAcceptanceComplete}
+        onError={handleTermsError}
+      >
+        <div className="min-h-screen bg-transparent text-foreground transition-colors duration-500">
+          <div className="p-4 md:p-6 lg:p-8 max-w-[1700px] mx-auto transition-all duration-500">
+            {/* 1. SELECTION / PROGRESS / FAVORITES VIEW (Not active exam) */}
+            {!isActive && (
+              <div className="w-full space-y-8 animate-in fade-in duration-700">
+                {/* Header Title  */}
+                {/* <div className="mb-10 text-center">
+                  <h1 className="text-4xl md:text-5xl font-extrabold text-gradient tracking-tight">
+                    Simulador de Exame
+                  </h1>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Prepare-se para sua certificação AWS com perguntas baseadas
+                    em cenários reais. Boa sorte!
                   </p>
-                  <p>
-                    <strong>Modo:</strong>{" "}
-                    {savedExamData.studyMode === "practice"
-                      ? "Prática"
-                      : savedExamData.studyMode === "exam"
-                        ? "Exame Simulado"
-                        : "Estudo Focado"}
-                  </p>
-                  <p>
-                    <strong>Progresso:</strong>{" "}
-                    {savedExamData.currentQuestionIndex + 1} de{" "}
-                    {savedExamData.selectedSimulado?.length || 0} questões
-                  </p>
-                  <p>
-                    <strong>Pontuação atual:</strong> {savedExamData.score}{" "}
-                    pontos
-                  </p>
-                  {savedExamData.studyMode === "exam" && (
-                    <p>
-                      <strong>Tempo restante:</strong>{" "}
-                      {Math.floor(savedExamData.timeLeft / 60)}m{" "}
-                      {savedExamData.timeLeft % 60}s
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <Button onClick={resumeSavedExam} className="flex-1">
-                    Continuar Exame
-                  </Button>
-                  <Button
-                    onClick={discardSavedExam}
-                    variant="outline"
-                    className="flex-1"
+                </div> */}
+                <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 max-w-full mx-auto px-4 lg:px-0 transition-all duration-300">
+                  {/* Sidebar - Aligned with the top of the Card */}
+                  <div
+                    className={`hidden lg:block transition-all duration-300 ${
+                      isSidebarCollapsed
+                        ? "w-20 min-w-[5rem]"
+                        : "w-80 min-w-[20rem]"
+                    } flex-shrink-0`}
                   >
-                    Começar Novo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                    <ExamSidebar
+                      currentView={
+                        currentView === "exam-details"
+                          ? "progress"
+                          : currentView
+                      }
+                      onViewChange={(v) => setCurrentView(v)}
+                      isCollapsed={isSidebarCollapsed}
+                      onToggleCollapse={() =>
+                        setIsSidebarCollapsed(!isSidebarCollapsed)
+                      }
+                      favoriteCount={userProgress.favoriteQuestions.length}
+                    />
+                  </div>
 
-        <div className="max-w-6xl mx-auto space-y-4">
-          <Card className="border-none shadow-lg">
-            <CardHeader className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                    AWS Cloud Practitioner
-                  </CardTitle>
-                  <CardDescription>
-                    Exame Simulado para o certificado AWS Cloud Practitioner
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isActive && studyMode === "exam" && (
-                    <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
-                      <Timer className="w-4 h-4" />
-                      <span className="font-mono font-medium">
-                        {formatTime(timeLeft)}
-                      </span>
-                    </div>
-                  )}
-                  {!isActive && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant={currentView === "exam" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentView("exam")}
-                      >
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Exame
-                      </Button>
-                      <Button
-                        variant={
-                          currentView === "progress" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setCurrentView("progress")}
-                      >
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Progresso
-                      </Button>
-                      <Button
-                        variant={
-                          currentView === "favorites" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setCurrentView("favorites")}
-                      >
-                        <Star className="w-4 h-4 mr-2" />
-                        Favoritas ({userProgress.favoriteQuestions.length})
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowShortcutsModal(true)}
-                        title="Atalhos do Teclado (Pressione ? para abrir)"
-                      >
-                        <Keyboard className="w-4 h-4 mr-2" />
-                        Atalhos
-                      </Button>
-                    </div>
-                  )}
+                  {/* Main Content Area for Selection/Progress */}
+                  <div className="flex-1 w-full space-y-6">
+                    <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                      {/* <CardHeader className="space-y-4 pb-2 pt-8 px-8"> */}
+                      {/* <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <CardTitle className="text-3xl md:text-4xl font-extrabold text-gradient tracking-tight">
+                              AWS Cloud Practitioner
+                            </CardTitle>
+                            <CardDescription className="text-base">
+                              Exame Simulado para o certificado AWS Cloud
+                              Practitioner
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowShortcutsModal(true)}
+                              className="rounded-xl shadow-sm hover:shadow-md transition-all"
+                            >
+                              <Keyboard className="w-4 h-4 mr-2" /> Atalhos
+                            </Button>
+                          </div>
+                        </div> */}
+                      {/* </CardHeader> */}
+
+                      <CardContent className="p-6 md:p-8">
+                        <Suspense
+                          fallback={
+                            <div className="text-center py-12 text-muted-foreground">
+                              Carregando conteúdo...
+                            </div>
+                          }
+                        >
+                          {currentView === "progress" && (
+                            <ProgressReport
+                              userProgress={userProgress}
+                              onViewExamDetails={handleViewExamDetails}
+                            />
+                          )}
+                          {currentView === "favorites" && (
+                            <FavoriteQuestions
+                              favoriteQuestions={userProgress.favoriteQuestions}
+                              questions={getAllQuestions()}
+                              onRemoveFavorite={removeFavoriteQuestion}
+                              onUpdateFavorite={updateFavoriteQuestion}
+                              onViewQuestion={handleViewQuestion}
+                            />
+                          )}
+                          {currentView === "exam-details" &&
+                            selectedExamDetails && (
+                              <ExamDetails
+                                examResult={selectedExamDetails}
+                                questions={getAllQuestions()}
+                                onBack={() => setCurrentView("progress")}
+                                onToggleFavorite={handleToggleFavorite}
+                                isFavoriteQuestion={isFavoriteQuestion}
+                              />
+                            )}
+                          {currentView === "exam" &&
+                            !isActive &&
+                            !showScore && (
+                              <ExamSelectionScreen
+                                certifications={certifications}
+                                certificationBanks={certificationBanks}
+                                selectedCertification={selectedCertification}
+                                selectedExamId={selectedExamId}
+                                studyMode={studyMode}
+                                selectedDomains={selectedDomains}
+                                selectedCategories={selectedCategories}
+                                checkingTerms={checkingTerms}
+                                termsAccepted={termsAccepted}
+                                isLoadingQuestions={isLoadingQuestions}
+                                onSelectCertification={(id) => {
+                                  setSelectedCertification(id);
+                                  setSelectedExamId("");
+                                  setSelectedDomains([]);
+                                  setSelectedCategories([]);
+                                }}
+                                onSelectStudyMode={setStudyMode}
+                                onSelectBank={(bankId) => {
+                                  setSelectedExamId(bankId);
+                                  setSelectedSimulado([]);
+                                }}
+                                onAddDomain={(d) =>
+                                  setSelectedDomains((prev) => [...prev, d])
+                                }
+                                onRemoveDomain={(d) =>
+                                  setSelectedDomains((prev) =>
+                                    prev.filter((x) => x !== d),
+                                  )
+                                }
+                                onAddCategory={(c) =>
+                                  setSelectedCategories((prev) => [...prev, c])
+                                }
+                                onRemoveCategory={(c) =>
+                                  setSelectedCategories((prev) =>
+                                    prev.filter((x) => x !== c),
+                                  )
+                                }
+                                onStartExam={startExam}
+                                onRecheckTerms={handleRecheckTerms}
+                                getDomainName={getDomainName}
+                              />
+                            )}
+                        </Suspense>
+
+                        {showScore && currentView === "exam" && (
+                          <ExamScoreScreen
+                            score={score}
+                            totalQuestions={selectedSimulado.length}
+                            studyMode={studyMode}
+                            endMessage={endMessage}
+                            simulatedExam={simulatedExam}
+                            currentExamResult={currentExamResult}
+                            allAnswers={allAnswers}
+                            selectedSimulado={selectedSimulado}
+                            onResetExam={resetExam}
+                            onRetryExam={startExam}
+                            onViewExamDetails={handleViewExamDetails}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {isActive && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-sm">
-                      Questão {currentQuestionIndex + 1} de{" "}
-                      {selectedSimulado.length}
-                    </Badge>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary" className="text-sm">
-                        {currentQuestion.category}
-                      </Badge>
-                      <Badge variant="secondary" className="text-sm">
-                        {getDomainName(selectedExamId, currentQuestion.dominio)}
-                      </Badge>
-                      {selectedExamId && (
-                        <Badge
-                          variant="outline"
-                          className={`text-sm ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
-                        >
-                          {getSourceIcon(
-                            getExamSourceInfo(selectedExamId).primarySource,
-                          )}{" "}
-                          {getSourceLabel(
-                            getExamSourceInfo(selectedExamId).primarySource,
-                          )}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-              )}
-            </CardHeader>
-
-            <CardContent className="p-6">
-              {currentView === "progress" && (
-                <ProgressReport
-                  userProgress={userProgress}
-                  onViewExamDetails={handleViewExamDetails}
-                />
-              )}
-
-              {currentView === "favorites" && (
-                <FavoriteQuestions
-                  favoriteQuestions={userProgress.favoriteQuestions}
-                  questions={getAllQuestions()}
-                  onRemoveFavorite={removeFavoriteQuestion}
-                  onUpdateFavorite={updateFavoriteQuestion}
-                  onViewQuestion={handleViewQuestion}
-                />
-              )}
-
-              {currentView === "exam-details" && selectedExamDetails && (
-                <ExamDetails
-                  examResult={selectedExamDetails}
-                  questions={getAllQuestions()}
-                  onBack={() => setCurrentView("progress")}
-                  onToggleFavorite={handleToggleFavorite}
-                  isFavoriteQuestion={isFavoriteQuestion}
-                />
-              )}
-
-              {currentView === "exam" && !isActive && !showScore && (
-                <div className="space-y-8 py-8">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold">
-                      Bem-vindo ao Simulador de Exame da AWS
-                    </h2>
-                    <p className="text-gray-500">
-                      Escolha seu modo de estudo e comece a praticar
-                    </p>
-                  </div>
-
-                  <div className="max-w-2xl mx-auto space-y-6">
-                    {/* Study Mode Selection */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">
-                        Modo de Estudo
-                      </label>
-                      <Select
-                        onValueChange={(value: StudyMode) =>
-                          setStudyMode(value)
+            {/* 2. ACTIVE EXAM VIEW (Focus Mode) - FULLY CENTERED */}
+            {isActive && !showScore && (
+              <div
+                ref={activeExamRef}
+                className={`flex flex-col lg:flex-row gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 scroll-mt-24 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
+              >
+                {/* Exam Navigation Panel */}
+                {isSidebarOpen && (
+                  <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 sm:order-2">
+                    <div className={isFullscreen ? "" : "sticky top-4"}>
+                      <QuestionNavigationPanel
+                        currentQuestionIndex={currentQuestionIndex}
+                        totalQuestions={selectedSimulado.length}
+                        questionStatuses={questionStatuses}
+                        onQuestionSelect={handleQuestionSelect}
+                        onPreviousQuestion={handleKeyboardPreviousQuestion}
+                        onNextQuestion={handleKeyboardNextQuestion}
+                        canNavigatePrevious={currentQuestionIndex > 0}
+                        canNavigateNext={
+                          currentQuestionIndex < selectedSimulado.length - 1
                         }
-                        value={studyMode}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o modo de estudo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="practice">
-                            Modo de Prática - Feedback imediato após cada
-                            questão
-                          </SelectItem>
-                          <SelectItem value="exam">
-                            Modo de Exame Simulado - Cronometrado, sem feedback
-                            até o final
-                          </SelectItem>
-                          <SelectItem value="domain_focus">
-                            Foco por Domínio/Categoria - Estudo direcionado
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                        studyMode={studyMode}
+                        isCompact={false}
+                      />
                     </div>
-
-                    {/* Domain/Category Filters - Only show for domain_focus mode */}
-                    {studyMode === "domain_focus" && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                          <label className="text-sm font-medium">
-                            Domínios
-                          </label>
-                          <Select
-                            onValueChange={(value: ExamDomainKey) => {
-                              if (value && !selectedDomains.includes(value)) {
-                                setSelectedDomains([...selectedDomains, value]);
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Adicionar domínio" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="DOMAIN_1">
-                                Conceitos de Nuvem
-                              </SelectItem>
-                              <SelectItem value="DOMAIN_2">
-                                Segurança e Conformidade
-                              </SelectItem>
-                              <SelectItem value="DOMAIN_3">
-                                Tecnologia
-                              </SelectItem>
-                              <SelectItem value="DOMAIN_4">
-                                Faturamento e Preços
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {selectedDomains.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {selectedDomains.map((domain) => (
-                                <Badge
-                                  key={domain}
-                                  variant="secondary"
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    setSelectedDomains(
-                                      selectedDomains.filter(
-                                        (d) => d !== domain,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  {getDomainName(
-                                    selectedExamId || "CLF-C02",
-                                    domain,
-                                  )}{" "}
-                                  ×
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-3">
-                          <label className="text-sm font-medium">
-                            Categorias
-                          </label>
-                          <Select
-                            onValueChange={(value: ExamCategory) => {
-                              if (
-                                value &&
-                                !selectedCategories.includes(value)
-                              ) {
-                                setSelectedCategories([
-                                  ...selectedCategories,
-                                  value,
-                                ]);
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Adicionar categoria" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="cloud_concepts">
-                                Conceitos de Nuvem
-                              </SelectItem>
-                              <SelectItem value="security">
-                                Segurança
-                              </SelectItem>
-                              <SelectItem value="technology">
-                                Tecnologia
-                              </SelectItem>
-                              <SelectItem value="billing">
-                                Faturamento
-                              </SelectItem>
-                              <SelectItem value="compute">
-                                Computação
-                              </SelectItem>
-                              <SelectItem value="storage">
-                                Armazenamento
-                              </SelectItem>
-                              <SelectItem value="networking">Redes</SelectItem>
-                              <SelectItem value="database">
-                                Banco de Dados
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {selectedCategories.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {selectedCategories.map((category) => (
-                                <Badge
-                                  key={category}
-                                  variant="secondary"
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    setSelectedCategories(
-                                      selectedCategories.filter(
-                                        (c) => c !== category,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  {category} ×
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Exam Selection */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">Exame</label>
-                      <Select
-                        onValueChange={handleExamSelection}
-                        value={selectedExamId}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione seu exame" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.keys(simulados).map((examId) => {
-                            const sourceInfo = getExamSourceInfo(examId);
-                            return (
-                              <SelectItem key={examId} value={examId}>
-                                <div className="flex items-center justify-between w-full">
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {sourceInfo.name} (
-                                      {sourceInfo.questionCount} questões)
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      {sourceInfo.description}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 ml-2">
-                                    <span className="text-xs">
-                                      {getSourceIcon(sourceInfo.primarySource)}
-                                    </span>
-                                    <Badge
-                                      variant="outline"
-                                      className={`text-xs px-1 py-0 ${getSourceColor(sourceInfo.primarySource)}`}
-                                    >
-                                      {getSourceLabel(sourceInfo.primarySource)}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {!checkingTerms && !termsAccepted && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            <svg
-                              className="h-5 w-5 text-yellow-400"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-sm font-medium text-yellow-800">
-                              Termos de Serviço Requeridos
-                            </h3>
-                            <p className="text-sm text-yellow-700 mt-1">
-                              Você deve aceitar nossos Termos de Serviço antes
-                              de iniciar o exame.
-                            </p>
-                            <div className="mt-3 flex flex-col gap-2">
-                              <TermsNavigationLinks
-                                variant="link"
-                                className="text-sm text-yellow-800 hover:text-yellow-900"
-                              />
-                              <button
-                                onClick={async () => {
-                                  setCheckingTerms(true);
-                                  try {
-                                    const hasConsent = await hasValidConsent(
-                                      termsConfig.currentVersion,
-                                      termsConfig.gracePeriodDays,
-                                    );
-                                    setTermsAccepted(hasConsent);
-                                  } catch (error) {
-                                    console.error(
-                                      "Error rechecking terms:",
-                                      error,
-                                    );
-                                  } finally {
-                                    setCheckingTerms(false);
-                                  }
-                                }}
-                                className="text-xs text-yellow-800 hover:text-yellow-900 underline text-left"
-                                disabled={checkingTerms}
-                              >
-                                {checkingTerms
-                                  ? "Verificando..."
-                                  : "Verificar novamente"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      onClick={startExam}
-                      disabled={
-                        !selectedExamId || checkingTerms || !termsAccepted
-                      }
-                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-                    >
-                      {checkingTerms && "Verificando Termos..."}
-                      {!checkingTerms &&
-                        !termsAccepted &&
-                        "Aceite os Termos para Continuar"}
-                      {!checkingTerms &&
-                        termsAccepted &&
-                        studyMode === "practice" &&
-                        "Iniciar Modo de Prática"}
-                      {!checkingTerms &&
-                        termsAccepted &&
-                        studyMode === "exam" &&
-                        "Iniciar Exame Simulado"}
-                      {!checkingTerms &&
-                        termsAccepted &&
-                        studyMode === "domain_focus" &&
-                        "Iniciar Estudo Focado"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {currentView === "exam" &&
-                isActive &&
-                !showScore &&
-                currentQuestion && (
-                  <div className="space-y-6">
-                    {/* background color: #bg-background text-foreground */}
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {studyMode === "practice"
-                              ? "Modo Prática"
-                              : studyMode === "exam"
-                                ? "Modo Exame"
-                                : "Estudo Focado"}
-                          </Badge>
-                          {studyMode !== "exam" && (
-                            <Badge variant="secondary" className="text-xs">
-                              {currentQuestion.difficulty}
-                            </Badge>
-                          )}
-                          {/* {selectedExamId && (
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${getSourceColor(getExamSourceInfo(selectedExamId).primarySource)}`}
-                            >
-                              {getSourceIcon(
-                                getExamSourceInfo(selectedExamId).primarySource,
-                              )}{" "}
-                              {getSourceLabel(
-                                getExamSourceInfo(selectedExamId).primarySource,
-                              )}
-                            </Badge>
-                          )} */}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleToggleFavorite(currentQuestion.id)
-                            }
-                            className={
-                              isFavoriteQuestion(currentQuestion.id)
-                                ? "text-yellow-500"
-                                : "text-gray-400"
-                            }
-                            title="Adicionar aos Favoritos"
-                          >
-                            <Star
-                              className={`h-4 w-4 ${isFavoriteQuestion(currentQuestion.id) ? "fill-current" : ""}`}
-                            />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowShortcutsModal(true)}
-                            className="text-gray-400 hover:text-gray-600"
-                            title="Atalhos do Teclado (Pressione ? para abrir)"
-                          >
-                            <Keyboard className="h-4 w-4" />
-                          </Button>
-                          <TermsNavigationLinks variant="button" size="sm" />
-                        </div>
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {currentQuestion.text}
-                      </h3>
-                      {currentQuestion.type === "multiple_choice" && (
-                        <p className="text-sm text-blue-600 mt-2 font-medium">
-                          Seleciona todas as opções corretas
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      {currentOptions.map((option) => (
-                        <Button
-                          key={option.id}
-                          variant={getButtonVariant(option.id)}
-                          className="w-full justify-start text-left p-4 h-auto whitespace-normal"
-                          onClick={() =>
-                            !showExplanation &&
-                            (currentQuestion.type === "multiple_choice"
-                              ? handleAnswerToggle(option.id)
-                              : setSelectedAnswers([option.id]))
-                          }
-                          disabled={showExplanation}
-                        >
-                          {option.text}
-                        </Button>
-                      ))}
-                    </div>
-
-                    {!showExplanation && selectedAnswers.length > 0 && (
-                      <Button
-                        onClick={handleSubmitAnswers}
-                        className="w-full sm:w-auto"
-                      >
-                        {studyMode === "practice"
-                          ? "Verificar Resposta"
-                          : currentQuestionIndex === selectedSimulado.length - 1
-                            ? "Finalizar Exame"
-                            : "Próxima Questão"}
-                      </Button>
-                    )}
-
-                    {showExplanation && (
-                      <div className="space-y-6 bg-background text-foreground p-6 rounded-lg border">
-                        <div className="flex items-center gap-2">
-                          {answerStatus === "correct" && (
-                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Resposta Correta
-                            </Badge>
-                          )}
-                          {answerStatus === "partial" && (
-                            <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                              Parcialmente Correta
-                            </Badge>
-                          )}
-                          {answerStatus === "incorrect" && (
-                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                              Resposta Incorreta
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="space-y-3">
-                            <h3 className="font-semibold text-green-700">
-                              Respostas Corretas:
-                            </h3>
-                            <ul className="space-y-3">
-                              {correctOptions.map((option) => (
-                                <li key={option.id} className="flex gap-3">
-                                  <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                                  <div>
-                                    <p className="font-medium">{option.text}</p>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                      {option.explanation}
-                                    </p>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <Separator />
-
-                          <div className="space-y-3">
-                            <h3 className="font-semibold text-red-700">
-                              Outras Opções Explicadas:
-                            </h3>
-                            <ul className="space-y-3">
-                              {incorrectOptions.map((option) => (
-                                <li key={option.id} className="space-y-1">
-                                  <p className="font-medium">{option.text}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {option.explanation}
-                                  </p>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-gray-700">
-                            References:
-                          </h4>
-                          <ul className="space-y-1">
-                            {currentQuestion.references.map(
-                              (reference, index) => (
-                                <li key={index}>
-                                  <a
-                                    href={reference}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline text-sm"
-                                  >
-                                    {reference}
-                                  </a>
-                                </li>
-                              ),
-                            )}
-                          </ul>
-                        </div>
-
-                        <Button
-                          onClick={handleNextQuestion}
-                          className="w-full sm:w-auto"
-                          // variant={
-                          //   answerStatus === "correct" ? "default" : "secondary"
-                          // }
-                        >
-                          {currentQuestionIndex ===
-                          selectedSimulado.length - 1 ? (
-                            "Finalizar Exame"
-                          ) : (
-                            <>
-                              Proxima Questão
-                              <ChevronRight className="w-4 h-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 )}
 
-              {currentView === "exam" && showScore && (
-                <div className="text-center space-y-6 py-8">
-                  <div className="inline-flex p-4 bg-background text-foreground rounded-full">
-                    <Award className="w-12 h-12 text-blue-600" />
-                  </div>
+                {/* Question Area */}
+                <div
+                  className={`flex-1 min-w-0 order-1 lg:order-2 sm:order-1 w-full`}
+                >
+                  <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
+                    <CardHeader className="space-y-4 pb-4 pt-8 px-8 border-b border-border/10 bg-muted/5">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="hidden lg:flex flex-shrink-0 shadow-sm"
+                            title={
+                              isSidebarOpen
+                                ? "Ocultar Navegação"
+                                : "Mostrar Navegação"
+                            }
+                          >
+                            {isSidebarOpen ? (
+                              <PanelLeftClose className="w-4 h-4" />
+                            ) : (
+                              <PanelLeftOpen className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <div className="space-y-1">
+                            {/* TODO: Colocar o nome do exame aqui  */}
+                            {/* <CardTitle className="text-2xl md:text-3xl font-extrabold text-gradient">
+                              AWS Cloud Practitioner
+                            </CardTitle> */}
+                            {studyMode === "exam" && (
+                              <div className="flex items-center gap-2 text-gray-600 font-mono text-lg font-bold">
+                                <Timer className="w-4 h-4" />
+                                {formatTime(timeLeft)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-bold">
-                      {studyMode === "practice"
-                        ? "Prática Concluída!"
-                        : studyMode === "exam"
-                          ? "Exame Concluído!"
-                          : "Estudo Focado Concluído!"}
-                    </h2>
-                    {endMessage && (
-                      <p className="text-gray-600">{endMessage}</p>
-                    )}
-                  </div>
-
-                  <div className="max-w-xs mx-auto p-6 bg-gray-50 rounded-lg">
-                    <div className="text-4xl font-bold text-blue-600">
-                      {Math.round((score / selectedSimulado.length) * 100)}%
-                    </div>
-                    <p className="text-gray-600 mt-2">
-                      {score} corretas de {selectedSimulado.length} questões
-                    </p>
-                    {simulatedExam?.timeSpent && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Tempo gasto: {Math.floor(simulatedExam.timeSpent / 60)}m{" "}
-                        {simulatedExam.timeSpent % 60}s
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Show detailed results for exam mode */}
-                  {studyMode === "exam" && (
-                    <div className="max-w-2xl mx-auto space-y-4">
-                      <h3 className="text-lg font-semibold">
-                        Revisão das Respostas
-                      </h3>
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {selectedSimulado.map((question, index) => {
-                          const userAnswer = allAnswers[question.id];
-                          const correctOptions = question.options.filter(
-                            (opt) => opt.isCorrect,
-                          );
-
-                          return (
-                            <div
-                              key={question.id}
-                              className="p-4 border rounded-lg text-left"
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-sm px-3 py-1 font-semibold border-border/20"
+                          >
+                            Questão {currentQuestionIndex + 1} de{" "}
+                            {selectedSimulado.length}
+                          </Badge>
+                          {currentQuestion && (
+                            <Badge
+                              variant="secondary"
+                              className="text-sm px-3 py-1 font-semibold"
                             >
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge
-                                  variant={
-                                    userAnswer?.status === "correct"
-                                      ? "default"
-                                      : "destructive"
-                                  }
-                                >
-                                  Questão {index + 1}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {question.category}
-                                </Badge>
-                              </div>
-                              <p className="text-sm mb-2">{question.text}</p>
-                              <div className="space-y-1 text-xs">
-                                <p>
-                                  <strong>Resposta correta:</strong>{" "}
-                                  {correctOptions
-                                    .map((opt) => opt.text)
-                                    .join(", ")}
-                                </p>
-                                {userAnswer && (
-                                  <p>
-                                    <strong>Sua resposta:</strong>{" "}
-                                    {userAnswer.answers
-                                      .map(
-                                        (id) =>
-                                          question.options.find(
-                                            (opt) => opt.id === id,
-                                          )?.text,
-                                      )
-                                      .join(", ")}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                              {currentQuestion.category}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  <div className="flex gap-4 justify-center flex-wrap">
-                    <Button
-                      onClick={resetExam}
-                      variant="outline"
-                      className="gap-2"
-                    >
-                      <BookOpen className="w-4 h-4" />
-                      Escolher Outro Exame
-                    </Button>
-                    <Button onClick={startExam} className="gap-2">
-                      <RotateCcw className="w-4 h-4" />
-                      Tentar Novamente
-                    </Button>
-                    {currentExamResult && (
-                      <Button
-                        onClick={() => {
-                          handleViewExamDetails(currentExamResult);
-                        }}
-                        variant="secondary"
-                        className="gap-2"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        Ver Detalhes do Exame
-                      </Button>
-                    )}
-                  </div>
+                      <Progress value={progress} className="h-1.5" />
+                    </CardHeader>
+
+                    <CardContent className="p-6 md:p-8">
+                      {currentView === "exam" &&
+                        isActive &&
+                        currentQuestion && (
+                          <ActiveExamView
+                            currentQuestion={currentQuestion}
+                            currentOptions={currentOptions}
+                            correctOptions={correctOptions}
+                            incorrectOptions={incorrectOptions}
+                            currentQuestionIndex={currentQuestionIndex}
+                            totalQuestions={selectedSimulado.length}
+                            selectedAnswers={selectedAnswers}
+                            showExplanation={showExplanation}
+                            answerStatus={answerStatus}
+                            studyMode={studyMode}
+                            isFullscreen={isFullscreen}
+                            isFavorite={isFavoriteQuestion(currentQuestion.id)}
+                            onAnswerToggle={handleAnswerToggle}
+                            onSelectSingleAnswer={(id) =>
+                              setSelectedAnswers([id])
+                            }
+                            onSubmitAnswers={handleSubmitAnswers}
+                            onNextQuestion={handleNextQuestion}
+                            onPreviousQuestion={handleKeyboardPreviousQuestion}
+                            onSkipQuestion={handleSkipQuestion}
+                            onToggleFavorite={() =>
+                              handleToggleFavorite(currentQuestion.id)
+                            }
+                            onToggleFullscreen={toggleFullscreen}
+                            onOpenShortcuts={() => setShowShortcutsModal(true)}
+                            getButtonVariant={getButtonVariant}
+                          />
+                        )}
+                    </CardContent>
+                  </Card>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
 
-          {/* Contextual Terms Links */}
-          <div className="mt-6 pt-4 border-t border-border">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-2">
+            {/* Resume Dialog Logic (Matched to user screenshot) */}
+            {/* Resume dialog */}
+            {showResumeDialog && savedExamData && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <Card className="w-full max-w-md mx-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Timer className="h-5 w-5" /> Exame em Andamento
+                    </CardTitle>
+                    <CardDescription>
+                      Encontramos um exame que você estava fazendo. Deseja
+                      continuar de onde parou?
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Exame:</strong> {savedExamData.selectedExamId}
+                      </p>
+                      <p>
+                        <strong>Modo:</strong>{" "}
+                        {savedExamData.studyMode === "practice"
+                          ? "Prática"
+                          : savedExamData.studyMode === "exam"
+                            ? "Exame Simulado"
+                            : "Estudo Focado"}
+                      </p>
+                      <p>
+                        <strong>Progresso:</strong>{" "}
+                        {savedExamData.currentQuestionIndex + 1} de{" "}
+                        {savedExamData.selectedSimulado?.length || 0} questões
+                      </p>
+                      <p>
+                        <strong>Pontuação atual:</strong> {savedExamData.score}{" "}
+                        pontos
+                      </p>
+                      {savedExamData.studyMode === "exam" && (
+                        <p>
+                          <strong>Tempo restante:</strong>{" "}
+                          {Math.floor(savedExamData.timeLeft / 60)}m{" "}
+                          {savedExamData.timeLeft % 60}s
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={resumeSavedExam} className="flex-1">
+                        Continuar Exame
+                      </Button>
+                      <Button
+                        onClick={discardSavedExam}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Começar Novo
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Footer Terms */}
+            <div className="mt-12 pt-8 border-t border-border/10 text-center">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">
                 Ao usar este simulador, você concorda com nossos
               </p>
               <TermsNavigationLinks variant="inline" className="text-xs" />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        isOpen={showShortcutsModal}
-        onClose={() => setShowShortcutsModal(false)}
-      />
-    </TermsVersionManager>
+        <KeyboardShortcutsModal
+          isOpen={showShortcutsModal}
+          onClose={() => setShowShortcutsModal(false)}
+        />
+      </TermsVersionManager>
+    </TooltipProvider>
   );
 };
 

@@ -5,28 +5,39 @@ export const questionsClfC0201: Question[] = [
   {
     id: "CLF-C02-01-01",
     text: "Uma empresa planeja usar um dispositivo Amazon Snowball Edge para transferir arquivos para a Nuvem AWS. Quais atividades relacionadas a um dispositivo Snowball Edge estão disponíveis gratuitamente para a empresa?",
+    text_en:
+      "A company plans to use an Amazon Snowball Edge device to transfer files to the AWS Cloud. Which activities related to a Snowball Edge device are available at no charge to the company?",
     type: "single_choice",
     options: [
       {
         id: "A",
         text: "Uso do dispositivo Snowball Edge por um período de 10 dias",
+        text_en: "Use of the Snowball Edge device for a 10-day period",
         isCorrect: true,
         explanation:
           "A AWS oferece 10 dias gratuitos de uso do dispositivo Snowball Edge. Após esse período, são cobradas taxas diárias adicionais.",
+        explanation_en:
+          "AWS provides 10 days of free use of the Snowball Edge device. After this period, additional daily fees are charged.",
       },
       {
         id: "B",
         text: "A transferência de dados do Amazon S3 para o dispositivo Snowball Edge",
+        text_en: "Data transfer from Amazon S3 to the Snowball Edge device",
         isCorrect: false,
         explanation:
           "A transferência de dados do S3 para o Snowball Edge é cobrada.",
+        explanation_en:
+          "Data transfer from S3 to the Snowball Edge device is charged.",
       },
       {
         id: "C",
         text: "A transferência de dados do dispositivo Snowball Edge para o Amazon S3",
+        text_en: "Data transfer from the Snowball Edge device to Amazon S3",
         isCorrect: false,
         explanation:
           "A transferência de dados do Snowball Edge para o S3 é cobrada.",
+        explanation_en:
+          "Data transfer from the Snowball Edge device to S3 is charged.",
       },
       {
         id: "D",
@@ -357,7 +368,10 @@ export const questionsClfC0201: Question[] = [
     category: "management",
     dominio: "DOMAIN_4",
     difficulty: "medium",
-    references: ["https://aws.amazon.com/compute-optimizer/"],
+    references: [
+      "https://aws.amazon.com/compute-optimizer/",
+      "https://aws.amazon.com/pt/aws-cost-management/aws-cost-explorer/",
+    ],
   },
   {
     id: "CLF-C02-01-10",

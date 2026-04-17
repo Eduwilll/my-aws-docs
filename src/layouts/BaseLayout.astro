@@ -8,12 +8,11 @@ const myString: DescribedString = {
   description:
     "Projeto Pessoal de Documentação e aprendizado da plataforma AWS - Simulados e notas de estudo.",
 };
-
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
 import TermsNavigationLinks from "../components/TermsNavigationLinks";
 import { Github, Twitter, Linkedin, Cloud, Menu, X } from "lucide-react";
-const { title } = Astro.props;
+const { title, fullWidth = false } = Astro.props;
 const { description } = myString;
 ---
 
@@ -23,10 +22,10 @@ const { description } = myString;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="images/favicon.ico" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} - Curso AWS</title>
     <meta name="description" content={description} />
-
     <!-- OpenGraph / Social Meta Tags -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -36,7 +35,6 @@ const { description } = myString;
       content="https://www.egyptiancouncil.com/assetsFront/images/photos/22/11/24/cloud-aws.png"
     />
     <meta property="og:url" content={Astro.url.href} />
-
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
@@ -45,7 +43,6 @@ const { description } = myString;
       name="twitter:image"
       content="https://my-aws-docs.vercel.app/images/og-image.webp"
     />
-
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
@@ -61,8 +58,10 @@ const { description } = myString;
       }
     </script>
   </head>
-  <body class="bg-background text-foreground">
-    <header class="bg-secondary py-4 px-4 sm:px-8 md:px-12 lg:px-16 shadow-md">
+  <body class="bg-background text-foreground min-h-screen flex flex-col">
+    <header
+      class="sticky top-0 z-50 w-full bg-background/70 backdrop-blur-xl border-b border-white/10 transition-all duration-300 py-4 px-4 sm:px-8"
+    >
       <div class="max-w-screen-lg mx-auto">
         <div class="flex justify-between items-center">
           <a href="/">
@@ -71,7 +70,6 @@ const { description } = myString;
               <h1 class="text-xl sm:text-2xl font-bold">My AWS Docs</h1>
             </div>
           </a>
-
           <!-- Mobile Menu Button -->
           <button
             id="menuButton"
@@ -80,7 +78,6 @@ const { description } = myString;
           >
             <Menu />
           </button>
-
           <!-- Desktop Navigation -->
           <nav class="hidden md:flex items-center space-x-4">
             <ul class="flex space-x-6 mr-4">
@@ -106,7 +103,6 @@ const { description } = myString;
                 >
               </li>
             </ul>
-
             <ThemeToggle client:load />
             <a
               href="https://github.com/Eduwilll/my-aws-docs"
@@ -119,7 +115,6 @@ const { description } = myString;
             </a>
           </nav>
         </div>
-
         <!-- Mobile Navigation -->
         <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4">
           <nav class="flex flex-col space-y-4">
@@ -162,13 +157,17 @@ const { description } = myString;
         </div>
       </div>
     </header>
-
-    <main class="max-w-screen-lg mx-auto py-12 px-4 sm:px-8 md:px-12 lg:px-16">
+    <main
+      class={`flex-grow w-full py-4 animate-in fade-in duration-500 ${
+        fullWidth
+          ? ""
+          : "max-w-screen-lg mx-auto px-4 sm:px-8 md:px-12 lg:px-16"
+      }`}
+    >
       <slot />
     </main>
-
     <footer
-      class="bg-secondary py-6 px-4 sm:px-8 md:px-12 lg:px-16 text-center"
+      class="border-t border-white/10 bg-background/50 backdrop-blur-md py-8 px-4 sm:px-8 md:px-12 lg:px-16 text-center mt-auto"
     >
       <div class="max-w-screen-lg mx-auto">
         <div class="flex justify-center space-x-6 mb-4">
@@ -205,11 +204,9 @@ const { description } = myString;
         </div>
       </div>
     </footer>
-
     <script>
       const menuButton = document.getElementById("menuButton");
       const mobileMenu = document.getElementById("mobileMenu");
-
       menuButton?.addEventListener("click", () => {
         mobileMenu?.classList.toggle("hidden");
       });

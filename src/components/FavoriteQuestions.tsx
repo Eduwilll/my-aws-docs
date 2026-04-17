@@ -125,12 +125,19 @@ export const FavoriteQuestions: React.FC<FavoriteQuestionsProps> = ({
                           {question.difficulty}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {favorite.examId}
+                          {question.dominio}
                         </Badge>
                       </div>
 
                       <p className="text-sm font-medium line-clamp-2">
                         {question.text}
+                      </p>
+                      <p className="text-sm font-medium line-clamp-2 text-green-600 dark:text-green-500 mt-1">
+                        <strong>Resposta:</strong>{" "}
+                        {question.options
+                          .filter((option) => option.isCorrect)
+                          .map((option) => option.text)
+                          .join(" | ")}
                       </p>
 
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">

@@ -9,54 +9,71 @@ export interface ExamSourceInfo {
   sourceBreakdown?: { [key in QuestionSource]?: number };
 }
 
-// Simple mapping of exam IDs to their source information
+// Core mapping of the 3 main AWS Certifications
 export const examSourceMap: { [key: string]: ExamSourceInfo } = {
+  // Main Certifications (for UI Cards)
   "CLF-C02": {
     id: "CLF-C02",
-    name: "Exame CLF-C02",
-    description: "Questões geradas por IA",
-    questionCount: 65,
-    primarySource: "AI",
+    name: "AWS Certified Cloud Practitioner",
+    description: "Conceitos fundamentais de nuvem e segurança da AWS",
+    questionCount: 0,
+    primarySource: "OFFICIAL",
+  },
+  "SAA-C03": {
+    id: "SAA-C03",
+    name: "AWS Certified Solutions Architect – Associate",
+    description: "Design de arquiteturas distribuídas e resilientes na AWS",
+    questionCount: 0,
+    primarySource: "OFFICIAL",
+  },
+  "DVA-C02": {
+    id: "DVA-C02",
+    name: "AWS Certified Developer – Associate",
+    description: "Desenvolvimento e manutenção de aplicações na AWS",
+    questionCount: 0,
+    primarySource: "OFFICIAL",
+  },
+
+  // Specific Question Banks
+  "CLF-C02-FULL": {
+    id: "CLF-C02-FULL",
+    name: "Treinamento Infinito (Todas as Questões)",
+    description: "Simulado com todas as questões disponíveis misturadas.",
+    questionCount: 0, // dynamically calculated
+    primarySource: "SYSTEM",
   },
   "CLF-C02-01": {
     id: "CLF-C02-01",
-    name: "Exame CLF-C02-01",
-    description: "Questões geradas por IA",
+    name: "Simulado Prático 01 (65 Questões)",
+    description: "Questões selecionadas para o exame CLF-C02",
     questionCount: 65,
     primarySource: "AI",
   },
   "CLF-C02-02": {
     id: "CLF-C02-02",
-    name: "Exame CLF-C02-02",
-    description: "QQuestões geradas por IA",
+    name: "Simulado Prático 02 (65 Questões)",
+    description: "Questões selecionadas para o exame CLF-C02",
+    questionCount: 65,
+    primarySource: "AI",
+  },
+  "CLF-C02-CC-01": {
+    id: "CLF-C02-CC-01",
+    name: "Simulado CC 01 (65 Questões)",
+    description: "Questões no estilo do exame oficial",
     questionCount: 65,
     primarySource: "AI",
   },
   "CLF-C02-GPT": {
     id: "CLF-C02-GPT",
-    name: "Exame CLF-C02-GPT",
-    description: "Questões geradas por IA",
+    name: "Simulado Gerado por GPT",
+    description: "Questões extras geradas por IA",
     questionCount: 65,
     primarySource: "AI",
   },
-  "CLF-C02-FULL-NOGPT": {
-    id: "CLF-C02-FULL-NOGPT",
-    name: "Exame Infinito",
-    description: "Questões geradas por IA",
-    questionCount: 130,
-    primarySource: "AI",
-  },
-  "CLF-C02-CC-01": {
-    id: "CLF-C02-CC-01",
-    name: "Exame CLF-C02-CC-01",
-    description: "Questões geradas por IA",
-    questionCount: 65,
-    primarySource: "AI",
-  },
-  "SAA-C03": {
-    id: "SAA-C03",
-    name: "Exame SAA-C03",
-    description: "Questões geradas por IA",
+  "SAA-C03-FULL": {
+    id: "SAA-C03-FULL",
+    name: "Simulado SAA-C03 Único",
+    description: "Questões SAA-C03 disponíveis",
     questionCount: 65,
     primarySource: "AI",
   },
