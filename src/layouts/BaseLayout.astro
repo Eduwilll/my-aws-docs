@@ -6,9 +6,10 @@ type DescribedString = {
 const myString: DescribedString = {
   value: "Seja bem vindo!",
   description:
-    "Projeto Pessoal de Documentação e aprendizado da plataforma AWS - Simulados e notas de estudo.",
+    "Guia definitivo e projeto de documentação para aprendizado da plataforma AWS. Acesse simulados interativos e notas de estudo.",
 };
 import "../styles/global.css";
+import BaseHead from "../components/BaseHead.astro";
 import ThemeToggle from "../components/ThemeToggle";
 import TermsNavigationLinks from "../components/TermsNavigationLinks";
 import { Github, Twitter, Linkedin, Cloud, Menu, X } from "lucide-react";
@@ -19,30 +20,7 @@ const { description } = myString;
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="images/favicon.ico" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title} - Curso AWS</title>
-    <meta name="description" content={description} />
-    <!-- OpenGraph / Social Meta Tags -->
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:image"
-      content="https://www.egyptiancouncil.com/assetsFront/images/photos/22/11/24/cloud-aws.png"
-    />
-    <meta property="og:url" content={Astro.url.href} />
-    <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta
-      name="twitter:image"
-      content="https://my-aws-docs.vercel.app/images/og-image.webp"
-    />
+    <BaseHead title={`${title} - Curso AWS`} description={description} />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
