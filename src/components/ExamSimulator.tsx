@@ -862,7 +862,46 @@ const ExamSimulator = () => {
     }
   };
 
-  if (!isMounted) return null;
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 max-w-full mx-auto px-4 lg:px-0 transition-all duration-300">
+        {/* Sidebar Skeleton */}
+        <div className="hidden lg:block w-80 min-w-[20rem] flex-shrink-0">
+          <div className="glass-card border border-border/10 shadow-2xl rounded-[2rem] p-6 h-[400px] animate-pulse flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="h-8 bg-muted/60 rounded-xl w-3/4"></div>
+              <div className="space-y-3">
+                <div className="h-12 bg-muted/40 rounded-xl w-full"></div>
+                <div className="h-12 bg-muted/40 rounded-xl w-full"></div>
+                <div className="h-12 bg-muted/40 rounded-xl w-full"></div>
+              </div>
+            </div>
+            <div className="h-10 bg-muted/60 rounded-xl w-1/2"></div>
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="flex-1 w-full">
+          <Card className="glass-card border border-border/10 shadow-2xl rounded-[2rem] overflow-hidden min-h-[500px] flex items-center justify-center p-8">
+            <div className="flex flex-col items-center space-y-6 text-center max-w-sm">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-purple-500 rounded-full animate-spin [animation-duration:1.5s]"></div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-gradient">
+                  Carregando Simulador
+                </h3>
+                <p className="text-sm text-muted-foreground animate-pulse">
+                  Preparando o ambiente de estudos...
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
