@@ -61,6 +61,7 @@ import { ExamSelectionScreen } from "@/components/exam/ExamSelectionScreen";
 import { ActiveExamView } from "@/components/exam/ActiveExamView";
 import { ExamScoreScreen } from "@/components/exam/ExamScoreScreen";
 import { ExamSidebar } from "@/components/exam/ExamSidebar";
+import type { title } from "process";
 
 // Lazy-loaded secondary views
 const ProgressReport = React.lazy(() =>
@@ -96,6 +97,7 @@ const certificationBanks: Record<string, string[]> = {
     "CLF-C02-CC-01",
     "CLF-C02-GPT",
   ],
+  "AIF-C01": ["AIF-C01-01"],
   "SAA-C03": ["SAA-C03-FULL"],
   "DVA-C02": [],
 };
@@ -105,6 +107,11 @@ const certifications = [
     id: "CLF-C02",
     title: "AWS Certified Cloud Practitioner",
     img: "/images/badges/AWS-Cloud-Practitioner_badge.png",
+  },
+  {
+    id: "AIF-C01",
+    title: "AWS Certified AI - Practitioner",
+    img: "/images/badges/AWS-Certified-AI-Practitioner_badge.png",
   },
   {
     id: "SAA-C03",

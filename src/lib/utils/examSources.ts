@@ -33,6 +33,13 @@ export const examSourceMap: { [key: string]: ExamSourceInfo } = {
     questionCount: 0,
     primarySource: "OFFICIAL",
   },
+  "AIF-C01": {
+    id: "AIF-C01",
+    name: "AWS Certified AI Practitioner",
+    description: "Fundamentos de IA/ML e IA generativa na AWS",
+    questionCount: 0,
+    primarySource: "OFFICIAL",
+  },
 
   // Specific Question Banks
   "CLF-C02-FULL": {
@@ -69,6 +76,21 @@ export const examSourceMap: { [key: string]: ExamSourceInfo } = {
     description: "Questões extras geradas por IA",
     questionCount: 65,
     primarySource: "AI",
+  },
+  "AIF-C01-01": {
+    id: "AIF-C01-01",
+    name: "Simulado AIF-C01 Único",
+    description: "Questões AIF-C01 disponíveis",
+    questionCount: 65,
+    primarySource: "AI",
+  },
+  "AIF-C01-FULL": {
+    id: "AIF-C01-FULL",
+    name: "Treinamento Infinito AIF-C01 (Todas as Questões)",
+    description:
+      "Simulado com todas as questões AIF-C01 disponíveis misturadas.",
+    questionCount: 0, // dynamically calculated
+    primarySource: "SYSTEM",
   },
   "SAA-C03-FULL": {
     id: "SAA-C03-FULL",

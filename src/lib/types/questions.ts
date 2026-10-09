@@ -61,7 +61,15 @@ export type ExamCategory =
   | "management_governance"
   | "migration_transfer"
   | "serverless"
-  | "containers";
+  | "containers"
+  | "ai_ml_fundamentals"
+  | "genai_fundamentals"
+  | "foundation_models"
+  | "responsible_ai"
+  | "machine_learning"
+  | "ai_security_compliance_governance"
+  | "security_governance"
+  | "generative_ai";
 
 export type typeChoice = "single_choice" | "multiple_choice";
 

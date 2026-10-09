@@ -50,6 +50,16 @@ export async function loadQuestionBank(bankId: string): Promise<Question[]> {
       ];
     }
 
+    case "AIF-C01-01": {
+      const { questionsaAIFc0101 } = await import("@/data/questions-AIF-C01");
+      return questionsaAIFc0101;
+    }
+
+    case "AIF-C01-FULL": {
+      const { questionsaAIFc0101 } = await import("@/data/questions-AIF-C01");
+      return questionsaAIFc0101;
+    }
+
     case "SAA-C03-FULL": {
       const { questionsSaaC03 } = await import("@/data/questions-saa-c03");
       return questionsSaaC03;
@@ -71,5 +81,7 @@ export const questionBankEstimates: Record<string, number> = {
   "CLF-C02-02": 65,
   "CLF-C02-CC-01": 65,
   "CLF-C02-GPT": 65,
+  "AIF-C01-01": 65,
+  "AIF-C01-FULL": 65,
   "SAA-C03-FULL": 65,
 };

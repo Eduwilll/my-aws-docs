@@ -122,7 +122,11 @@ export function ExamSelectionScreen({
             {certifications.map((cert) => {
               const availableBanks = certificationBanks[cert.id] || [];
               const totalQuestions =
-                questionBankEstimates[`${cert.id}-FULL`] || 0;
+                questionBankEstimates[`${cert.id}-FULL`] ??
+                availableBanks.reduce(
+                  (sum, bankId) => sum + (questionBankEstimates[bankId] || 0),
+                  0,
+                );
               const isAvailable = availableBanks.length > 0;
               const isSelected = selectedCertification === cert.id;
 

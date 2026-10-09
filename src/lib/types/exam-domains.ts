@@ -6,6 +6,15 @@ export const CLF_C02_DomainMap = {
   DOMAIN_4: "Cobrança e Preços",
 } as const;
 
+// AWS Certified AI - Practitioner (AIF-C01) Domain Map
+export const AIF_C01_DomainMap = {
+  DOMAIN_1: "Fundamentos de IA e ML",
+  DOMAIN_2: "Fundamentos de GenAI",
+  DOMAIN_3: "Aplicação de modelos de base",
+  DOMAIN_4: "Diretrizes de IA responsável",
+  DOMAIN_5: "Segurança, conformidade e governança para soluções de IA",
+} as const;
+
 // AWS Certified Solutions Architect - Associate (SAA-C03) Domain Map
 export const SAA_C03_DomainMap = {
   DOMAIN_1: "Criação de arquiteturas seguras",
