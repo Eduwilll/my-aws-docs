@@ -41,6 +41,8 @@ interface ActiveExamViewProps {
   onToggleFavorite: () => void;
   onToggleFullscreen: () => void;
   onOpenShortcuts: () => void;
+  lang: "pt" | "en";
+  onToggleLang: () => void;
   getButtonVariant: (
     optionId: string,
   ) => "default" | "outline" | "success" | "destructive";
@@ -68,9 +70,12 @@ export function ActiveExamView({
   onToggleFavorite,
   onToggleFullscreen,
   onOpenShortcuts,
+  lang,
+  onToggleLang,
   getButtonVariant,
 }: ActiveExamViewProps) {
   const explanationRef = useRef<HTMLDivElement>(null);
+  const t = (pt: string, en?: string) => (lang === "en" ? en || pt : pt);
 
   useEffect(() => {
     if (showExplanation && explanationRef.current) {
@@ -145,31 +150,22 @@ export function ActiveExamView({
         {/* Question text */}
         <div className="flex items-start gap-2">
           <h3 className="text-lg font-medium text-foreground flex-1">
-            {currentQuestion.text}
+            {t(currentQuestion.text, currentQuestion.text_en)}
           </h3>
           {currentQuestion.text_en && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-                >
-                  <Languages className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="left"
-                className="max-w-md p-3 bg-white border shadow-lg"
-              >
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-blue-600">English:</p>
-                  <p className="text-lg">{currentQuestion.text_en}</p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleLang}
+              title={lang === "pt" ? "Ver em inglês" : "Ver em português"}
+              className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+            >
+              <Languages className="h-4 w-4 mr-1" />
+              {lang === "pt" ? "EN" : "PT"}
+            </Button>
           )}
         </div>
+
         {currentQuestion.type === "multiple_choice" && (
           <p className="text-sm text-blue-600 mt-2 font-medium">
             Questão de múltipla escolha: Seleciona todas as opções corretas
@@ -192,7 +188,9 @@ export function ActiveExamView({
               }
               disabled={showExplanation}
             >
-              <span className="flex-1 pr-3">{option.text}</span>
+              <span className="flex-1 pr-3">
+                {t(option.text, option.text_en)}
+              </span>
               {!showExplanation && (
                 <kbd className="kbd-shortcut font-mono">{index + 1}</kbd>
               )}
@@ -287,10 +285,10 @@ export function ActiveExamView({
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <p className="font-medium text-foreground">
-                        {option.text}
+                        {t(option.text, option.text_en)}
                       </p>
                       <p className="feedback-explanation mt-1">
-                        {option.explanation}
+                        {t(option.explanation, option.explanation_en)}
                       </p>
                     </div>
                   </li>
@@ -310,7 +308,7 @@ export function ActiveExamView({
                   <li key={option.id} className="space-y-1">
                     <div className="flex items-start gap-2">
                       <p className="font-medium flex-1 text-foreground">
-                        {option.text}
+                        {t(option.text, option.text_en)}
                       </p>
                       {option.text_en && (
                         <Tooltip>
@@ -337,7 +335,9 @@ export function ActiveExamView({
                         </Tooltip>
                       )}
                     </div>
-                    <p className="feedback-explanation">{option.explanation}</p>
+                    <p className="feedback-explanation">
+                      {t(option.explanation, option.explanation_en)}
+                    </p>
                   </li>
                 ))}
               </ul>

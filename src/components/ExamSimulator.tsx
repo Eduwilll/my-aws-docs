@@ -150,6 +150,11 @@ const ExamSimulator = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lang, setLang] = useState<"pt" | "en">(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("examLang") as "pt" | "en") || "pt"
+      : "pt",
+  );
   const [currentView, setCurrentView] = useState<
     "exam" | "progress" | "favorites" | "exam-details"
   >("exam");
@@ -1206,6 +1211,15 @@ const ExamSimulator = () => {
                             }
                             onToggleFullscreen={toggleFullscreen}
                             onOpenShortcuts={() => setShowShortcutsModal(true)}
+                            lang={lang}
+                            onToggleLang={() =>
+                              setLang((prev) => {
+                                const next = prev === "pt" ? "en" : "pt";
+                                if (typeof window !== "undefined")
+                                  localStorage.setItem("examLang", next);
+                                return next;
+                              })
+                            }
                             getButtonVariant={getButtonVariant}
                           />
                         )}
