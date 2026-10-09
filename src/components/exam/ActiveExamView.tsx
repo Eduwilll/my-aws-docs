@@ -310,30 +310,6 @@ export function ActiveExamView({
                       <p className="font-medium flex-1 text-foreground">
                         {t(option.text, option.text_en)}
                       </p>
-                      {option.text_en && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 p-1 h-auto"
-                            >
-                              <Languages className="h-3 w-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="left"
-                            className="max-w-sm p-3 bg-card border shadow-lg"
-                          >
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                                English:
-                              </p>
-                              <p className="text-sm">{option.text_en}</p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
                     </div>
                     <p className="feedback-explanation">
                       {t(option.explanation, option.explanation_en)}

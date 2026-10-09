@@ -422,9 +422,11 @@ const ExamSimulator = () => {
 
   // ── Helpers
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement)
-      document.documentElement.requestFullscreen().catch(console.error);
-    else document.exitFullscreen?.();
+    if (!document.fullscreenElement) {
+      // Fullscreen only the exam area so the site header stays out
+      const el = activeExamRef.current ?? document.documentElement;
+      el.requestFullscreen?.().catch(console.error);
+    } else document.exitFullscreen?.();
   };
 
   const saveExamState = () => {
@@ -1122,7 +1124,9 @@ const ExamSimulator = () => {
 
                 {/* Question Area */}
                 <div
-                  className={`flex-1 min-w-0 order-1 lg:order-2 sm:order-1 w-full`}
+                  className={`flex-1 min-w-0 order-1 lg:order-2 sm:order-1 w-full ${
+                    isSidebarOpen ? "" : "max-w-4xl mx-auto"
+                  }`}
                 >
                   <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
                     <CardHeader className="space-y-4 pb-4 pt-8 px-8 border-b border-border/10 bg-muted/5">
