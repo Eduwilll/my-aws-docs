@@ -21,14 +21,17 @@ const { Content, headings } = await render(entry);
 
 // Buscar todas as notas para gerar o sidebar
 const allNotes = await getCollection("notes");
-const organizedNotes = allNotes.reduce((acc, note) => {
-  const [category] = slugOf(note).split("/");
-  if (!acc[category]) {
-    acc[category] = [];
-  }
-  acc[category].push(note);
-  return acc;
-}, {});
+const organizedNotes = allNotes.reduce<Record<string, typeof allNotes>>(
+  (acc, note) => {
+    const [category] = slugOf(note).split("/");
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(note);
+    return acc;
+  },
+  {},
+);
 ---
 
 <NoteLayout frontmatter={entry.data} slug={slugOf(entry)} headings={headings}>

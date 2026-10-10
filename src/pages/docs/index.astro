@@ -6,7 +6,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 const notes = await getCollection("notes");
 // Content Layer (Astro 6+): glob loader entries expose `id` (e.g. "aws/vpc.md"), not `slug`.
 const slugOf = (e: { id: string }) => e.id.replace(/\.mdx?$/, "");
-const categories = notes.reduce((acc, note) => {
+const categories = notes.reduce<Record<string, typeof notes>>((acc, note) => {
   const [category] = slugOf(note).split("/");
   if (!acc[category]) {
     acc[category] = [];
