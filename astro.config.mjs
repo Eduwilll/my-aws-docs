@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import remarkWikiLink from 'remark-wiki-link';
@@ -41,18 +42,20 @@ export default defineConfig({
     }),
   ],
   markdown: {
-    remarkPlugins: [
-      [
-        remarkWikiLink,
-        {
-          pageResolver: (name) => [name.toLowerCase().replace(/ /g, '-')],
-          hrefTemplate: (permalink) => {
-            const mapped = permalinksMap[permalink] || `aws/${permalink}`;
-            return `/docs/${mapped}`;
+    processor: unified({
+      remarkPlugins: [
+        [
+          remarkWikiLink,
+          {
+            pageResolver: (name) => [name.toLowerCase().replace(/ /g, '-')],
+            hrefTemplate: (permalink) => {
+              const mapped = permalinksMap[permalink] || `aws/${permalink}`;
+              return `/docs/${mapped}`;
+            },
           },
-        },
+        ],
       ],
-    ],
+    }),
     shikiConfig: {
       theme: 'github-light',
     },

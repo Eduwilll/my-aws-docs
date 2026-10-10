@@ -1,23 +1,28 @@
 ---
 // src/pages/notes/[...slug].astro
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import NoteLayout from "../../layouts/NoteLayout.astro";
+
+// Content Layer (Astro 6+): glob loader entries expose `id` (e.g. "aws/vpc.md"), not `slug`.
+const slugOf = (e: { id: string }) => e.id.replace(/\.mdx?$/, "");
 
 export async function getStaticPaths() {
   const notes = await getCollection("notes");
   return notes.map((entry) => ({
-    params: { slug: entry.slug },
+    // NOTE: frontmatter helpers (e.g. slugOf) are NOT in scope here —
+    // getStaticPaths is compiled into a separate chunk, so inline the logic.
+    params: { slug: entry.id.replace(/\.mdx?$/, "") },
     props: { entry },
   }));
 }
 
 const { entry } = Astro.props;
-const { Content, headings } = await entry.render();
+const { Content, headings } = await render(entry);
 
 // Buscar todas as notas para gerar o sidebar
 const allNotes = await getCollection("notes");
 const organizedNotes = allNotes.reduce((acc, note) => {
-  const [category] = note.slug.split("/");
+  const [category] = slugOf(note).split("/");
   if (!acc[category]) {
     acc[category] = [];
   }
@@ -26,7 +31,7 @@ const organizedNotes = allNotes.reduce((acc, note) => {
 }, {});
 ---
 
-<NoteLayout frontmatter={entry.data} slug={entry.slug} headings={headings}>
+<NoteLayout frontmatter={entry.data} slug={slugOf(entry)} headings={headings}>
   <div slot="sidebar">
     {
       Object.entries(organizedNotes).map(([category, notes]) => (
@@ -38,9 +43,9 @@ const organizedNotes = allNotes.reduce((acc, note) => {
             {notes.map((note) => (
               <li>
                 <a
-                  href={`/docs/${note.slug}`}
+                  href={`/docs/${slugOf(note)}`}
                   class={`block px-2 py-1 rounded-md text-muted-foreground nav-item-hover ${
-                    entry.slug === note.slug ? "nav-item-active" : ""
+                    slugOf(entry) === slugOf(note) ? "nav-item-active" : ""
                   }`}
                 >
                   {note.data.title}

@@ -4,8 +4,10 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const notes = await getCollection("notes");
+// Content Layer (Astro 6+): glob loader entries expose `id` (e.g. "aws/vpc.md"), not `slug`.
+const slugOf = (e: { id: string }) => e.id.replace(/\.mdx?$/, "");
 const categories = notes.reduce((acc, note) => {
-  const [category] = note.slug.split("/");
+  const [category] = slugOf(note).split("/");
   if (!acc[category]) {
     acc[category] = [];
   }
@@ -29,7 +31,7 @@ const categories = notes.reduce((acc, note) => {
               {categoryNotes
                 .sort((a, b) => (a.data.order || 0) - (b.data.order || 0))
                 .map((note) => (
-                  <a href={`/docs/${note.slug}`} class="note-link">
+                  <a href={`/docs/${slugOf(note)}`} class="note-link">
                     <h3 class="text-lg font-medium text-foreground mb-2">
                       {note.data.title}
                     </h3>
