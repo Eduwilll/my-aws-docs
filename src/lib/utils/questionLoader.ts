@@ -1,3 +1,4 @@
+import { questionsaAIFc0102 } from "@/data/questions-AIF-C01-02";
 import type { Question } from "@/lib/types/questions";
 
 /**
@@ -51,13 +52,44 @@ export async function loadQuestionBank(bankId: string): Promise<Question[]> {
     }
 
     case "AIF-C01-01": {
-      const { questionsaAIFc0101 } = await import("@/data/questions-AIF-C01");
+      const { questionsaAIFc0101 } =
+        await import("@/data/questions-AIF-C01-01");
       return questionsaAIFc0101;
+    }
+    case "AIF-C01-02": {
+      const { questionsaAIFc0102 } =
+        await import("@/data/questions-AIF-C01-02");
+      return questionsaAIFc0102;
+    }
+    case "AIF-C01-03": {
+      const { questionsaAIFc0103 } =
+        await import("@/data/questions-AIF-C01-03");
+      return questionsaAIFc0103;
+    }
+    case "AIF-C01-04": {
+      const { questionsaAIFc0104 } =
+        await import("@/data/questions-AIF-C01-04");
+      return questionsaAIFc0104;
     }
 
     case "AIF-C01-FULL": {
-      const { questionsaAIFc0101 } = await import("@/data/questions-AIF-C01");
-      return questionsaAIFc0101;
+      const [
+        { questionsaAIFc0101 },
+        { questionsaAIFc0102 },
+        { questionsaAIFc0103 },
+        { questionsaAIFc0104 },
+      ] = await Promise.all([
+        import("@/data/questions-AIF-C01-01"),
+        import("@/data/questions-AIF-C01-02"),
+        import("@/data/questions-AIF-C01-03"),
+        import("@/data/questions-AIF-C01-04"),
+      ]);
+      return [
+        ...questionsaAIFc0101,
+        ...questionsaAIFc0102,
+        ...questionsaAIFc0103,
+        ...questionsaAIFc0104,
+      ];
     }
 
     case "SAA-C03-FULL": {
@@ -82,6 +114,9 @@ export const questionBankEstimates: Record<string, number> = {
   "CLF-C02-CC-01": 65,
   "CLF-C02-GPT": 65,
   "AIF-C01-01": 65,
+  "AIF-C01-02": 65,
+  "AIF-C01-03": 65,
+  "AIF-C01-04": 65,
   "AIF-C01-FULL": 65,
   "SAA-C03-FULL": 65,
 };

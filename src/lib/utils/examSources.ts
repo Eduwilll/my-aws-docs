@@ -31,14 +31,14 @@ export const examSourceMap: { [key: string]: ExamSourceInfo } = {
     name: "AWS Certified Developer – Associate",
     description: "Desenvolvimento e manutenção de aplicações na AWS",
     questionCount: 0,
-    primarySource: "OFFICIAL",
+    primarySource: "AI",
   },
   "AIF-C01": {
     id: "AIF-C01",
     name: "AWS Certified AI Practitioner",
     description: "Fundamentos de IA/ML e IA generativa na AWS",
     questionCount: 0,
-    primarySource: "OFFICIAL",
+    primarySource: "AI",
   },
 
   // Specific Question Banks
@@ -79,7 +79,28 @@ export const examSourceMap: { [key: string]: ExamSourceInfo } = {
   },
   "AIF-C01-01": {
     id: "AIF-C01-01",
-    name: "Simulado AIF-C01 Único",
+    name: "Simulado AIF-C01 01",
+    description: "Questões AIF-C01 disponíveis",
+    questionCount: 65,
+    primarySource: "AI",
+  },
+  "AIF-C01-02": {
+    id: "AIF-C01-02",
+    name: "Simulado AIF-C01 02",
+    description: "Questões AIF-C01 disponíveis",
+    questionCount: 65,
+    primarySource: "AI",
+  },
+  "AIF-C01-03": {
+    id: "AIF-C01-03",
+    name: "Simulado AIF-C01 03",
+    description: "Questões AIF-C01 disponíveis",
+    questionCount: 65,
+    primarySource: "AI",
+  },
+  "AIF-C01-04": {
+    id: "AIF-C01-04",
+    name: "Simulado AIF-C01 04",
     description: "Questões AIF-C01 disponíveis",
     questionCount: 65,
     primarySource: "AI",
