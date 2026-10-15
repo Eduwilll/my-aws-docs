@@ -102,6 +102,7 @@ const certificationBanks: Record<string, string[]> = {
     "AIF-C01-02",
     "AIF-C01-03",
     "AIF-C01-04",
+    "AIF-C01-05",
     "AIF-C01-FULL",
   ],
   "SAA-C03": ["SAA-C03-FULL"],

@@ -105,6 +105,13 @@ export const examSourceMap: { [key: string]: ExamSourceInfo } = {
     questionCount: 65,
     primarySource: "AI",
   },
+  "AIF-C01-05": {
+    id: "AIF-C01-05",
+    name: "Simulado AIF-C01 05",
+    description: "Questões AIF-C01 disponíveis",
+    questionCount: 65,
+    primarySource: "AI",
+  },
   "AIF-C01-FULL": {
     id: "AIF-C01-FULL",
     name: "Treinamento Infinito AIF-C01 (Todas as Questões)",
