@@ -131,6 +131,20 @@
     @apply px-2 py-1 text-xs bg-muted text-muted-foreground border border-border rounded font-mono flex-shrink-0 shadow-sm transition-colors;
   }
 
+  /* Hide keyboard hints on touch devices (no physical keyboard) */
+  @media (pointer: coarse) {
+    .kbd-shortcut {
+      display: none;
+    }
+  }
+
+  /* Minimum 44px touch targets for exam option buttons on touch devices */
+  @media (pointer: coarse) {
+    .exam-option-btn {
+      min-height: 3rem;
+    }
+  }
+
   /* Exam Question Area Header */
   .exam-header-area {
     @apply p-4 rounded-lg border transition-all duration-300;

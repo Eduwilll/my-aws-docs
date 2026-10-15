@@ -1105,11 +1105,11 @@ const ExamSimulator = () => {
             {isActive && !showScore && (
               <div
                 ref={activeExamRef}
-                className={`flex flex-col lg:flex-row gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 scroll-mt-24 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
+                className={`flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-full mx-auto items-stretch animate-in fade-in duration-500 scroll-mt-24 ${isFullscreen ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-12" : ""}`}
               >
-                {/* Exam Navigation Panel */}
+                {/* Desktop navigation sidebar */}
                 {isSidebarOpen && (
-                  <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 sm:order-2">
+                  <div className="hidden lg:block w-80 flex-shrink-0 order-1">
                     <div className={isFullscreen ? "" : "sticky top-4"}>
                       <QuestionNavigationPanel
                         currentQuestionIndex={currentQuestionIndex}
@@ -1128,6 +1128,34 @@ const ExamSimulator = () => {
                     </div>
                   </div>
                 )}
+                {/* Mobile/tablet: collapsible navigator (the desktop toggle is hidden below lg) */}
+                <details className="lg:hidden w-full order-2 rounded-2xl border border-border/20 bg-card px-4 py-2">
+                  <summary className="cursor-pointer select-none font-semibold text-sm flex items-center justify-between min-h-[44px]">
+                    <span>
+                      Questão {currentQuestionIndex + 1} de{" "}
+                      {selectedSimulado.length}
+                    </span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      Ver navegação
+                    </span>
+                  </summary>
+                  <div className="pt-2 pb-2">
+                    <QuestionNavigationPanel
+                      currentQuestionIndex={currentQuestionIndex}
+                      totalQuestions={selectedSimulado.length}
+                      questionStatuses={questionStatuses}
+                      onQuestionSelect={handleQuestionSelect}
+                      onPreviousQuestion={handleKeyboardPreviousQuestion}
+                      onNextQuestion={handleKeyboardNextQuestion}
+                      canNavigatePrevious={currentQuestionIndex > 0}
+                      canNavigateNext={
+                        currentQuestionIndex < selectedSimulado.length - 1
+                      }
+                      studyMode={studyMode}
+                      isCompact
+                    />
+                  </div>
+                </details>
 
                 {/* Question Area */}
                 <div
@@ -1135,9 +1163,9 @@ const ExamSimulator = () => {
                     isSidebarOpen ? "" : "max-w-4xl mx-auto"
                   }`}
                 >
-                  <Card className="glass-card border-none shadow-2xl rounded-[2rem] overflow-hidden">
-                    <CardHeader className="space-y-4 pb-4 pt-8 px-8 border-b border-border/10 bg-muted/5">
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <Card className="glass-card border-none shadow-2xl rounded-[1.25rem] sm:rounded-[2rem] overflow-hidden">
+                    <CardHeader className="space-y-4 pb-4 pt-5 sm:pt-8 px-4 sm:px-6 md:px-8 border-b border-border/10 bg-muted/5">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 md:gap-4">
                         <div className="flex items-start gap-4">
                           <Button
                             variant="outline"
@@ -1170,10 +1198,10 @@ const ExamSimulator = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge
                             variant="outline"
-                            className="text-sm px-3 py-1 font-semibold border-border/20"
+                            className="text-xs sm:text-sm px-2 sm:px-3 py-1 font-semibold border-border/20"
                           >
                             Questão {currentQuestionIndex + 1} de{" "}
                             {selectedSimulado.length}
@@ -1181,7 +1209,7 @@ const ExamSimulator = () => {
                           {currentQuestion && (
                             <Badge
                               variant="secondary"
-                              className="text-sm px-3 py-1 font-semibold"
+                              className="text-xs sm:text-sm px-2 sm:px-3 py-1 font-semibold max-w-full truncate"
                             >
                               {currentQuestion.category}
                             </Badge>
@@ -1192,7 +1220,7 @@ const ExamSimulator = () => {
                       <Progress value={progress} className="h-1.5" />
                     </CardHeader>
 
-                    <CardContent className="p-6 md:p-8">
+                    <CardContent className="p-4 sm:p-6 md:p-8">
                       {currentView === "exam" &&
                         isActive &&
                         currentQuestion && (

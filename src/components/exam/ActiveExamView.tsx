@@ -149,7 +149,7 @@ export function ActiveExamView({
 
         {/* Question text */}
         <div className="flex items-start gap-2">
-          <h3 className="text-lg font-medium text-foreground flex-1">
+          <h3 className="text-base sm:text-lg font-medium text-foreground flex-1 leading-relaxed">
             {t(currentQuestion.text, currentQuestion.text_en)}
           </h3>
           {currentQuestion.text_en && (
@@ -179,7 +179,7 @@ export function ActiveExamView({
           <div key={option.id} className="relative">
             <Button
               variant={getButtonVariant(option.id) as any}
-              className="w-full justify-between text-left p-4 h-auto whitespace-normal"
+              className="exam-option-btn w-full justify-between text-left p-3 sm:p-4 h-auto min-h-[44px] whitespace-normal text-sm sm:text-base"
               onClick={() =>
                 !showExplanation &&
                 (currentQuestion.type === "multiple_choice"
@@ -201,13 +201,13 @@ export function ActiveExamView({
 
       {/* Navigation + submit buttons (before answer is submitted) */}
       {!showExplanation && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:flex-wrap">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button
               variant="outline"
               onClick={onPreviousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto"
             >
               <ChevronLeft className="w-4 h-4" />
               Anterior
@@ -217,18 +217,18 @@ export function ActiveExamView({
               variant="outline"
               onClick={onNextQuestion}
               disabled={currentQuestionIndex === totalQuestions - 1}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto"
             >
               Próxima
               <kbd className="kbd-shortcut ml-1">→</kbd>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-1">
             <Button
               onClick={onSubmitAnswers}
               disabled={selectedAnswers.length === 0}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 min-h-[44px] w-full"
             >
               {studyMode === "practice"
                 ? "Verificar Resposta"
@@ -242,7 +242,7 @@ export function ActiveExamView({
             <Button
               variant="outline"
               onClick={onSkipQuestion}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto"
             >
               Pular Questão
               <kbd className="kbd-shortcut ml-1">Space</kbd>

@@ -100,7 +100,7 @@ export function ExamSelectionScreen({
   return (
     <div className="space-y-8 py-8">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gradient tracking-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gradient tracking-tight">
           Simulador de Exame
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -109,7 +109,7 @@ export function ExamSelectionScreen({
         </p>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-10">
+      <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 px-1 sm:px-0">
         {/* Step 1: Certification Selection */}
         <div className="space-y-4">
           <label className="text-xl font-semibold flex items-center gap-2">
@@ -118,7 +118,7 @@ export function ExamSelectionScreen({
             </span>
             Selecione a Certificação
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {certifications.map((cert) => {
               const availableBanks = certificationBanks[cert.id] || [];
               const totalQuestions =
@@ -134,7 +134,7 @@ export function ExamSelectionScreen({
                 <div
                   key={cert.id}
                   onClick={() => isAvailable && onSelectCertification(cert.id)}
-                  className={`relative p-6 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-4 ${
+                  className={`relative p-4 sm:p-6 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-3 sm:gap-4 ${
                     !isAvailable
                       ? "opacity-60 cursor-not-allowed bg-muted border-border grayscale-[0.5]"
                       : isSelected
@@ -152,7 +152,7 @@ export function ExamSelectionScreen({
                       <Check className="w-4 h-4" />
                     </div>
                   )}
-                  <div className="h-32 flex items-center justify-center">
+                  <div className="h-24 sm:h-32 flex items-center justify-center">
                     <img
                       src={cert.img}
                       alt={cert.title}
@@ -187,7 +187,7 @@ export function ExamSelectionScreen({
               </span>
               Modo de Estudo
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {[
                 {
                   id: "practice" as StudyMode,
@@ -246,7 +246,7 @@ export function ExamSelectionScreen({
               </span>
               Escolha o Banco de Questões
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {certificationBanks[selectedCertification]
                 .filter((bankId) => {
                   if (studyMode === "exam") {
@@ -308,7 +308,7 @@ export function ExamSelectionScreen({
               </span>
               Filtros de Domínio e Categoria
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Domain filter */}
               <div className="space-y-3">
                 <label className="text-sm font-medium">Domínios</label>
