@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
 
 /**
- * Custom hook that manages the countdown timer for exam mode.
+ * Custom hook that manages the countdown timer for enabled study sessions.
  * Returns the current time left (in seconds), a formatter, and a setter.
  */
 export function useExamTimer({
   isActive,
   studyMode,
+  enabled = studyMode === "exam",
   initialTime = 90 * 60,
   onTimeExpired,
 }: {
   isActive: boolean;
   studyMode: string;
+  enabled?: boolean;
   initialTime?: number;
   onTimeExpired: () => void;
 }) {
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
-  // Reset the timer when a new exam starts
+  // Update idle defaults without overwriting a resumed active countdown.
   useEffect(() => {
-    setTimeLeft(initialTime);
-  }, [initialTime]);
+    if (!isActive) setTimeLeft(initialTime);
+  }, [initialTime, isActive]);
 
   useEffect(() => {
-    if (!isActive || studyMode !== "exam") return;
+    if (!isActive || !enabled) return;
 
     if (timeLeft <= 0) {
       onTimeExpired();
@@ -35,7 +37,7 @@ export function useExamTimer({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, studyMode, timeLeft, onTimeExpired]);
+  }, [isActive, enabled, timeLeft, onTimeExpired]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);

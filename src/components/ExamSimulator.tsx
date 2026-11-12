@@ -22,6 +22,7 @@ import type {
   Question,
   SimulatedExam,
   StudyMode,
+  FocusStudyOptions,
   ExamCategory,
   DetailedExamResult,
   QuestionAttempt,
@@ -35,8 +36,7 @@ import { QuestionNavigationPanel } from "@/components/QuestionNavigationPanel";
 import TermsNavigationLinks from "@/components/TermsNavigationLinks";
 import TermsVersionManager from "@/components/TermsVersionManager";
 import {
-  CLF_C02_DomainMap,
-  SAA_C03_DomainMap,
+  getExamDomainName as getDomainName,
   CLF_C02_DomainDetails,
   SAA_C03_DomainDetails,
 } from "@/lib/types/exam-domains";
@@ -134,15 +134,6 @@ const certifications = [
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────
 
-function getDomainMap(examId: string) {
-  return examId.startsWith("SAA-C03") ? SAA_C03_DomainMap : CLF_C02_DomainMap;
-}
-
-function getDomainName(examId: string, domain: string) {
-  const map = getDomainMap(examId);
-  return map[domain as keyof typeof map] || "Unknown Domain";
-}
-
 function getDomainDetails(examId: string) {
   return examId.startsWith("SAA-C03")
     ? SAA_C03_DomainDetails
@@ -174,6 +165,19 @@ const ExamSimulator = () => {
     useState<string>("");
   const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [studyMode, setStudyMode] = useState<StudyMode>("practice");
+  const [focusOptions, setFocusOptions] = useState<FocusStudyOptions>({
+    showImmediateFeedback: true,
+    timerEnabled: false,
+    timeLimitMinutes: 90,
+  });
+  const showImmediateFeedback =
+    studyMode === "practice" ||
+    (studyMode === "domain_focus" && focusOptions.showImmediateFeedback);
+  const timerEnabled =
+    studyMode === "exam" ||
+    (studyMode === "domain_focus" && focusOptions.timerEnabled);
+  const timeLimitMinutes =
+    studyMode === "domain_focus" ? focusOptions.timeLimitMinutes : 90;
   const [selectedDomains, setSelectedDomains] = useState<ExamDomainKey[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<ExamCategory[]>(
     [],
@@ -272,10 +276,10 @@ const ExamSimulator = () => {
   const { timeLeft, setTimeLeft, formatTime } = useExamTimer({
     isActive,
     studyMode,
-    initialTime: studyMode === "exam" ? 90 * 60 : 999999,
+    enabled: timerEnabled,
+    initialTime: timerEnabled ? timeLimitMinutes * 60 : 999999,
     onTimeExpired: () => {
-      setShowScore(true);
-      setIsActive(false);
+      finalizeExam();
       setEndMessage(
         "O tempo acabou! Sua prova foi finalizada automaticamente.",
       );
@@ -410,9 +414,11 @@ const ExamSimulator = () => {
   }, [isMounted, userProgress.favoriteQuestions, userProgress.recentExams]);
 
   useEffect(() => {
-    saveExamState();
+    if (showScore) clearExamState();
+    else saveExamState();
   }, [
     isActive,
+    showScore,
     selectedExamId,
     selectedSimulado,
     currentQuestionIndex,
@@ -420,6 +426,11 @@ const ExamSimulator = () => {
     timeLeft,
     selectedAnswers,
     studyMode,
+    focusOptions,
+    showExplanation,
+    answerStatus,
+    simulatedExam,
+    selectedCertification,
     selectedDomains,
     selectedCategories,
     allAnswers,
@@ -449,6 +460,11 @@ const ExamSimulator = () => {
         timeLeft,
         selectedAnswers,
         studyMode,
+        focusOptions,
+        showExplanation,
+        answerStatus,
+        simulatedExam,
+        selectedCertification,
         selectedDomains,
         selectedCategories,
         allAnswers,
@@ -550,24 +566,21 @@ const ExamSimulator = () => {
     const hasPartial =
       selectedAnswers.some((id) => correctIds.includes(id)) && !isFullyCorrect;
     let status: "correct" | "incorrect" | "partial" = "incorrect";
-    if (isFullyCorrect) {
-      setScore((s) => s + 1);
-      status = "correct";
-    } else if (hasPartial) {
-      setScore((s) => s + 0.5);
-      status = "partial";
-    }
-
-    setAllAnswers((prev) => ({
-      ...prev,
+    if (isFullyCorrect) status = "correct";
+    else if (hasPartial) status = "partial";
+    const nextScore = score + (isFullyCorrect ? 1 : hasPartial ? 0.5 : 0);
+    const nextAnswers = {
+      ...allAnswers,
       [currentQuestion.id]: { answers: selectedAnswers, status },
-    }));
+    };
+    setScore(nextScore);
+    setAllAnswers(nextAnswers);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentQuestionIndex]: {
         answered: true,
         skipped: false,
-        correct: studyMode === "practice" ? isFullyCorrect : null,
+        correct: showImmediateFeedback ? isFullyCorrect : null,
       },
     }));
 
@@ -580,9 +593,11 @@ const ExamSimulator = () => {
         },
       });
 
-    if (studyMode === "practice") {
+    if (showImmediateFeedback) {
       setAnswerStatus(status);
       setShowExplanation(true);
+    } else if (currentQuestionIndex === selectedSimulado.length - 1) {
+      finalizeExam(nextScore, nextAnswers);
     } else handleNextQuestion();
   };
 
@@ -598,7 +613,7 @@ const ExamSimulator = () => {
     }
   };
 
-  const finalizeExam = () => {
+  const finalizeExam = (finalScore = score, finalAnswers = allAnswers) => {
     if (!simulatedExam || !examStartTime) {
       setShowScore(true);
       setIsActive(false);
@@ -612,13 +627,19 @@ const ExamSimulator = () => {
     );
     const updatedExam: SimulatedExam = {
       ...simulatedExam,
+      answers: Object.fromEntries(
+        Object.entries(finalAnswers).map(([questionId, answer]) => [
+          questionId,
+          answer.answers.join(","),
+        ]),
+      ),
       endTime,
-      score,
+      score: finalScore,
       timeSpent,
     };
 
     const attempts: QuestionAttempt[] = selectedSimulado.map((q) => {
-      const ua = allAnswers[q.id];
+      const ua = finalAnswers[q.id];
       const correctAnswers = q.options
         .filter((o) => o.isCorrect)
         .map((o) => o.id);
@@ -686,6 +707,16 @@ const ExamSimulator = () => {
 
   // ── Start / Reset / Resume
   const startExam = async () => {
+    if (
+      studyMode === "domain_focus" &&
+      focusOptions.timerEnabled &&
+      (!Number.isInteger(timeLimitMinutes) ||
+        timeLimitMinutes < 1 ||
+        timeLimitMinutes > 180)
+    ) {
+      alert("Informe um número inteiro entre 1 e 180 minutos.");
+      return;
+    }
     if (!selectedCertification) {
       alert("Por favor, selecione uma certificação.");
       return;
@@ -734,6 +765,7 @@ const ExamSimulator = () => {
     }
 
     const examStart = new Date();
+    setSelectedExamId(bankId);
     setSelectedSimulado(filtered);
     // Cache questions so they remain available after exam ends (for ExamDetails, FavoriteQuestions, etc.)
     setCachedQuestions((prev) => {
@@ -751,15 +783,15 @@ const ExamSimulator = () => {
         mode: studyMode,
         selectedDomains,
         selectedCategories,
-        timeLimit: studyMode === "exam" ? 90 : undefined,
-        showImmediateFeedback: studyMode === "practice",
+        timeLimit: timerEnabled ? timeLimitMinutes : undefined,
+        showImmediateFeedback,
       },
     });
     setIsActive(true);
     setCurrentQuestionIndex(0);
     setScore(0);
     setShowScore(false);
-    setTimeLeft(studyMode === "exam" ? 90 * 60 : 999999);
+    setTimeLeft(timerEnabled ? timeLimitMinutes * 60 : 999999);
     setSelectedAnswers([]);
     setShowExplanation(false);
     setEndMessage(null);
@@ -801,6 +833,26 @@ const ExamSimulator = () => {
     setTimeLeft(savedExamData.timeLeft);
     setSelectedAnswers(savedExamData.selectedAnswers);
     setStudyMode(savedExamData.studyMode);
+    setFocusOptions(
+      savedExamData.focusOptions ?? {
+        showImmediateFeedback: true,
+        timerEnabled: false,
+        timeLimitMinutes: 90,
+      },
+    );
+    setShowExplanation(savedExamData.showExplanation ?? false);
+    setAnswerStatus(savedExamData.answerStatus ?? null);
+    setSelectedCertification(
+      savedExamData.selectedCertification ??
+        savedExamData.selectedExamId?.split("-").slice(0, 2).join("-") ??
+        "",
+    );
+    if (savedExamData.simulatedExam) {
+      setSimulatedExam({
+        ...savedExamData.simulatedExam,
+        startTime: new Date(savedExamData.simulatedExam.startTime),
+      });
+    }
     setSelectedDomains(savedExamData.selectedDomains || []);
     setSelectedCategories(savedExamData.selectedCategories || []);
     setAllAnswers(savedExamData.allAnswers || {});
@@ -1040,6 +1092,8 @@ const ExamSimulator = () => {
                                 selectedCertification={selectedCertification}
                                 selectedExamId={selectedExamId}
                                 studyMode={studyMode}
+                                focusOptions={focusOptions}
+                                onFocusOptionsChange={setFocusOptions}
                                 selectedDomains={selectedDomains}
                                 selectedCategories={selectedCategories}
                                 checkingTerms={checkingTerms}
@@ -1123,6 +1177,7 @@ const ExamSimulator = () => {
                           currentQuestionIndex < selectedSimulado.length - 1
                         }
                         studyMode={studyMode}
+                        showImmediateFeedback={showImmediateFeedback}
                         isCompact={false}
                       />
                     </div>
@@ -1152,6 +1207,7 @@ const ExamSimulator = () => {
                         currentQuestionIndex < selectedSimulado.length - 1
                       }
                       studyMode={studyMode}
+                      showImmediateFeedback={showImmediateFeedback}
                       isCompact
                     />
                   </div>
@@ -1189,8 +1245,12 @@ const ExamSimulator = () => {
                             {/* <CardTitle className="text-2xl md:text-3xl font-extrabold text-gradient">
                               AWS Cloud Practitioner
                             </CardTitle> */}
-                            {studyMode === "exam" && (
-                              <div className="flex items-center gap-2 text-gray-600 font-mono text-lg font-bold">
+                            {timerEnabled && (
+                              <div
+                                role="timer"
+                                aria-label="Tempo restante"
+                                className="flex items-center gap-2 text-muted-foreground font-mono text-lg font-bold"
+                              >
                                 <Timer className="w-4 h-4" />
                                 {formatTime(timeLeft)}
                               </div>
@@ -1235,6 +1295,7 @@ const ExamSimulator = () => {
                             showExplanation={showExplanation}
                             answerStatus={answerStatus}
                             studyMode={studyMode}
+                            showImmediateFeedback={showImmediateFeedback}
                             isFullscreen={isFullscreen}
                             isFavorite={isFavoriteQuestion(currentQuestion.id)}
                             onAnswerToggle={handleAnswerToggle}
@@ -1304,7 +1365,8 @@ const ExamSimulator = () => {
                         <strong>Pontuação atual:</strong> {savedExamData.score}{" "}
                         pontos
                       </p>
-                      {savedExamData.studyMode === "exam" && (
+                      {(savedExamData.studyMode === "exam" ||
+                        savedExamData.focusOptions?.timerEnabled) && (
                         <p>
                           <strong>Tempo restante:</strong>{" "}
                           {Math.floor(savedExamData.timeLeft / 60)}m{" "}

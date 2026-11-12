@@ -34,6 +34,7 @@ interface QuestionNavigationPanelProps {
   canNavigateNext: boolean;
   studyMode: "practice" | "exam" | "domain_focus";
   isCompact?: boolean;
+  showImmediateFeedback?: boolean;
 }
 
 export const QuestionNavigationPanel: React.FC<
@@ -48,6 +49,7 @@ export const QuestionNavigationPanel: React.FC<
   canNavigatePrevious,
   canNavigateNext,
   studyMode,
+  showImmediateFeedback = studyMode === "practice",
   isCompact = false,
 }) => {
   const getQuestionIcon = (index: number) => {
@@ -62,7 +64,7 @@ export const QuestionNavigationPanel: React.FC<
     }
 
     if (status.answered) {
-      if (studyMode === "practice" && status.correct !== undefined) {
+      if (showImmediateFeedback && status.correct !== undefined) {
         return status.correct ? (
           <Check className="w-3 h-3 text-green-500" />
         ) : (
@@ -90,7 +92,7 @@ export const QuestionNavigationPanel: React.FC<
     }
 
     if (status.answered) {
-      if (studyMode === "practice" && status.correct !== undefined) {
+      if (showImmediateFeedback && status.correct !== undefined) {
         return status.correct ? "default" : "destructive";
       }
       return "default";
@@ -234,7 +236,7 @@ export const QuestionNavigationPanel: React.FC<
                           : status.skipped
                             ? "Pulada"
                             : status.answered
-                              ? studyMode === "practice" &&
+                              ? showImmediateFeedback &&
                                 status.correct !== undefined
                                 ? status.correct
                                   ? "Correta"
@@ -317,7 +319,7 @@ export const QuestionNavigationPanel: React.FC<
                           : status.skipped
                             ? "Pulada"
                             : status.answered
-                              ? studyMode === "practice" &&
+                              ? showImmediateFeedback &&
                                 status.correct !== undefined
                                 ? status.correct
                                   ? "Correta"

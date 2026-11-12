@@ -43,6 +43,7 @@ export const DOP_C02_DomainMap = {
 } as const;
 
 // Type for domain keys
+export type AIF_C01_DomainKey = keyof typeof AIF_C01_DomainMap;
 export type CLF_C02_DomainKey = keyof typeof CLF_C02_DomainMap;
 export type SAA_C03_DomainKey = keyof typeof SAA_C03_DomainMap;
 export type SAP_C02_DomainKey = keyof typeof SAP_C02_DomainMap;
@@ -50,6 +51,7 @@ export type DOP_C02_DomainKey = keyof typeof DOP_C02_DomainMap;
 
 // Union type for all domain keys
 export type ExamDomainKey =
+  | AIF_C01_DomainKey
   | CLF_C02_DomainKey
   | SAA_C03_DomainKey
   | SAP_C02_DomainKey
@@ -114,3 +116,28 @@ export const SAA_C03_DomainDetails: Record<SAA_C03_DomainKey, ExamDomainInfo> =
       description: "Design de arquiteturas econômicas e otimizadas",
     },
   };
+
+const certificationDomainMaps = {
+  "CLF-C02": CLF_C02_DomainMap,
+  "AIF-C01": AIF_C01_DomainMap,
+  "SAA-C03": SAA_C03_DomainMap,
+  "SAP-C02": SAP_C02_DomainMap,
+  "DOP-C02": DOP_C02_DomainMap,
+} as const;
+
+export function getExamDomainMap(
+  examId: string,
+): Readonly<Partial<Record<ExamDomainKey, string>>> {
+  for (const [certification, domains] of Object.entries(
+    certificationDomainMaps,
+  )) {
+    if (examId === certification || examId.startsWith(`${certification}-`)) {
+      return domains;
+    }
+  }
+  return {};
+}
+
+export function getExamDomainName(examId: string, domain: string): string {
+  return getExamDomainMap(examId)[domain as ExamDomainKey] ?? "Unknown Domain";
+}

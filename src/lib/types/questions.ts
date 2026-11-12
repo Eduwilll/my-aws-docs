@@ -83,6 +83,12 @@ export type QuestionSource =
 
 export type StudyMode = "practice" | "exam" | "domain_focus";
 
+export interface FocusStudyOptions {
+  showImmediateFeedback: boolean;
+  timerEnabled: boolean;
+  timeLimitMinutes: number;
+}
+
 export interface StudySettings {
   mode: StudyMode;
   selectedDomains?: ExamDomainKey[];

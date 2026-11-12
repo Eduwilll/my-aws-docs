@@ -9,8 +9,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BookOpen, Check, Target, Timer } from "lucide-react";
-import type { StudyMode, ExamCategory } from "@/lib/types/questions";
-import type { ExamDomainKey } from "@/lib/types/exam-domains";
+import type {
+  StudyMode,
+  ExamCategory,
+  FocusStudyOptions,
+} from "@/lib/types/questions";
+import { getExamDomainMap, type ExamDomainKey } from "@/lib/types/exam-domains";
 import {
   getExamSourceInfo,
   getSourceLabel,
@@ -33,6 +37,8 @@ interface ExamSelectionScreenProps {
   selectedCertification: string;
   selectedExamId: string;
   studyMode: StudyMode;
+  focusOptions: FocusStudyOptions;
+  onFocusOptionsChange: (options: FocusStudyOptions) => void;
   selectedDomains: ExamDomainKey[];
   selectedCategories: ExamCategory[];
   checkingTerms: boolean;
@@ -56,6 +62,8 @@ export function ExamSelectionScreen({
   selectedCertification,
   selectedExamId,
   studyMode,
+  focusOptions,
+  onFocusOptionsChange,
   selectedDomains,
   selectedCategories,
   checkingTerms,
@@ -72,6 +80,11 @@ export function ExamSelectionScreen({
   onRecheckTerms,
   getDomainName,
 }: ExamSelectionScreenProps) {
+  const invalidFocusTime =
+    focusOptions.timerEnabled &&
+    (!Number.isInteger(focusOptions.timeLimitMinutes) ||
+      focusOptions.timeLimitMinutes < 1 ||
+      focusOptions.timeLimitMinutes > 180);
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
   const step4Ref = useRef<HTMLDivElement>(null);
@@ -313,6 +326,7 @@ export function ExamSelectionScreen({
               <div className="space-y-3">
                 <label className="text-sm font-medium">Domínios</label>
                 <Select
+                  key={selectedCertification}
                   onValueChange={(value: ExamDomainKey) =>
                     !selectedDomains.includes(value) && onAddDomain(value)
                   }
@@ -321,14 +335,13 @@ export function ExamSelectionScreen({
                     <SelectValue placeholder="Adicionar domínio" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DOMAIN_1">Conceitos de Nuvem</SelectItem>
-                    <SelectItem value="DOMAIN_2">
-                      Segurança e Conformidade
-                    </SelectItem>
-                    <SelectItem value="DOMAIN_3">Tecnologia</SelectItem>
-                    <SelectItem value="DOMAIN_4">
-                      Faturamento e Preços
-                    </SelectItem>
+                    {Object.entries(
+                      getExamDomainMap(selectedCertification),
+                    ).map(([domain, name]) => (
+                      <SelectItem key={domain} value={domain}>
+                        {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {selectedDomains.length > 0 && (
@@ -391,6 +404,108 @@ export function ExamSelectionScreen({
                 )}
               </div>
             </div>
+            <fieldset className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
+              <legend className="px-2 text-base font-semibold">
+                Opções do estudo focado
+              </legend>
+              <div>
+                <div className="flex min-h-[44px] items-center gap-3">
+                  <input
+                    id="focus-feedback"
+                    type="checkbox"
+                    className="h-5 w-5 accent-primary"
+                    checked={focusOptions.showImmediateFeedback}
+                    onChange={(event) =>
+                      onFocusOptionsChange({
+                        ...focusOptions,
+                        showImmediateFeedback: event.target.checked,
+                      })
+                    }
+                    aria-describedby="focus-feedback-help"
+                  />
+                  <label
+                    htmlFor="focus-feedback"
+                    className="cursor-pointer py-2 text-sm font-medium"
+                  >
+                    Mostrar feedback após cada resposta
+                  </label>
+                </div>
+                <p
+                  id="focus-feedback-help"
+                  className="text-sm text-muted-foreground"
+                >
+                  Veja a correção e as explicações antes de avançar, como no
+                  modo Prática. Desative para revisar apenas ao final.
+                </p>
+              </div>
+              <div>
+                <div className="flex min-h-[44px] items-center gap-3">
+                  <input
+                    id="focus-timer"
+                    type="checkbox"
+                    className="h-5 w-5 accent-primary"
+                    checked={focusOptions.timerEnabled}
+                    onChange={(event) =>
+                      onFocusOptionsChange({
+                        ...focusOptions,
+                        timerEnabled: event.target.checked,
+                      })
+                    }
+                    aria-describedby="focus-timer-help"
+                  />
+                  <label
+                    htmlFor="focus-timer"
+                    className="cursor-pointer py-2 text-sm font-medium"
+                  >
+                    Usar cronômetro
+                  </label>
+                </div>
+                <p
+                  id="focus-timer-help"
+                  className="text-sm text-muted-foreground"
+                >
+                  O estudo termina automaticamente quando o tempo acabar.
+                </p>
+              </div>
+              {focusOptions.timerEnabled && (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="focus-minutes"
+                    className="block text-sm font-medium"
+                  >
+                    Tempo limite (minutos)
+                  </label>
+                  <input
+                    id="focus-minutes"
+                    type="number"
+                    min="1"
+                    max="180"
+                    step="1"
+                    className="min-h-[44px] w-full max-w-48 rounded-md border border-input bg-background px-3 text-base"
+                    value={focusOptions.timeLimitMinutes || ""}
+                    onChange={(event) =>
+                      onFocusOptionsChange({
+                        ...focusOptions,
+                        timeLimitMinutes: event.target.valueAsNumber || 0,
+                      })
+                    }
+                    aria-invalid={invalidFocusTime}
+                    aria-describedby={
+                      invalidFocusTime ? "focus-time-error" : "focus-timer-help"
+                    }
+                  />
+                  {invalidFocusTime && (
+                    <p
+                      id="focus-time-error"
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
+                      Informe um número inteiro entre 1 e 180 minutos.
+                    </p>
+                  )}
+                </div>
+              )}
+            </fieldset>
           </div>
         )}
 
@@ -444,7 +559,8 @@ export function ExamSelectionScreen({
               checkingTerms ||
               !termsAccepted ||
               (studyMode !== "domain_focus" && !selectedExamId) ||
-              isLoadingQuestions
+              isLoadingQuestions ||
+              (studyMode === "domain_focus" && invalidFocusTime)
             }
             className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
           >

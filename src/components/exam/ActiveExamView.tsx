@@ -30,6 +30,7 @@ interface ActiveExamViewProps {
   showExplanation: boolean;
   answerStatus: "correct" | "incorrect" | "partial" | null;
   studyMode: StudyMode;
+  showImmediateFeedback?: boolean;
   isFullscreen: boolean;
   isFavorite: boolean;
   onAnswerToggle: (optionId: string) => void;
@@ -59,6 +60,7 @@ export function ActiveExamView({
   showExplanation,
   answerStatus,
   studyMode,
+  showImmediateFeedback = studyMode === "practice",
   isFullscreen,
   isFavorite,
   onAnswerToggle,
@@ -230,7 +232,7 @@ export function ActiveExamView({
               disabled={selectedAnswers.length === 0}
               className="flex items-center justify-center gap-2 min-h-[44px] w-full"
             >
-              {studyMode === "practice"
+              {showImmediateFeedback
                 ? "Verificar Resposta"
                 : currentQuestionIndex === totalQuestions - 1
                   ? "Finalizar Exame"
